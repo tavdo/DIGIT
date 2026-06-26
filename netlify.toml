@@ -4,6 +4,7 @@
 
 [build.environment]
   NODE_VERSION = "22"
+  VITE_BOOTSTRAP_ADMIN_EMAILS = "admin@gmail.com"
 
 # React Router — all routes serve index.html
 [[redirects]]
