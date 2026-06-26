@@ -2,11 +2,15 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, Sparkles } from 'lucide-react'
 import Reveal from '../components/Reveal'
 import usePageMeta from '../hooks/usePageMeta'
+import useSiteContent from '../hooks/useSiteContent'
 import { pageTitle } from '../constants/brand'
-import { allServices } from '../data/services'
+import { getServicesFromContent } from '../utils/siteServices'
 import './Services.css'
 
 function Services() {
+  const { content } = useSiteContent()
+  const services = getServicesFromContent(content)
+
   usePageMeta(
     pageTitle('სერვისები'),
     'DIGIT — სერვისების კატალოგი. გადამოწმებული პარტნიორები და მენეჯერის ხარისხის კონტროლი.'
@@ -30,7 +34,7 @@ function Services() {
       <div className="page services-page">
         <div className="container">
           <div className="services-page__grid">
-          {allServices.map(({ id, icon: Icon, title, description, custom }, index) => (
+          {services.map(({ id, icon: Icon, title, description, custom }, index) => (
             <Reveal
               key={id}
               className={`service-item ${custom ? 'service-item--custom' : ''}`}

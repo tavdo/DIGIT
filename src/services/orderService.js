@@ -2,6 +2,7 @@ import {
   addDoc,
   arrayUnion,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   onSnapshot,
@@ -13,6 +14,7 @@ import {
   where,
 } from 'firebase/firestore'
 import { db } from '../firebase'
+import { uploadOrderAttachments } from './attachmentService'
 
 export const ORDER_STATUS = {
   NEW: 'new',
@@ -88,6 +90,7 @@ export async function createTicket({
   serviceType,
   description,
   priority,
+  attachmentFiles = [],
 }) {
   const firestore = requireDb()
   const ref = await addDoc(collection(firestore, 'orders'), {
@@ -101,6 +104,7 @@ export async function createTicket({
     assignedDeveloperId: null,
     assignedDeveloperName: null,
     managerNotes: [],
+    attachments: [],
     price: null,
     paymentStatus: PAYMENT_STATUS.UNPAID,
     developerPayout: null,
@@ -110,6 +114,16 @@ export async function createTicket({
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   })
+
+  if (attachmentFiles.length > 0) {
+    try {
+      await uploadOrderAttachments(ref.id, customerId, attachmentFiles)
+    } catch (err) {
+      await deleteDoc(ref)
+      throw err
+    }
+  }
+
   return ref.id
 }
 

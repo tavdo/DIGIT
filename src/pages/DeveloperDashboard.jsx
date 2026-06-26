@@ -32,6 +32,7 @@ import {
 import { updateDeveloperProfile } from '../services/userService'
 import DeveloperCvFields from '../components/DeveloperCvFields'
 import DigitMark from '../components/DigitMark'
+import OrderAttachments from '../components/OrderAttachments'
 import usePageMeta from '../hooks/usePageMeta'
 import { pageTitle } from '../constants/brand'
 import './DeveloperDashboard.css'
@@ -134,6 +135,7 @@ function TaskDetailScreen({ orderId, onBack, onError, readOnly = false }) {
           <h3>აღწერა</h3>
           <p>{order.description}</p>
         </section>
+        <OrderAttachments attachments={order.attachments} title="ფოტო / ვიდეო" />
         <section className="dev-task-detail__block">
           <h3>დეტალები</h3>
           <dl className="dev-task-detail__facts">

@@ -8,6 +8,7 @@ import {
   UserCheck,
   Wallet,
 } from 'lucide-react'
+import OrderAttachments from '../OrderAttachments'
 import {
   addOrderNote,
   assignDeveloperToOrder,
@@ -276,6 +277,7 @@ function OrderDetail({ orderId, managerName, onError, onMissing }) {
       <section className="orders-detail__section">
         <h3 className="orders-detail__section-title">აღწერა</h3>
         <p className="orders-detail__description">{order.description}</p>
+        <OrderAttachments attachments={order.attachments} />
         <p className="orders-detail__meta">
           შექმნილია: {formatOrderDate(order.createdAt)}
           {order.assignedDeveloperName && (

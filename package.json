@@ -6,19 +6,21 @@
   "scripts": {
     "dev": "vite",
     "dev:emulator": "node scripts/seed-admin.mjs && npm run dev",
-    "dev:all": "node scripts/free-emulator-ports.mjs && firebase emulators:exec --only auth,firestore \"npm run dev:emulator\"",
+    "dev:all": "node scripts/free-emulator-ports.mjs && firebase emulators:exec --only auth,firestore,storage \"npm run dev:emulator\"",
     "free-ports": "node scripts/free-emulator-ports.mjs",
     "seed-admin": "node scripts/seed-admin.mjs",
     "seed-developer": "node scripts/seed-developer.mjs",
     "clear-data": "node scripts/clear-emulator-data.mjs",
     "reset-emulator": "node scripts/reset-emulator.mjs",
-    "emulators": "firebase emulators:start --only auth,firestore",
+    "emulators": "firebase emulators:start --only auth,firestore,storage",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "firebase-deploy-rules": "firebase deploy --only firestore:rules",
     "firebase-deploy-indexes": "firebase deploy --only firestore:indexes",
-    "firebase-deploy-firestore": "firebase deploy --only firestore"
+    "firebase-deploy-firestore": "firebase deploy --only firestore",
+    "firebase-deploy-storage": "firebase deploy --only storage",
+    "firebase-deploy-all-rules": "firebase deploy --only firestore:rules,storage"
   },
   "dependencies": {
     "firebase": "^12.15.0",

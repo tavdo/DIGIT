@@ -11,6 +11,7 @@ import Reveal from '../components/Reveal'
 import Accordion from '../components/Accordion'
 import usePageMeta from '../hooks/usePageMeta'
 import { pageTitle } from '../constants/brand'
+import useSiteContent from '../hooks/useSiteContent'
 import './About.css'
 
 const workSteps = [
@@ -108,6 +109,8 @@ const trustBadges = [
 ]
 
 function About() {
+  const { content } = useSiteContent()
+
   usePageMeta(
     pageTitle('ჩვენ შესახებ'),
     'DIGIT — ჩვენი ისტორია, გუნდი და გარანტიები. სანდო გზა სპეციალისტებთან ერთი მენეჯერის კონტროლით.'
@@ -121,17 +124,7 @@ function About() {
             <span className="about-mission__label">ჩვენი ისტორია</span>
             <h1 className="about-mission__title">ნდობა, რომელიც გამოიმსახურებს</h1>
             <div className="about-mission__text">
-              <p>
-                ბევრმა ადამიანმა გამოიცადა — დაუკავშირდი სპეციალისტს, გადაიხადე,
-                მიიღე ცუდი შედეგი და ვეღარ ვისაც ენდო. ჩვენ ზუსტად ამ პრობლემის
-                გამო შევქმენით DIGIT.
-              </p>
-              <p>
-                ჩვენი მიზანი მარტივია: DIGIT-ით მოგცეთ სანდო, კონტროლირებადი გზა
-                სპეციალისტებთან — ერთი მენეჯერის მეშვეობით, რომელიც პასუხისმგებელია
-                ხარისხზე, კომუნიკაციაზე და შედეგზე. არ ვატყუებთ, არ ვამალავთ —
-                ვთავაზობთ გამჭვირვალობას და პასუხისმგებლობას.
-              </p>
+              <p>{content.aboutIntro}</p>
             </div>
           </Reveal>
         </div>

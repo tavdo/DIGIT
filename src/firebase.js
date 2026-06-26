@@ -2,6 +2,7 @@ import { initializeApp } from 'firebase/app'
 import { getAnalytics, isSupported } from 'firebase/analytics'
 import { connectAuthEmulator, getAuth } from 'firebase/auth'
 import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore'
+import { connectStorageEmulator, getStorage } from 'firebase/storage'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -38,12 +39,14 @@ export const useFirebaseEmulator = import.meta.env.VITE_USE_FIREBASE_EMULATOR ==
 let app = null
 let auth = null
 let db = null
+let storage = null
 let analytics = null
 
 if (isFirebaseConfigured) {
   app = initializeApp(firebaseConfig)
   auth = getAuth(app)
   db = getFirestore(app)
+  storage = getStorage(app)
 
   if (useFirebaseEmulator && import.meta.env.DEV) {
     const emulatorKey = '__HOMEWORK_FIREBASE_EMULATORS__'
@@ -51,10 +54,11 @@ if (isFirebaseConfigured) {
     if (!globalThis[emulatorKey]) {
       connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true })
       connectFirestoreEmulator(db, '127.0.0.1', 8080)
+      connectStorageEmulator(storage, '127.0.0.1', 9199)
       globalThis[emulatorKey] = true
 
       if (import.meta.env.DEV) {
-        console.info('[Firebase] Emulator mode: Auth :9099, Firestore :8080, UI http://127.0.0.1:4000')
+        console.info('[Firebase] Emulator mode: Auth :9099, Firestore :8080, Storage :9199, UI http://127.0.0.1:4000')
       }
     }
   } else if (firebaseConfig.measurementId && typeof window !== 'undefined') {
@@ -71,4 +75,4 @@ if (isFirebaseConfigured) {
   )
 }
 
-export { app, auth, db, analytics }
+export { app, auth, db, storage, analytics }

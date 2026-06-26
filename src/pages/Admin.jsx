@@ -1,29 +1,36 @@
 import { useEffect, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
-import { CheckCircle2, LayoutDashboard, Loader2, LogOut, ShieldCheck, XCircle } from 'lucide-react'
+import {
+  Globe,
+  LayoutDashboard,
+  Loader2,
+  LogOut,
+  ShieldCheck,
+  UserCog,
+  Users,
+} from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import FirebaseSetupNotice from '../components/FirebaseSetupNotice'
-import DeveloperCvSummary from '../components/DeveloperCvSummary'
-import {
-  approveDeveloperRequest,
-  rejectDeveloperRequest,
-  subscribeToPendingDeveloperRequests,
-} from '../services/adminService'
+import AdminUsersPanel from '../components/admin/AdminUsersPanel'
+import AdminSitePanel from '../components/admin/AdminSitePanel'
+import AdminDevelopersPanel from '../components/admin/AdminDevelopersPanel'
 import {
   getAuthErrorMessage,
   validateEmail,
   validatePassword,
 } from '../utils/authErrors'
-import {
-  DEVELOPER_REQUEST_STATUS,
-  isManagerRole,
-  isStaffRole,
-} from '../utils/roles'
+import { DEVELOPER_REQUEST_STATUS, isAdminRole } from '../utils/roles'
 import { ensureAdminAccount } from '../utils/ensureAdminAccount'
 import usePageMeta from '../hooks/usePageMeta'
 import { pageTitle } from '../constants/brand'
 import './Auth.css'
 import './Admin.css'
+
+const ADMIN_TABS = [
+  { id: 'users', label: 'მომხმარებლები', icon: Users },
+  { id: 'site', label: 'საიტი', icon: Globe },
+  { id: 'developers', label: 'შემსრულებლები', icon: UserCog },
+]
 
 function AdminLogin({ onLoggedIn }) {
   const { login, isFirebaseConfigured } = useAuth()
@@ -62,13 +69,11 @@ function AdminLogin({ onLoggedIn }) {
   return (
     <>
       <div className="admin-page__brand">
-        <span className="admin-page__badge">Admin</span>
-        <h1 className="admin-page__title">Admin Panel</h1>
-        <p className="admin-page__subtitle">შედი admin ანგარიშით</p>
+        <span className="admin-page__badge">Super Admin</span>
+        <h1 className="admin-page__title">ადმინ პანელი</h1>
+        <p className="admin-page__subtitle">საიტის და მომხმარებლების სრული მართვა</p>
         {import.meta.env.VITE_USE_FIREBASE_EMULATOR === 'true' && (
-          <p className="admin-page__hint">
-            ლოკალური admin: admin@gmail.com / admin123
-          </p>
+          <p className="admin-page__hint">ლოკალური admin: admin@gmail.com / admin123</p>
         )}
       </div>
 
@@ -130,7 +135,7 @@ function AdminLogin({ onLoggedIn }) {
       </form>
 
       <p className="admin-page__footer">
-        არ გაქვს ანგარიში? <Link to="/register">რეგისტრაცია</Link>
+        მენეჯერი ხარ? <Link to="/login">შესვლა</Link>
         {' · '}
         <Link to="/">მთავარი გვერდი</Link>
       </p>
@@ -138,65 +143,23 @@ function AdminLogin({ onLoggedIn }) {
   )
 }
 
-function AdminRequestsPanel() {
+function SuperAdminPanel() {
   const { user, logout } = useAuth()
-  const [requests, setRequests] = useState([])
-  const [loadingRequests, setLoadingRequests] = useState(true)
-  const [processingId, setProcessingId] = useState(null)
+  const [tab, setTab] = useState('users')
   const [error, setError] = useState('')
 
-  useEffect(() => {
-    const unsubscribe = subscribeToPendingDeveloperRequests(
-      (items) => {
-        setRequests(items)
-        setLoadingRequests(false)
-      },
-      (err) => {
-        setError(err.message || 'მოთხოვნების ჩატვირთვა ვერ მოხერხდა.')
-        setLoadingRequests(false)
-      },
-    )
-
-    return unsubscribe
-  }, [])
-
-  const handleApprove = async (requestId) => {
-    if (!user?.uid) return
-    setError('')
-    setProcessingId(requestId)
-    try {
-      await approveDeveloperRequest(requestId, user.uid)
-    } catch (err) {
-      setError(err.message || 'დადასტურება ვერ მოხერხდა.')
-    } finally {
-      setProcessingId(null)
-    }
-  }
-
-  const handleReject = async (requestId) => {
-    if (!user?.uid) return
-    setProcessingId(requestId)
-    try {
-      await rejectDeveloperRequest(requestId, user.uid)
-    } catch (err) {
-      setError(err.message || 'უარყოფა ვერ მოხერხდა.')
-    } finally {
-      setProcessingId(null)
-    }
-  }
-
   return (
-    <div className="admin-panel">
+    <div className="admin-panel admin-panel--super">
       <div className="admin-panel__header">
         <div>
-          <span className="admin-page__badge">Admin</span>
-          <h1 className="admin-page__title">დეველოპერის მოთხოვნები</h1>
-          <p className="admin-page__subtitle">დაადასტურე ან უარყო ახალი დეველოპერები</p>
+          <span className="admin-page__badge">Super Admin</span>
+          <h1 className="admin-page__title">ადმინ პანელი</h1>
+          <p className="admin-page__subtitle">მომხმარებლები · საიტი · შემსრულებლები</p>
         </div>
         <div className="admin-panel__actions">
           <Link to="/dashboard" className="btn btn--outline btn--sm">
             <LayoutDashboard size={16} />
-            Dashboard
+            თიქეტები
           </Link>
           <button type="button" className="btn btn--outline btn--sm" onClick={logout}>
             <LogOut size={16} />
@@ -205,51 +168,34 @@ function AdminRequestsPanel() {
         </div>
       </div>
 
+      <nav className="admin-tabs" aria-label="ადმინის ტაბები">
+        {ADMIN_TABS.map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            type="button"
+            className={`admin-tabs__btn ${tab === id ? 'admin-tabs__btn--active' : ''}`}
+            onClick={() => {
+              setTab(id)
+              setError('')
+            }}
+          >
+            <Icon size={16} />
+            {label}
+          </button>
+        ))}
+      </nav>
+
       {error && <div className="auth-form__alert">{error}</div>}
 
-      {loadingRequests ? (
-        <div className="admin-panel__empty">იტვირთება...</div>
-      ) : requests.length === 0 ? (
-        <div className="admin-panel__empty">ახალი მოთხოვნა არ არის.</div>
-      ) : (
-        <ul className="admin-requests">
-          {requests.map((request) => (
-            <li key={request.id} className="admin-request">
-              <div className="admin-request__info">
-                <strong>{request.name || 'უსახელო'}</strong>
-                <span>{request.email}</span>
-                <DeveloperCvSummary profile={request} />
-              </div>
-              <div className="admin-request__buttons">
-                <button
-                  type="button"
-                  className="btn btn--primary btn--sm"
-                  disabled={processingId === request.id}
-                  onClick={() => handleApprove(request.id)}
-                >
-                  <CheckCircle2 size={16} />
-                  დადასტურება
-                </button>
-                <button
-                  type="button"
-                  className="btn btn--outline btn--sm admin-request__reject"
-                  disabled={processingId === request.id}
-                  onClick={() => handleReject(request.id)}
-                >
-                  <XCircle size={16} />
-                  უარყოფა
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
+      {tab === 'users' && <AdminUsersPanel adminId={user?.uid} onError={setError} />}
+      {tab === 'site' && <AdminSitePanel adminId={user?.uid} onError={setError} />}
+      {tab === 'developers' && <AdminDevelopersPanel adminId={user?.uid} onError={setError} />}
     </div>
   )
 }
 
 function Admin() {
-  usePageMeta(pageTitle('Admin'), 'DIGIT — ადმინისტრაციის პანელი.')
+  usePageMeta(pageTitle('ადმინ პანელი'), 'DIGIT — სრული ადმინისტრაცია.')
 
   const { user, userProfile, loading, logout, refreshUserProfile } = useAuth()
   const [checkingAccess, setCheckingAccess] = useState(false)
@@ -275,8 +221,7 @@ function Admin() {
         if (!cancelled) {
           setAdminReady(true)
           setAdminSeedError(
-            err.message ||
-              'Admin ანგარიში ვერ შეიქმნა. გადატვირთე dev server (npm run dev:all).',
+            err.message || 'Admin ანგარიში ვერ შეიქმნა. გადატვირთე dev server (npm run dev:all).',
           )
         }
       })
@@ -294,13 +239,13 @@ function Admin() {
 
       if (profile?.developerRequestStatus === DEVELOPER_REQUEST_STATUS.PENDING) {
         await logout()
-        setAccessError('თქვენი დეველოპერის მოთხოვნა admin-ის დადასტურებას ელოდება.')
+        setAccessError('შემსრულებლის მოთხოვნა admin-ის დადასტურებას ელოდება.')
         return
       }
 
-      if (!isStaffRole(profile?.role)) {
+      if (!isAdminRole(profile?.role)) {
         await logout()
-        setAccessError('ამ ანგარიშს არ აქვს admin წვდომა.')
+        setAccessError('ამ ანგარიშს არ აქვს super admin წვდომა. მენეჯერი ხარ? გამოიყენე /login.')
       }
     } finally {
       setCheckingAccess(false)
@@ -317,12 +262,16 @@ function Admin() {
     )
   }
 
-  if (user && isManagerRole(userProfile?.role)) {
+  if (user && isAdminRole(userProfile?.role)) {
     return (
       <div className="admin-page admin-page--wide">
-        <AdminRequestsPanel />
+        <SuperAdminPanel />
       </div>
     )
+  }
+
+  if (user && userProfile?.role === 'manager') {
+    return <Navigate to="/dashboard" replace />
   }
 
   if (user && userProfile?.role === 'developer') {

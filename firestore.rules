@@ -10,14 +10,19 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/users/$(request.auth.uid));
     }
 
+    function isAdmin() {
+      return hasUserProfile()
+        && userDoc().data.role == 'admin';
+    }
+
     function isStaff() {
       return hasUserProfile()
-        && userDoc().data.role in ['manager', 'developer'];
+        && userDoc().data.role in ['manager', 'developer', 'admin'];
     }
 
     function isManager() {
       return hasUserProfile()
-        && userDoc().data.role == 'manager';
+        && userDoc().data.role in ['manager', 'admin'];
     }
 
     function isCustomer() {
@@ -36,11 +41,18 @@ service cloud.firestore {
         && request.resource.data.developerRequestStatus in ['none', 'pending'];
     }
 
+    function isBootstrapAdminCreate(userId) {
+      return request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.role == 'admin'
+        && request.resource.data.email == 'admin@gmail.com'
+        && request.resource.data.developerRequestStatus == 'none';
+    }
+
     function isBootstrapManagerCreate(userId) {
       return request.auth != null
         && request.auth.uid == userId
         && request.resource.data.role == 'manager'
-        && request.resource.data.email == 'admin@gmail.com'
         && request.resource.data.developerRequestStatus == 'none';
     }
 
@@ -63,6 +75,22 @@ service cloud.firestore {
         && request.resource.data.email == resource.data.email;
     }
 
+    function validBootstrapAdminSelfUpgrade(userId) {
+      return request.auth.uid == userId
+        && resource.data.email == 'admin@gmail.com'
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.role == 'admin'
+        && request.resource.data.developerRequestStatus == 'none';
+    }
+
+    function validAdminUserRoleUpdate() {
+      return isAdmin()
+        && request.auth.uid != userId
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.role in ['customer', 'manager', 'developer', 'admin']
+        && request.resource.data.developerRequestStatus in ['none', 'pending', 'approved', 'rejected'];
+    }
+
     function validTicketCreate() {
       return isCustomer()
         && request.resource.data.customerId == request.auth.uid
@@ -71,7 +99,23 @@ service cloud.firestore {
         && request.resource.data.serviceType is string
         && request.resource.data.description is string
         && request.resource.data.customerName is string
-        && request.resource.data.assignedDeveloperId == null;
+        && request.resource.data.assignedDeveloperId == null
+        && (!('attachments' in request.resource.data) || request.resource.data.attachments == []);
+    }
+
+    function customerAttachmentFinalize() {
+      return isCustomer()
+        && resource.data.customerId == request.auth.uid
+        && resource.data.status == 'new'
+        && request.resource.data.status == 'new'
+        && request.resource.data.customerId == resource.data.customerId
+        && request.resource.data.customerName == resource.data.customerName
+        && request.resource.data.serviceType == resource.data.serviceType
+        && request.resource.data.description == resource.data.description
+        && request.resource.data.priority == resource.data.priority
+        && request.resource.data.assignedDeveloperId == null
+        && request.resource.data.attachments is list
+        && request.resource.data.attachments.size() <= 5;
     }
 
     function customerPriceDecision() {
@@ -83,7 +127,8 @@ service cloud.firestore {
         && request.resource.data.customerId == resource.data.customerId
         && request.resource.data.serviceType == resource.data.serviceType
         && request.resource.data.description == resource.data.description
-        && request.resource.data.priority == resource.data.priority;
+        && request.resource.data.priority == resource.data.priority
+        && request.resource.data.attachments == resource.data.attachments;
     }
 
     function customerRatingUpdate() {
@@ -94,7 +139,8 @@ service cloud.firestore {
         && request.resource.data.customerRating is number
         && request.resource.data.customerRating >= 1
         && request.resource.data.customerRating <= 5
-        && request.resource.data.status == 'completed';
+        && request.resource.data.status == 'completed'
+        && request.resource.data.attachments == resource.data.attachments;
     }
 
     match /users/{userId} {
@@ -103,8 +149,10 @@ service cloud.firestore {
         || isManager()
         || (isStaff()
           && resource.data.keys().hasAll(['role'])
-          && resource.data.role in ['manager', 'developer'])
+          && resource.data.role in ['manager', 'developer', 'admin'])
       );
+
+      allow list: if isAdmin();
 
       allow list: if isManager()
         && resource.data.keys().hasAll(['developerRequestStatus'])
@@ -116,13 +164,19 @@ service cloud.firestore {
 
       allow create: if request.auth != null
         && request.auth.uid == userId
-        && (validUserCreate() || isBootstrapManagerCreate(userId));
+        && (validUserCreate() || isBootstrapAdminCreate(userId) || isBootstrapManagerCreate(userId));
 
       allow update: if request.auth != null && (
         (request.auth.uid == userId && validUserSelfUpdate())
         || (request.auth.uid == userId && validDeveloperProfileUpdate())
-        || isManager()
+        || validBootstrapAdminSelfUpgrade(userId)
+        || validAdminUserRoleUpdate()
       );
+    }
+
+    match /siteContent/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
     match /orders/{orderId} {
@@ -140,6 +194,7 @@ service cloud.firestore {
 
       allow update: if isManager()
         || customerPriceDecision()
+        || customerAttachmentFinalize()
         || customerRatingUpdate()
         || (
           isAssignedDeveloper(resource.data)
@@ -151,6 +206,7 @@ service cloud.firestore {
           && request.resource.data.serviceType == resource.data.serviceType
           && request.resource.data.description == resource.data.description
           && request.resource.data.managerNotes == resource.data.managerNotes
+          && request.resource.data.attachments == resource.data.attachments
           && request.resource.data.price == resource.data.price
           && request.resource.data.paymentStatus == resource.data.paymentStatus
           && request.resource.data.developerPayout == resource.data.developerPayout

@@ -5,14 +5,18 @@ import { useAuth } from '../context/AuthContext'
 import FirebaseSetupNotice from '../components/FirebaseSetupNotice'
 import Reveal from '../components/Reveal'
 import usePageMeta from '../hooks/usePageMeta'
-import { CONTACT_EMAIL, pageTitle } from '../constants/brand'
-import { allServices, getServiceById } from '../data/services'
+import { pageTitle } from '../constants/brand'
+import { allServices } from '../data/services'
+import { getServiceFromContent, getServicesFromContent } from '../utils/siteServices'
+import useSiteContent from '../hooks/useSiteContent'
 import {
   createTicket,
   ORDER_PRIORITY,
   ORDER_PRIORITY_LABELS,
 } from '../services/orderService'
 import { MAX_ORDER_DESCRIPTION_LENGTH, validateMessageLength } from '../utils/validation'
+import { validateTicketAttachmentSelection } from '../utils/attachmentValidation'
+import TicketAttachmentPicker from '../components/TicketAttachmentPicker'
 import './Contact.css'
 
 const PRIORITY_OPTIONS = [
@@ -28,6 +32,7 @@ function Contact() {
   )
 
   const { user, userProfile, isFirebaseConfigured } = useAuth()
+  const { content } = useSiteContent()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const serviceIdFromUrl = searchParams.get('service')
@@ -37,11 +42,14 @@ function Contact() {
   )
   const [description, setDescription] = useState('')
   const [priority, setPriority] = useState(ORDER_PRIORITY.TOMORROW)
+  const [attachmentFiles, setAttachmentFiles] = useState([])
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [attachmentError, setAttachmentError] = useState('')
   const [success, setSuccess] = useState(false)
 
-  const selectedService = getServiceById(serviceId)
+  const services = getServicesFromContent(content)
+  const selectedService = getServiceFromContent(content, serviceId) || services[0]
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -53,8 +61,15 @@ function Contact() {
       return
     }
 
+    const filesError = validateTicketAttachmentSelection(attachmentFiles)
+    if (filesError) {
+      setAttachmentError(filesError)
+      return
+    }
+
     setSubmitting(true)
     setError('')
+    setAttachmentError('')
 
     try {
       await createTicket({
@@ -65,6 +80,7 @@ function Contact() {
         serviceType: selectedService?.title || serviceId,
         description: trimmed,
         priority,
+        attachmentFiles,
       })
       setSuccess(true)
       setTimeout(() => navigate('/my-requests'), 1500)
@@ -82,7 +98,7 @@ function Contact() {
           <Reveal>
             <h1 className="page-hero__title">გამოიძახე დახმარება</h1>
             <p className="page-hero__text">
-              ისევე მარტივად, როგორც ტაქსი — აირჩიე კატეგორია, აღწერე პრობლემა და მიუთითე პრიორიტეტი.
+              აირჩიე კატეგორია, აღწერე პრობლემა, სურვილისამებრ მიმაგრე ფოტო და მიუთითე პრიორიტეტი.
             </p>
           </Reveal>
         </div>
@@ -117,7 +133,7 @@ function Contact() {
                     disabled={submitting}
                     required
                   >
-                    {allServices.map(({ id, title }) => (
+                    {services.map(({ id, title }) => (
                       <option key={id} value={id}>
                         {title}
                       </option>
@@ -163,13 +179,24 @@ function Contact() {
                   />
                 </div>
 
+                <TicketAttachmentPicker
+                  files={attachmentFiles}
+                  onChange={setAttachmentFiles}
+                  disabled={submitting || !isFirebaseConfigured}
+                  error={attachmentError}
+                />
+
                 <button
                   type="submit"
                   className="btn btn--primary btn--lg ticket-form__submit"
                   disabled={submitting || !description.trim() || !isFirebaseConfigured}
                 >
                   <Send size={18} />
-                  {submitting ? 'იგზავნება...' : 'მოთხოვნის გაგზავნა'}
+                  {submitting
+                    ? attachmentFiles.length > 0
+                      ? 'იტვირთება...'
+                      : 'იგზავნება...'
+                    : 'მოთხოვნის გაგზავნა'}
                 </button>
               </form>
 
@@ -180,21 +207,21 @@ function Contact() {
                     <Phone size={18} aria-hidden="true" />
                     <div>
                       <span className="contact-info__label">ტელეფონი</span>
-                      <a href="tel:+995555123456">+995 555 123 456</a>
+                      <a href={`tel:${content.contactPhone.replace(/\s/g, '')}`}>{content.contactPhone}</a>
                     </div>
                   </li>
                   <li>
                     <Mail size={18} aria-hidden="true" />
                     <div>
                       <span className="contact-info__label">ელ. ფოსტა</span>
-                      <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+                      <a href={`mailto:${content.contactEmail}`}>{content.contactEmail}</a>
                     </div>
                   </li>
                   <li>
                     <Clock size={18} aria-hidden="true" />
                     <div>
                       <span className="contact-info__label">სამუშაო საათები</span>
-                      <span>ორშ–პარ, 10:00 – 19:00</span>
+                      <span>{content.workingHours}</span>
                     </div>
                   </li>
                 </ul>

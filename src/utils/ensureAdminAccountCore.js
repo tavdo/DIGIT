@@ -14,7 +14,7 @@ async function writeAdminProfile(firestore, uid) {
     uid,
     name: ADMIN_NAME,
     email: ADMIN_EMAIL,
-    role: 'manager',
+    role: 'admin',
     developerRequestStatus: 'none',
     createdAt: serverTimestamp(),
   })
@@ -40,6 +40,15 @@ export async function ensureAdminAccountFor(authClient, firestore) {
     const snapshot = await getDoc(doc(firestore, 'users', uid))
     if (!snapshot.exists()) {
       await writeAdminProfile(firestore, uid)
+    } else if (snapshot.data().role !== 'admin') {
+      await setDoc(
+        doc(firestore, 'users', uid),
+        {
+          role: 'admin',
+          developerRequestStatus: 'none',
+        },
+        { merge: true },
+      )
     }
   } finally {
     if (authClient.currentUser) {

@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Home, LogOut } from 'lucide-react'
+import { Home, LogOut, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { isAdminRole } from '../utils/roles'
 import ManagerOrdersPanel from '../components/orders/ManagerOrdersPanel'
 import usePageMeta from '../hooks/usePageMeta'
 import { pageTitle } from '../constants/brand'
@@ -25,6 +26,12 @@ function Dashboard() {
           <h1 className="dashboard-header__title">თიქეტების პანელი</h1>
         </div>
         <div className="dashboard-header__actions">
+          {isAdminRole(userProfile?.role) && (
+            <Link to="/admin" className="dashboard-header__link">
+              <ShieldCheck size={18} />
+              ადმინი
+            </Link>
+          )}
           <Link to="/" className="dashboard-header__link">
             <Home size={18} />
             საიტზე დაბრუნება

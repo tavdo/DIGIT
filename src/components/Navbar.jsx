@@ -22,6 +22,13 @@ function getNavLinks(role, isAuthenticated) {
     ]
   }
 
+  if (role === 'admin') {
+    return [
+      { to: '/admin', label: 'ადმინ პანელი', end: true },
+      { to: '/dashboard', label: 'თიქეტები' },
+    ]
+  }
+
   if (role === 'manager') {
     return [
       { to: '/', label: 'მთავარი', end: true },

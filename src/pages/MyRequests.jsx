@@ -16,6 +16,7 @@ import {
   submitOrderRating,
   subscribeToCustomerOrders,
 } from '../services/orderService'
+import OrderAttachments from '../components/OrderAttachments'
 import './MyRequests.css'
 
 function RatingForm({ order, onRated, onError }) {
@@ -108,6 +109,8 @@ function RequestCard({ order, onError }) {
       </div>
 
       <p className="my-request__description">{order.description}</p>
+
+      <OrderAttachments attachments={order.attachments} />
 
       {order.price != null && order.status !== ORDER_STATUS.NEW && (
         <p className="my-request__price">
