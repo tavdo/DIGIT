@@ -14,6 +14,7 @@
     "reset-emulator": "node scripts/reset-emulator.mjs",
     "emulators": "firebase emulators:start --only auth,firestore,storage",
     "build": "vite build",
+    "push": "git push origin main",
     "lint": "eslint .",
     "preview": "vite preview",
     "firebase-deploy-rules": "firebase deploy --only firestore:rules",
