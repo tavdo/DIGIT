@@ -73,6 +73,10 @@
   letter-spacing: -0.035em;
 }
 
+.hero__title-main {
+  color: #4274D9;
+}
+
 .hero__title-accent {
   background: linear-gradient(135deg, #ffffff 0%, #c7d4fd 55%, #93a8f8 100%);
   -webkit-background-clip: text;

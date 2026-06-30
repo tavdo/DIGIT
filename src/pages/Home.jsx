@@ -76,7 +76,7 @@ function Home() {
             <Reveal delay={80}>
               <span className="relay-line" />
               <h1 className="hero__title">
-                {content.heroTitle}
+                <span className="hero__title-main">{content.heroTitle}</span>
                 <br />
                 <span className="hero__title-accent">{content.heroTitleAccent}</span>
               </h1>
