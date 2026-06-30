@@ -534,33 +534,40 @@ function ManagerOrdersPanel({ managerName, initialOrderId, onError }) {
   return (
     <div className="orders-panel">
       <aside className="orders-panel__list">
-        <div className="orders-panel__filters">
-          {STATUS_FILTERS.map(({ value, label }) => (
-            <button
-              key={value}
-              type="button"
-              className={`dashboard-filter ${statusFilter === value ? 'dashboard-filter--active' : ''}`}
-              onClick={() => {
-                setStatusFilter(value)
+        <div className="orders-panel__filter-bar">
+          <label className="orders-panel__filter-field">
+            <span className="orders-panel__filter-label">სტატუსი</span>
+            <select
+              className="orders-panel__filter-select"
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value)
                 setLoading(true)
               }}
+              aria-label="სტატუსის ფილტრი"
             >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        <div className="orders-panel__filters orders-panel__filters--compensation">
-          {COMPENSATION_FILTERS.map(({ value, label }) => (
-            <button
-              key={value}
-              type="button"
-              className={`dashboard-filter ${compensationFilter === value ? 'dashboard-filter--active' : ''}`}
-              onClick={() => setCompensationFilter(value)}
+              {STATUS_FILTERS.map(({ value, label }) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="orders-panel__filter-field">
+            <span className="orders-panel__filter-label">გადახდა</span>
+            <select
+              className="orders-panel__filter-select"
+              value={compensationFilter}
+              onChange={(e) => setCompensationFilter(e.target.value)}
+              aria-label="გადახდის ფილტრი"
             >
-              {label}
-            </button>
-          ))}
+              {COMPENSATION_FILTERS.map(({ value, label }) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
 
         <div className="orders-panel__items">
