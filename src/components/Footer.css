@@ -1,5 +1,5 @@
 .footer {
-  background: var(--color-ink);
+  background: var(--gradient-hero);
   color: var(--text-inverse);
   padding: 4rem 0 0;
   border-top: 1px solid var(--color-border-on-dark);

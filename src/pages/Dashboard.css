@@ -12,9 +12,9 @@
   gap: 1rem;
   padding: 0 1.25rem;
   height: 56px;
-  background: var(--color-ink);
+  background: var(--gradient-hero);
   color: var(--text-inverse);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border-on-dark);
 }
 
 .dashboard-header__brand {
@@ -30,7 +30,7 @@
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  background: rgba(72, 118, 225, 0.15);
+  background: rgba(79, 109, 245, 0.15);
   color: var(--color-copper-glow);
   border-radius: 4px;
 }
@@ -76,9 +76,9 @@
 }
 
 .dashboard-main-tab--active {
-  background: var(--color-highlight);
-  color: var(--primary-color);
-  border: 1px solid var(--color-border-strong);
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--text-inverse);
+  border: 1px solid rgba(255, 255, 255, 0.25);
 }
 
 .dashboard-main-tab__badge {

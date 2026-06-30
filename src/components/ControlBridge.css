@@ -20,7 +20,7 @@
   transform: translate(-50%, -50%);
   width: 200px;
   height: 200px;
-  background: radial-gradient(circle, rgba(72, 118, 225, 0.08) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(79, 109, 245, 0.1) 0%, transparent 70%);
   pointer-events: none;
   animation: bridgeGlow 12s ease-in-out infinite alternate;
 }
@@ -71,7 +71,7 @@
 }
 
 .control-bridge__circle--hub {
-  fill: rgba(72, 118, 225, 0.15);
+  fill: rgba(79, 109, 245, 0.15);
   stroke: var(--color-copper-glow);
   stroke-width: 2;
 }

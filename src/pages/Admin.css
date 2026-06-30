@@ -4,7 +4,7 @@
   align-items: center;
   justify-content: center;
   padding: 2rem 1.25rem;
-  background: var(--color-ink);
+  background: var(--gradient-hero);
 }
 
 .admin-page__panel {
@@ -36,7 +36,7 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-copper-glow);
-  background: rgba(72, 118, 225, 0.1);
+  background: rgba(79, 109, 245, 0.1);
   border-radius: 999px;
 }
 
@@ -179,8 +179,8 @@
 
 .admin-tabs__btn--active {
   color: var(--color-copper-glow);
-  border-color: rgba(72, 118, 225, 0.4);
-  background: rgba(72, 118, 225, 0.08);
+  border-color: rgba(79, 109, 245, 0.4);
+  background: rgba(79, 109, 245, 0.08);
 }
 
 .admin-section__head {
@@ -265,8 +265,8 @@
 }
 
 .admin-role-badge--manager {
-  color: #98D1E2;
-  background: rgba(72, 118, 225, 0.12);
+  color: #93a8f8;
+  background: rgba(79, 109, 245, 0.12);
 }
 
 .admin-role-badge--developer {

@@ -17,7 +17,7 @@
   transform: translate(-50%, -50%);
   width: min(560px, 95vw);
   height: 480px;
-  background: radial-gradient(ellipse at center, rgba(72, 118, 225, 0.18) 0%, transparent 68%);
+  background: radial-gradient(ellipse at center, rgba(79, 109, 245, 0.1) 0%, transparent 68%);
   pointer-events: none;
 }
 
@@ -55,13 +55,11 @@
 /* ── Card ── */
 .auth-card {
   width: 100%;
-  background: linear-gradient(180deg, #ffffff 0%, #eef6f5 100%);
-  border: 1px solid var(--color-border-strong);
+  background: var(--gradient-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   padding: 2.25rem 2rem 2rem;
-  box-shadow:
-    var(--shadow-lg),
-    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+  box-shadow: var(--shadow-lg);
 }
 
 .auth-card::before {
@@ -146,9 +144,9 @@
 
 .auth-form__input:focus {
   outline: none;
-  border-color: rgba(72, 118, 225, 0.5);
-  background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(72, 118, 225, 0.12);
+  border-color: rgba(79, 109, 245, 0.45);
+  background: var(--bg-color);
+  box-shadow: 0 0 0 3px rgba(79, 109, 245, 0.1);
 }
 
 .auth-form__input--error {
@@ -217,9 +215,9 @@
 }
 
 .auth-role-select__option:has(input:checked) {
-  border-color: rgba(72, 118, 225, 0.45);
-  background: rgba(72, 118, 225, 0.08);
-  box-shadow: 0 0 0 1px rgba(72, 118, 225, 0.15) inset;
+  border-color: rgba(79, 109, 245, 0.45);
+  background: rgba(79, 109, 245, 0.06);
+  box-shadow: 0 0 0 1px rgba(79, 109, 245, 0.1) inset;
 }
 
 .auth-role-select__option input {

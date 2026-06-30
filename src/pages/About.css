@@ -1,5 +1,5 @@
 .about-mission {
-  background: var(--color-ink);
+  background: var(--gradient-hero);
   color: var(--text-inverse);
   padding: clamp(4rem, 8vw, 6rem) 0;
   position: relative;
@@ -10,7 +10,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse 50% 60% at 50% 0%, rgba(72, 118, 225, 0.08), transparent);
+  background: radial-gradient(ellipse 50% 60% at 50% 0%, rgba(79, 109, 245, 0.08), transparent);
   pointer-events: none;
 }
 
@@ -118,7 +118,7 @@
   justify-content: center;
   width: 40px;
   height: 40px;
-  background: rgba(72, 118, 225, 0.08);
+  background: rgba(79, 109, 245, 0.08);
   color: var(--color-copper-glow);
   border-radius: var(--radius-sm);
   margin-bottom: 1rem;
@@ -228,7 +228,7 @@
   width: 48px;
   height: 48px;
   margin: 0 auto 1rem;
-  background: rgba(72, 118, 225, 0.08);
+  background: rgba(79, 109, 245, 0.08);
   color: var(--color-copper-glow);
   border-radius: var(--radius-md);
 }

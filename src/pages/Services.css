@@ -38,12 +38,12 @@
 
 .service-item--custom {
   border-style: dashed;
-  border-color: rgba(72, 118, 225, 0.2);
-  background: rgba(72, 118, 225, 0.02);
+  border-color: rgba(79, 109, 245, 0.2);
+  background: rgba(79, 109, 245, 0.02);
 }
 
 .service-item--custom:hover {
-  border-color: rgba(72, 118, 225, 0.35);
+  border-color: rgba(79, 109, 245, 0.35);
 }
 
 .service-item__icon {
@@ -52,14 +52,14 @@
   justify-content: center;
   width: 40px;
   height: 40px;
-  background: rgba(72, 118, 225, 0.08);
+  background: rgba(79, 109, 245, 0.08);
   color: var(--color-copper-glow);
   border-radius: var(--radius-sm);
   margin-bottom: 1.25rem;
 }
 
 .service-item--custom .service-item__icon {
-  background: rgba(72, 118, 225, 0.1);
+  background: rgba(79, 109, 245, 0.1);
   color: var(--accent-color);
 }
 

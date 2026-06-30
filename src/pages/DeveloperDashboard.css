@@ -198,7 +198,7 @@
 
 .dev-app__tab--active {
   color: var(--color-copper-glow);
-  background: rgba(72, 118, 225, 0.1);
+  background: rgba(79, 109, 245, 0.1);
 }
 
 .dev-app__badge {
@@ -292,8 +292,8 @@
 }
 
 .dev-task-card__status--assigned {
-  color: #98D1E2;
-  background: rgba(72, 118, 225, 0.15);
+  color: #4338ca;
+  background: rgba(79, 109, 245, 0.1);
 }
 
 .dev-task-card__status--in_progress {
@@ -425,6 +425,11 @@
 
 .dev-app__screen--profile .profile-card {
   margin-bottom: 0;
+  box-shadow: var(--shadow-md);
+}
+
+.dev-app__screen--profile .profile-stats {
+  box-shadow: var(--shadow-md);
 }
 
 .dev-app__screen--profile .profile-card__header {
