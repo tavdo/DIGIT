@@ -67,10 +67,23 @@
 }
 
 .my-request__price,
-.my-request__developer,
-.my-request__rated {
+.my-request__developer {
   font-size: 0.875rem;
   margin: 0 0 0.5rem;
+}
+
+.my-request__developer a {
+  color: var(--color-copper-glow);
+}
+
+.my-request__developer a:hover {
+  text-decoration: underline;
+}
+
+.my-request__rated {
+  font-size: 0.875rem;
+  margin: 0.5rem 0 0;
+  color: var(--color-copper-glow);
 }
 
 .my-request__actions {

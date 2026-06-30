@@ -120,7 +120,14 @@ function RequestCard({ order, onError }) {
 
       {order.assignedDeveloperName && (
         <p className="my-request__developer">
-          შემსრულებელი: <strong>{order.assignedDeveloperName}</strong>
+          შემსრულებელი:{' '}
+          {order.assignedDeveloperId ? (
+            <Link to={`/specialists/${order.assignedDeveloperId}`}>
+              <strong>{order.assignedDeveloperName}</strong>
+            </Link>
+          ) : (
+            <strong>{order.assignedDeveloperName}</strong>
+          )}
         </p>
       )}
 

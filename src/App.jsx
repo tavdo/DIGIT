@@ -11,6 +11,8 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import DeveloperDashboard from './pages/DeveloperDashboard'
+import SpecialistProfile from './pages/SpecialistProfile'
+import Specialists from './pages/Specialists'
 import Profile from './pages/Profile'
 import Admin from './pages/Admin'
 
@@ -35,6 +37,22 @@ function App() {
             element={
               <RoleProtectedRoute allowedRoles={['customer']}>
                 <MyRequests />
+              </RoleProtectedRoute>
+            }
+          />
+          <Route
+            path="specialists"
+            element={
+              <RoleProtectedRoute allowedRoles={['customer', 'manager', 'admin']}>
+                <Specialists />
+              </RoleProtectedRoute>
+            }
+          />
+          <Route
+            path="specialists/:developerId"
+            element={
+              <RoleProtectedRoute allowedRoles={['customer', 'manager', 'admin']}>
+                <SpecialistProfile />
               </RoleProtectedRoute>
             }
           />

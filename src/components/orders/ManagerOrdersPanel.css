@@ -438,6 +438,38 @@
   border-color: rgba(79, 109, 245, 0.28);
 }
 
+.orders-detail__dev-list {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.orders-detail__dev-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+}
+
+.orders-detail__dev-link {
+  color: var(--color-copper-glow);
+  font-weight: 600;
+}
+
+.orders-detail__dev-link:hover {
+  text-decoration: underline;
+}
+
+.orders-detail__dev-rating {
+  font-size: 0.72rem;
+  color: var(--dash-muted);
+  flex-shrink: 0;
+}
+
 .orders-panel .btn--outline {
   background-color: var(--dash-surface-raised);
   border-color: var(--dash-border-strong);

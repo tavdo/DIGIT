@@ -164,6 +164,9 @@ service cloud.firestore {
         || (isStaff()
           && resource.data.keys().hasAll(['role'])
           && resource.data.role in ['manager', 'developer', 'admin'])
+        || (resource.data.role == 'developer'
+          && hasUserProfile()
+          && userDoc().data.role in ['customer', 'manager', 'admin'])
       );
 
       allow list: if isAdmin();
@@ -176,6 +179,11 @@ service cloud.firestore {
         && resource.data.keys().hasAll(['role'])
         && (resource.data.role == 'developer' || resource.data.role == 'manager');
 
+      allow list: if hasUserProfile()
+        && userDoc().data.role in ['customer', 'manager', 'admin']
+        && resource.data.keys().hasAll(['role'])
+        && resource.data.role == 'developer';
+
       allow create: if request.auth != null
         && request.auth.uid == userId
         && (validUserCreate() || isBootstrapAdminCreate(userId) || isBootstrapManagerCreate(userId));
@@ -186,6 +194,21 @@ service cloud.firestore {
         || validBootstrapAdminSelfUpgrade(userId)
         || validAdminUserRoleUpdate(userId)
       );
+
+      match /reviews/{reviewId} {
+        allow read: if request.auth != null
+          && hasUserProfile()
+          && userDoc().data.role in ['customer', 'manager', 'admin'];
+
+        allow create: if isCustomer()
+          && exists(/databases/$(database)/documents/orders/$(reviewId))
+          && get(/databases/$(database)/documents/orders/$(reviewId)).data.customerId == request.auth.uid
+          && get(/databases/$(database)/documents/orders/$(reviewId)).data.assignedDeveloperId == userId
+          && get(/databases/$(database)/documents/orders/$(reviewId)).data.status == 'completed'
+          && request.resource.data.rating is number
+          && request.resource.data.rating >= 1
+          && request.resource.data.rating <= 5;
+      }
     }
 
     match /siteContent/{docId} {

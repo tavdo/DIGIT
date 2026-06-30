@@ -15,6 +15,7 @@ import {
 } from 'firebase/firestore'
 import { db } from '../firebase'
 import { uploadOrderAttachments } from './attachmentService'
+import { saveDeveloperReview } from './developerReviewService'
 
 export const ORDER_STATUS = {
   NEW: 'new',
@@ -457,6 +458,13 @@ export async function submitOrderRating(orderId, developerId, { rating, review }
   })
 
   if (developerId) {
+    await saveDeveloperReview(developerId, orderId, {
+      rating: value,
+      review: review?.trim() || '',
+      customerName: order.customerName,
+      serviceType: order.serviceType,
+    })
+
     const devRef = doc(firestore, 'users', developerId)
     const devSnap = await getDoc(devRef)
     if (devSnap.exists()) {

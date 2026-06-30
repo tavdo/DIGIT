@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Home, LogOut, ShieldCheck, User } from 'lucide-react'
+import { Home, LogOut, ShieldCheck, User, Users } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { isAdminRole } from '../utils/roles'
 import ManagerOrdersPanel from '../components/orders/ManagerOrdersPanel'
@@ -32,6 +32,10 @@ function Dashboard() {
               ადმინი
             </Link>
           )}
+          <Link to="/specialists" className="dashboard-header__link">
+            <Users size={18} />
+            შემსრულებლები
+          </Link>
           <Link to="/profile" className="dashboard-header__link">
             <User size={18} />
             პროფილი

@@ -27,6 +27,7 @@ function getNavLinks(role, isAuthenticated) {
     return [
       { to: '/admin', label: 'ადმინ პანელი', end: true },
       { to: '/dashboard', label: 'თიქეტები' },
+      { to: '/specialists', label: 'შემსრულებლები' },
       { to: '/profile', label: 'პროფილი' },
     ]
   }
@@ -35,6 +36,7 @@ function getNavLinks(role, isAuthenticated) {
     return [
       { to: '/', label: 'მთავარი', end: true },
       { to: '/dashboard', label: 'თიქეტები' },
+      { to: '/specialists', label: 'შემსრულებლები' },
       { to: '/profile', label: 'პროფილი' },
     ]
   }
@@ -45,6 +47,7 @@ function getNavLinks(role, isAuthenticated) {
       { to: '/services', label: 'სერვისები' },
       { to: '/contact', label: 'ახალი მოთხოვნა' },
       { to: '/my-requests', label: 'ჩემი მოთხოვნები' },
+      { to: '/specialists', label: 'შემსრულებლები' },
       { to: '/profile', label: 'პროფილი' },
     ]
   }

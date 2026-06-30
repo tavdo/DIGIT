@@ -1,0 +1,41 @@
+.specialists-page {
+  padding: 2rem 0 4rem;
+}
+
+.specialists-page__header {
+  margin-bottom: 2rem;
+}
+
+.specialists-page__inner {
+  max-width: 720px;
+}
+
+.specialists-page__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.specialists-page__back:hover {
+  color: var(--primary-color);
+}
+
+.specialists-page__error {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  color: var(--color-error);
+  background: var(--color-error-bg);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  border-radius: var(--radius-md);
+}
+
+.specialists-page__empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-muted);
+}

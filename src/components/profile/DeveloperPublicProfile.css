@@ -1,0 +1,189 @@
+.dev-public {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.dev-public__header {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  padding: 1.25rem;
+  background: var(--bg-color);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+}
+
+.dev-public__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  background: rgba(72, 118, 225, 0.15);
+  color: var(--color-copper-glow);
+  flex-shrink: 0;
+}
+
+.dev-public__identity h1 {
+  font-size: 1.35rem;
+  margin-bottom: 0.35rem;
+}
+
+.dev-public__rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-copper-glow);
+  margin-bottom: 0.25rem;
+}
+
+.dev-public__meta {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.dev-public__section {
+  padding: 1.25rem;
+  background: var(--bg-color);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+}
+
+.dev-public__section h2 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #e4e4e7;
+  margin-bottom: 0.875rem;
+}
+
+.dev-public__reviews {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  list-style: none;
+}
+
+.dev-public__review {
+  padding: 0.875rem 1rem;
+  background: #1a1a1e;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+}
+
+.dev-public__review-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.dev-public__review-stars {
+  font-size: 0.95rem;
+  letter-spacing: 0.05em;
+  color: #fbbf24;
+}
+
+.dev-public__review-date {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.dev-public__review-text {
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: #d4d4d8;
+  margin-bottom: 0.5rem;
+}
+
+.dev-public__review-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.dev-public__reviews-empty {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* ── Specialists list cards ── */
+.specialists-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.specialist-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 1.125rem;
+  background: var(--bg-color);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  transition: border-color var(--transition), transform var(--transition);
+}
+
+.specialist-card:hover {
+  border-color: rgba(72, 118, 225, 0.35);
+  transform: translateY(-2px);
+}
+
+.specialist-card__top {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.specialist-card__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: rgba(72, 118, 225, 0.12);
+  color: var(--color-copper-glow);
+  flex-shrink: 0;
+}
+
+.specialist-card__name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.specialist-card__rating {
+  font-size: 0.8rem;
+  color: var(--color-copper-glow);
+  font-weight: 600;
+}
+
+.specialist-card__bio {
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.specialist-card__link {
+  margin-top: auto;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-copper-glow);
+}
+
+.specialist-card__categories {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}

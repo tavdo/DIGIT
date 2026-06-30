@@ -41,6 +41,7 @@ export const ROLE_DEFAULT_ROUTES = {
 const ROUTE_ALLOWED_ROLES = {
   '/contact': ['customer'],
   '/my-requests': ['customer'],
+  '/specialists': ['customer', 'manager', 'admin'],
   '/profile': ['customer', 'manager', 'developer', 'admin'],
   '/dashboard': ['manager', 'admin'],
   '/developer-dashboard': ['developer'],
@@ -61,6 +62,11 @@ export function getDefaultRouteForRole(role) {
 export function isPathAllowedForRole(pathname, role) {
   const resolvedRole = role ?? 'customer'
   const normalized = pathname.replace(/\/$/, '') || '/'
+
+  if (normalized.startsWith('/specialists/')) {
+    return ['customer', 'manager', 'admin'].includes(resolvedRole)
+  }
+
   const allowedRoles = ROUTE_ALLOWED_ROLES[normalized]
 
   if (!allowedRoles) return true

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   Banknote,
   RefreshCw,
@@ -281,7 +282,17 @@ function OrderDetail({ orderId, managerName, onError, onMissing }) {
         <p className="orders-detail__meta">
           შექმნილია: {formatOrderDate(order.createdAt)}
           {order.assignedDeveloperName && (
-            <> · შემსრულებელი: {order.assignedDeveloperName}</>
+            <>
+              {' '}
+              · შემსრულებელი:{' '}
+              {order.assignedDeveloperId ? (
+                <Link to={`/specialists/${order.assignedDeveloperId}`} className="orders-detail__dev-link">
+                  {order.assignedDeveloperName}
+                </Link>
+              ) : (
+                order.assignedDeveloperName
+              )}
+            </>
           )}
         </p>
       </section>
@@ -411,6 +422,16 @@ function OrderDetail({ orderId, managerName, onError, onMissing }) {
             მინიჭება
           </button>
         </div>
+        <ul className="orders-detail__dev-list">
+          {developers.map((dev) => (
+            <li key={dev.id}>
+              <Link to={`/specialists/${dev.id}`} className="orders-detail__dev-link">
+                {dev.name || dev.email}
+              </Link>
+              <span className="orders-detail__dev-rating">{formatDeveloperRating(dev)}</span>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section className="orders-detail__section">
