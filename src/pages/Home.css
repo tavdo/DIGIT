@@ -74,7 +74,7 @@
 }
 
 .hero__title-main {
-  color: #4274D9;
+  color: var(--color-heading-accent);
 }
 
 .hero__title-accent {
