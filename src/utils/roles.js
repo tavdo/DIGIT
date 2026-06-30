@@ -41,6 +41,7 @@ export const ROLE_DEFAULT_ROUTES = {
 const ROUTE_ALLOWED_ROLES = {
   '/contact': ['customer'],
   '/my-requests': ['customer'],
+  '/profile': ['customer', 'manager', 'developer', 'admin'],
   '/dashboard': ['manager', 'admin'],
   '/developer-dashboard': ['developer'],
   '/admin': ['admin'],

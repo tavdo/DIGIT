@@ -6,6 +6,7 @@ import {
   Loader2,
   LogOut,
   ShieldCheck,
+  User,
   UserCog,
   Users,
 } from 'lucide-react'
@@ -157,6 +158,10 @@ function SuperAdminPanel() {
           <p className="admin-page__subtitle">მომხმარებლები · საიტი · შემსრულებლები</p>
         </div>
         <div className="admin-panel__actions">
+          <Link to="/profile" className="btn btn--outline btn--sm">
+            <User size={16} />
+            პროფილი
+          </Link>
           <Link to="/dashboard" className="btn btn--outline btn--sm">
             <LayoutDashboard size={16} />
             თიქეტები

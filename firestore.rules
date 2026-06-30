@@ -67,12 +67,26 @@ service cloud.firestore {
         );
     }
 
-    function validDeveloperProfileUpdate(targetUserId) {
+    function validUserProfileSelfUpdate(targetUserId) {
       return request.auth.uid == targetUserId
-        && userDoc().data.role == 'developer'
-        && request.resource.data.role == 'developer'
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.email == resource.data.email
         && request.resource.data.developerRequestStatus == resource.data.developerRequestStatus
-        && request.resource.data.email == resource.data.email;
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 1
+        && request.resource.data.name.size() <= 100
+        && request.resource.data.companyName is string
+        && request.resource.data.companyName.size() <= 120
+        && request.resource.data.phone is string
+        && request.resource.data.phone.size() <= 30
+        && (
+          resource.data.role != 'developer'
+          || (
+            request.resource.data.bio is string
+            && request.resource.data.experienceCategories is list
+            && request.resource.data.experienceYears is string
+          )
+        );
     }
 
     function validBootstrapAdminSelfUpgrade(userId) {
@@ -168,7 +182,7 @@ service cloud.firestore {
 
       allow update: if request.auth != null && (
         (request.auth.uid == userId && validUserSelfUpdate())
-        || (request.auth.uid == userId && validDeveloperProfileUpdate(userId))
+        || (request.auth.uid == userId && validUserProfileSelfUpdate(userId))
         || validBootstrapAdminSelfUpgrade(userId)
         || validAdminUserRoleUpdate(userId)
       );

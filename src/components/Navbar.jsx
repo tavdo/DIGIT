@@ -19,6 +19,7 @@ function getNavLinks(role, isAuthenticated) {
   if (role === 'developer') {
     return [
       { to: '/developer-dashboard', label: 'ჩემი ტასკები', end: true },
+      { to: '/profile', label: 'პროფილი' },
     ]
   }
 
@@ -26,6 +27,7 @@ function getNavLinks(role, isAuthenticated) {
     return [
       { to: '/admin', label: 'ადმინ პანელი', end: true },
       { to: '/dashboard', label: 'თიქეტები' },
+      { to: '/profile', label: 'პროფილი' },
     ]
   }
 
@@ -33,6 +35,7 @@ function getNavLinks(role, isAuthenticated) {
     return [
       { to: '/', label: 'მთავარი', end: true },
       { to: '/dashboard', label: 'თიქეტები' },
+      { to: '/profile', label: 'პროფილი' },
     ]
   }
 
@@ -42,6 +45,7 @@ function getNavLinks(role, isAuthenticated) {
       { to: '/services', label: 'სერვისები' },
       { to: '/contact', label: 'ახალი მოთხოვნა' },
       { to: '/my-requests', label: 'ჩემი მოთხოვნები' },
+      { to: '/profile', label: 'პროფილი' },
     ]
   }
 

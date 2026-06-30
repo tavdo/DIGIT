@@ -33,6 +33,8 @@ async function ensureGoogleUserDocument(user) {
       email: user.email,
       role: profile.role,
       developerRequestStatus: profile.developerRequestStatus,
+      companyName: '',
+      phone: '',
     })
   }
 }
@@ -84,6 +86,8 @@ export function AuthProvider({ children }) {
       email: credential.user.email,
       role: profile.role,
       developerRequestStatus: profile.developerRequestStatus,
+      companyName: '',
+      phone: '',
     }
 
     if (profile.pendingDeveloper) {

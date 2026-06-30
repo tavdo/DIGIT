@@ -11,6 +11,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import DeveloperDashboard from './pages/DeveloperDashboard'
+import Profile from './pages/Profile'
 import Admin from './pages/Admin'
 
 function App() {
@@ -39,6 +40,14 @@ function App() {
           />
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
+          <Route
+            path="profile"
+            element={
+              <RoleProtectedRoute allowedRoles={['customer', 'manager', 'developer', 'admin']}>
+                <Profile />
+              </RoleProtectedRoute>
+            }
+          />
         </Route>
 
         <Route path="/admin" element={<Admin />} />

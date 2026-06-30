@@ -6,19 +6,12 @@ import {
   History,
   Loader2,
   LogOut,
-  Pencil,
   Play,
-  Save,
   User,
 } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import {
-  formatExperienceCategories,
-  formatExperienceYears,
-  validateDeveloperCv,
-} from '../utils/developerProfile'
-import {
-  formatDeveloperRating,
   formatOrderAmount,
   formatOrderDate,
   ORDER_PRIORITY_LABELS,
@@ -29,8 +22,9 @@ import {
   subscribeToOrder,
   updateDeveloperOrderStatus,
 } from '../services/orderService'
-import { updateDeveloperProfile } from '../services/userService'
-import DeveloperCvFields from '../components/DeveloperCvFields'
+import UserProfileEditor from '../components/profile/UserProfileEditor'
+import UserStatsGrid from '../components/profile/UserStatsGrid'
+import useUserOrderStats from '../hooks/useUserOrderStats'
 import DigitMark from '../components/DigitMark'
 import OrderAttachments from '../components/OrderAttachments'
 import usePageMeta from '../hooks/usePageMeta'
@@ -188,101 +182,22 @@ function TaskDetailScreen({ orderId, onBack, onError, readOnly = false }) {
 }
 
 function ProfileScreen({ user, userProfile, onError }) {
-  const [editing, setEditing] = useState(false)
-  const [bio, setBio] = useState(userProfile?.bio || '')
-  const [experienceCategories, setExperienceCategories] = useState(
-    userProfile?.experienceCategories || [],
-  )
-  const [experienceYears, setExperienceYears] = useState(userProfile?.experienceYears || '')
-  const [fieldErrors, setFieldErrors] = useState({})
-  const [saving, setSaving] = useState(false)
-
-  const handleSave = async (e) => {
-    e.preventDefault()
-    const errors = validateDeveloperCv({ bio, experienceCategories, experienceYears })
-    setFieldErrors(errors)
-    if (Object.keys(errors).length > 0) return
-
-    setSaving(true)
-    try {
-      await updateDeveloperProfile(user.uid, {
-        bio: bio.trim(),
-        experienceCategories,
-        experienceYears,
-      })
-      setEditing(false)
-    } catch (err) {
-      onError(err.message || 'პროფილის შენახვა ვერ მოხერხდა.')
-    } finally {
-      setSaving(false)
-    }
-  }
+  const { stats, loading } = useUserOrderStats(user, userProfile)
 
   return (
     <div className="dev-app__screen dev-app__screen--profile">
-      <div className="dev-profile-card">
-        <div className="dev-profile-card__avatar">
-          <User size={32} />
-        </div>
-        <h2>{userProfile?.name || 'შემსრულებელი'}</h2>
-        <p className="dev-profile-card__email">{userProfile?.email || user?.email}</p>
-        <p className="dev-profile-card__rating">{formatDeveloperRating(userProfile)}</p>
+      <UserProfileEditor onError={onError} />
+      <div className="dev-profile-stats-wrap">
+        <UserStatsGrid
+          role="developer"
+          stats={stats}
+          userProfile={userProfile}
+          loading={loading}
+        />
       </div>
-
-      {!editing ? (
-        <div className="dev-profile-view">
-          <section className="dev-profile-view__section">
-            <div className="dev-profile-view__head">
-              <h3>ჩემს შესახებ</h3>
-              <button
-                type="button"
-                className="dev-profile-view__edit"
-                onClick={() => setEditing(true)}
-              >
-                <Pencil size={14} />
-                რედაქტირება
-              </button>
-            </div>
-            <p>{userProfile?.bio || 'აღწერა ჯერ არ არის შევსებული.'}</p>
-          </section>
-          <section className="dev-profile-view__section">
-            <h3>გამოცდილება</h3>
-            <p>{formatExperienceYears(userProfile?.experienceYears)}</p>
-          </section>
-          <section className="dev-profile-view__section">
-            <h3>კატეგორიები</h3>
-            <p>{formatExperienceCategories(userProfile?.experienceCategories)}</p>
-          </section>
-        </div>
-      ) : (
-        <form className="dev-profile-edit" onSubmit={handleSave}>
-          <DeveloperCvFields
-            idPrefix="dev-profile"
-            bio={bio}
-            onBioChange={setBio}
-            experienceCategories={experienceCategories}
-            onExperienceCategoriesChange={setExperienceCategories}
-            experienceYears={experienceYears}
-            onExperienceYearsChange={setExperienceYears}
-            fieldErrors={fieldErrors}
-            disabled={saving}
-          />
-          <div className="dev-profile-edit__actions">
-            <button
-              type="button"
-              className="btn btn--outline"
-              onClick={() => setEditing(false)}
-              disabled={saving}
-            >
-              გაუქმება
-            </button>
-            <button type="submit" className="btn btn--primary" disabled={saving}>
-              {saving ? <Loader2 size={16} className="dev-app__spin" /> : <Save size={16} />}
-              შენახვა
-            </button>
-          </div>
-        </form>
-      )}
+      <Link to="/profile" className="dev-profile-full-link">
+        სრული პროფილი გვერდზე
+      </Link>
     </div>
   )
 }
