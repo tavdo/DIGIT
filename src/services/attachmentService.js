@@ -47,7 +47,7 @@ export async function uploadOrderAttachments(orderId, customerId, files) {
         uploadedBy: customerId,
       })
     } catch (err) {
-      throw new Error(getStorageErrorMessage(err))
+      throw new Error(getStorageErrorMessage(err), { cause: err })
     }
   }
 

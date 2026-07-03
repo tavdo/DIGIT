@@ -5,7 +5,6 @@
   --color-royal: #4f6df5;
   --color-sky: #93a8f8;
   --color-ice: #f7f8fc;
-  --color-heading-accent: #4274D9;
 
   --color-ink: #0b1120;
   --color-slate: #151d32;
@@ -204,16 +203,6 @@ textarea:focus-visible {
 
 .page-hero .page__title {
   color: var(--text-inverse);
-}
-
-.page-hero__title {
-  color: var(--color-heading-accent);
-}
-
-.page-hero__text {
-  color: var(--text-on-dark-muted);
-  max-width: 36rem;
-  line-height: 1.7;
 }
 
 .page-hero .page__subtitle {

@@ -1,55 +1,70 @@
-import { useEffect, useState } from 'react'
-import { Loader2, Pencil, Save, User } from 'lucide-react'
+import { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { updateUserProfile } from '../../services/userService'
-import { ROLE_LABELS } from '../../utils/roles'
+import { resolveUserRole, ROLE_LABELS } from '../../utils/roles'
 import {
   formatExperienceCategories,
   formatExperienceYears,
   validateDeveloperCv,
 } from '../../utils/developerProfile'
-import { formatProfileMemberSince } from '../../utils/userStats'
 import DeveloperCvFields from '../DeveloperCvFields'
+import { User, Edit2, Save, X, Loader2 } from 'lucide-react'
 
 export default function UserProfileEditor({ onError, onSaved }) {
   const { user, userProfile, refreshUserProfile } = useAuth()
-  const role = userProfile?.role ?? 'customer'
+  const role = resolveUserRole(userProfile)
 
-  const [editing, setEditing] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [name, setName] = useState('')
-  const [companyName, setCompanyName] = useState('')
-  const [phone, setPhone] = useState('')
-  const [bio, setBio] = useState('')
-  const [experienceCategories, setExperienceCategories] = useState([])
-  const [experienceYears, setExperienceYears] = useState('')
+  const [isEditing, setIsEditing] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const [fieldErrors, setFieldErrors] = useState({})
 
-  useEffect(() => {
+  // Form states
+  const [name, setName] = useState(userProfile?.name || '')
+  const [companyName, setCompanyName] = useState(userProfile?.companyName || '')
+  const [phone, setPhone] = useState(userProfile?.phone || '')
+
+  // Developer specific form states
+  const [bio, setBio] = useState(userProfile?.bio || '')
+  const [experienceCategories, setExperienceCategories] = useState(
+    userProfile?.experienceCategories || []
+  )
+  const [experienceYears, setExperienceYears] = useState(userProfile?.experienceYears || '')
+
+  const handleEditStart = () => {
     setName(userProfile?.name || '')
     setCompanyName(userProfile?.companyName || '')
     setPhone(userProfile?.phone || '')
     setBio(userProfile?.bio || '')
     setExperienceCategories(userProfile?.experienceCategories || [])
     setExperienceYears(userProfile?.experienceYears || '')
-  }, [userProfile])
+    setFieldErrors({})
+    setIsEditing(true)
+  }
 
-  const handleSave = async (e) => {
-    e.preventDefault()
+  const validateForm = () => {
     const errors = {}
-
     if (!name.trim()) {
-      errors.name = 'სახელი სავალდებულოა.'
+      errors.name = 'სახელის შევსება სავალდებულოა'
     }
 
     if (role === 'developer') {
-      Object.assign(errors, validateDeveloperCv({ bio, experienceCategories, experienceYears }))
+      const devErrors = validateDeveloperCv({
+        bio,
+        experienceCategories,
+        experienceYears,
+      })
+      Object.assign(errors, devErrors)
     }
 
     setFieldErrors(errors)
-    if (Object.keys(errors).length > 0) return
+    return Object.keys(errors).length === 0
+  }
 
-    setSaving(true)
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!validateForm()) return
+
+    setSubmitting(true)
     try {
       await updateUserProfile(user.uid, role, {
         name,
@@ -60,112 +75,110 @@ export default function UserProfileEditor({ onError, onSaved }) {
         experienceYears,
       })
       await refreshUserProfile()
-      setEditing(false)
+      setIsEditing(false)
       onSaved?.()
     } catch (err) {
-      onError?.(err.message || 'პროფილის შენახვა ვერ მოხერხდა.')
+      onError?.(err.message || 'პროფილის განახლება ვერ მოხერხდა')
     } finally {
-      setSaving(false)
+      setSubmitting(false)
     }
   }
 
+  if (!userProfile) return null
+
   return (
-    <section className="profile-card">
+    <div className="profile-card">
       <div className="profile-card__header">
         <div className="profile-card__avatar">
-          <User size={28} />
+          <User size={32} />
         </div>
         <div className="profile-card__identity">
-          <h1>{userProfile?.name || 'პროფილი'}</h1>
-          <p>{userProfile?.email || user?.email}</p>
+          <h1>{userProfile.name || 'მომხმარებელი'}</h1>
+          <p>{userProfile.email}</p>
           <span className={`profile-role-badge profile-role-badge--${role}`}>
-            {ROLE_LABELS[role] || role}
+            {ROLE_LABELS[role]}
           </span>
         </div>
-        {!editing && (
-          <button type="button" className="btn btn--outline btn--sm" onClick={() => setEditing(true)}>
-            <Pencil size={14} />
+        {!isEditing && (
+          <button
+            type="button"
+            className="btn btn--outline btn--sm"
+            onClick={handleEditStart}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}
+          >
+            <Edit2 size={14} />
             რედაქტირება
           </button>
         )}
       </div>
 
-      <dl className="profile-meta">
-        <div>
-          <dt>წევრი</dt>
-          <dd>{formatProfileMemberSince(userProfile?.createdAt)}</dd>
-        </div>
-        {userProfile?.companyName && !editing && (
-          <div>
-            <dt>კომპანია</dt>
-            <dd>{userProfile.companyName}</dd>
-          </div>
-        )}
-        {userProfile?.phone && !editing && (
-          <div>
-            <dt>ტელეფონი</dt>
-            <dd>{userProfile.phone}</dd>
-          </div>
-        )}
-      </dl>
-
-      {!editing ? (
+      {!isEditing ? (
         <div className="profile-view">
-          {role === 'developer' && (
-            <>
-              <div className="profile-view__block">
-                <h3>ჩემს შესახებ</h3>
-                <p>{userProfile?.bio || 'აღწერა ჯერ არ არის შევსებული.'}</p>
-              </div>
-              <div className="profile-view__block">
-                <h3>გამოცდილება</h3>
-                <p>{formatExperienceYears(userProfile?.experienceYears)}</p>
-                <p>{formatExperienceCategories(userProfile?.experienceCategories)}</p>
-              </div>
-            </>
+          <dl className="profile-meta">
+            <div>
+              <dt>ტელეფონი</dt>
+              <dd>{userProfile.phone || '—'}</dd>
+            </div>
+            <div>
+              <dt>კომპანია</dt>
+              <dd>{userProfile.companyName || '—'}</dd>
+            </div>
+            {role === 'developer' && (
+              <>
+                <div>
+                  <dt>გამოცდილება</dt>
+                  <dd>{formatExperienceYears(userProfile.experienceYears)}</dd>
+                </div>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <dt>გამოცდილების კატეგორიები</dt>
+                  <dd>{formatExperienceCategories(userProfile.experienceCategories)}</dd>
+                </div>
+              </>
+            )}
+          </dl>
+
+          {role === 'developer' && userProfile.bio && (
+            <div className="profile-view__block">
+              <h3>ჩემს შესახებ</h3>
+              <p>{userProfile.bio}</p>
+            </div>
           )}
         </div>
       ) : (
-        <form className="profile-form" onSubmit={handleSave}>
-          <label className="profile-form__field">
+        <form onSubmit={handleSubmit} className="profile-form">
+          <div className="profile-form__field">
             <span>სახელი</span>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              disabled={saving}
-              maxLength={100}
+              disabled={submitting}
             />
             {fieldErrors.name && <em>{fieldErrors.name}</em>}
-          </label>
+          </div>
 
-          <label className="profile-form__field">
-            <span>კომპანია / ორგანიზაცია</span>
+          <div className="profile-form__field">
+            <span>ტელეფონი</span>
+            <input
+              type="text"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              disabled={submitting}
+            />
+          </div>
+
+          <div className="profile-form__field">
+            <span>კომპანია</span>
             <input
               type="text"
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
-              disabled={saving}
-              maxLength={120}
-              placeholder="არასავალდებულო"
+              disabled={submitting}
             />
-          </label>
-
-          <label className="profile-form__field">
-            <span>ტელეფონი</span>
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              disabled={saving}
-              maxLength={30}
-              placeholder="არასავალდებულო"
-            />
-          </label>
+          </div>
 
           {role === 'developer' && (
             <DeveloperCvFields
-              idPrefix="profile"
               bio={bio}
               onBioChange={setBio}
               experienceCategories={experienceCategories}
@@ -173,26 +186,38 @@ export default function UserProfileEditor({ onError, onSaved }) {
               experienceYears={experienceYears}
               onExperienceYearsChange={setExperienceYears}
               fieldErrors={fieldErrors}
-              disabled={saving}
+              disabled={submitting}
+              idPrefix="edit-profile"
             />
           )}
 
           <div className="profile-form__actions">
             <button
               type="button"
-              className="btn btn--outline"
-              onClick={() => setEditing(false)}
-              disabled={saving}
+              className="btn btn--outline btn--sm"
+              disabled={submitting}
+              onClick={() => setIsEditing(false)}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}
             >
+              <X size={14} />
               გაუქმება
             </button>
-            <button type="submit" className="btn btn--primary" disabled={saving}>
-              {saving ? <Loader2 size={16} className="profile-form__spin" /> : <Save size={16} />}
-              შენახვა
+            <button
+              type="submit"
+              className="btn btn--accent btn--sm"
+              disabled={submitting}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+            >
+              {submitting ? (
+                <Loader2 className="profile-form__spin" size={14} />
+              ) : (
+                <Save size={14} />
+              )}
+              {submitting ? 'ინახება...' : 'შენახვა'}
             </button>
           </div>
         </form>
       )}
-    </section>
+    </div>
   )
 }

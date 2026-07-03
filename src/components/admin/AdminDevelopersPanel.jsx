@@ -1,106 +1,144 @@
 import { useEffect, useState } from 'react'
-import { CheckCircle2, XCircle } from 'lucide-react'
-import DeveloperCvSummary from '../DeveloperCvSummary'
 import {
+  subscribeToPendingDeveloperRequests,
   approveDeveloperRequest,
   rejectDeveloperRequest,
-  subscribeToPendingDeveloperRequests,
 } from '../../services/superAdminService'
+import {
+  formatExperienceCategories,
+  formatExperienceYears,
+} from '../../utils/developerProfile'
+import { Check, X, Loader2 } from 'lucide-react'
 
-function AdminDevelopersPanel({ adminId, onError }) {
+export default function AdminDevelopersPanel({ adminId, onError }) {
   const [requests, setRequests] = useState([])
   const [loading, setLoading] = useState(true)
-  const [processingId, setProcessingId] = useState(null)
+  const [actioningId, setActioningId] = useState(null)
+
+  const [prevOnError, setPrevOnError] = useState(() => onError)
+  if (onError !== prevOnError) {
+    setPrevOnError(() => onError)
+    setLoading(true)
+  }
 
   useEffect(() => {
     const unsubscribe = subscribeToPendingDeveloperRequests(
-      (items) => {
-        setRequests(items)
+      (data) => {
+        setRequests(data)
         setLoading(false)
       },
       (err) => {
-        onError(err.message || 'მოთხოვნების ჩატვირთვა ვერ მოხერხდა.')
+        onError?.(err.message || 'მოთხოვნების ჩატვირთვა ვერ მოხერხდა')
         setLoading(false)
-      },
+      }
     )
 
-    return unsubscribe
+    return () => unsubscribe()
   }, [onError])
 
-  const handleApprove = async (requestId) => {
-    if (!adminId) return
-    setProcessingId(requestId)
+  const handleApprove = async (userId) => {
+    setActioningId(userId)
     try {
-      await approveDeveloperRequest(requestId, adminId)
+      await approveDeveloperRequest(userId, adminId)
     } catch (err) {
-      onError(err.message || 'დადასტურება ვერ მოხერხდა.')
+      onError?.(err.message || 'მოთხოვნის დადასტურება ვერ მოხერხდა')
     } finally {
-      setProcessingId(null)
+      setActioningId(null)
     }
   }
 
-  const handleReject = async (requestId) => {
-    if (!adminId) return
-    setProcessingId(requestId)
+  const handleReject = async (userId) => {
+    setActioningId(userId)
     try {
-      await rejectDeveloperRequest(requestId, adminId)
+      await rejectDeveloperRequest(userId, adminId)
     } catch (err) {
-      onError(err.message || 'უარყოფა ვერ მოხერხდა.')
+      onError?.(err.message || 'მოთხოვნის უარყოფა ვერ მოხერხდა')
     } finally {
-      setProcessingId(null)
+      setActioningId(null)
     }
   }
 
   if (loading) {
-    return <div className="admin-panel__empty">იტვირთება...</div>
-  }
-
-  if (requests.length === 0) {
-    return <div className="admin-panel__empty">ახალი შემსრულებლის მოთხოვნა არ არის.</div>
+    return (
+      <div className="admin-panel__empty">
+        <Loader2 className="animate-spin" style={{ margin: '0 auto' }} size={24} />
+        <p style={{ marginTop: '0.5rem' }}>იტვირთება მოთხოვნები...</p>
+      </div>
+    )
   }
 
   return (
     <div className="admin-section">
       <div className="admin-section__head">
         <div>
-          <h2>შემსრულებლის მოთხოვნები</h2>
-          <p>დაადასტურე ან უარყო ახალი შემსრულებლები.</p>
+          <h2>შემსრულებლების მოთხოვნები ({requests.length})</h2>
+          <p>განაცხადები შემსრულებლის როლის მისაღებად, რომლებიც ელოდებიან განხილვას</p>
         </div>
       </div>
 
-      <ul className="admin-requests">
-        {requests.map((request) => (
-          <li key={request.id} className="admin-request">
-            <div className="admin-request__info">
-              <strong>{request.name || 'უსახელო'}</strong>
-              <span>{request.email}</span>
-              <DeveloperCvSummary profile={request} />
-            </div>
-            <div className="admin-request__buttons">
-              <button
-                type="button"
-                className="btn btn--primary btn--sm"
-                disabled={processingId === request.id}
-                onClick={() => handleApprove(request.id)}
-              >
-                <CheckCircle2 size={16} />
-                დადასტურება
-              </button>
-              <button
-                type="button"
-                className="btn btn--outline btn--sm admin-request__reject"
-                disabled={processingId === request.id}
-                onClick={() => handleReject(request.id)}
-              >
-                <XCircle size={16} />
-                უარყოფა
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
+      {requests.length === 0 ? (
+        <div className="admin-panel__empty">
+          <p>აქტიური მოთხოვნები არ არის</p>
+        </div>
+      ) : (
+        <div className="admin-requests">
+          {requests.map((req) => {
+            const isBusy = actioningId === req.id
+            return (
+              <div key={req.id} className="admin-request">
+                <div className="admin-request__info">
+                  <strong>{req.displayName || req.name || 'სახელის გარეშე'}</strong>
+                  <span>ელ.ფოსტა: {req.email}</span>
+                  <div style={{ marginTop: '0.5rem', fontSize: '0.8125rem' }}>
+                    <p style={{ margin: '0.25rem 0' }}>
+                      <strong>გამოცდილება:</strong> {formatExperienceYears(req.experienceYears)}
+                    </p>
+                    <p style={{ margin: '0.25rem 0' }}>
+                      <strong>კატეგორიები:</strong> {formatExperienceCategories(req.experienceCategories)}
+                    </p>
+                    {req.bio && (
+                      <p style={{ margin: '0.5rem 0 0 0', color: 'var(--text-color)', fontStyle: 'italic' }}>
+                        &ldquo;{req.bio}&rdquo;
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="admin-request__buttons">
+                  <button
+                    type="button"
+                    className="btn btn--accent btn--sm"
+                    disabled={isBusy}
+                    onClick={() => handleApprove(req.id)}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                  >
+                    {isBusy ? (
+                      <Loader2 className="animate-spin" size={14} />
+                    ) : (
+                      <Check size={14} />
+                    )}
+                    დადასტურება
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn--outline btn--sm admin-request__reject"
+                    disabled={isBusy}
+                    onClick={() => handleReject(req.id)}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                  >
+                    {isBusy ? (
+                      <Loader2 className="animate-spin" size={14} />
+                    ) : (
+                      <X size={14} />
+                    )}
+                    უარყოფა
+                  </button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
-
-export default AdminDevelopersPanel

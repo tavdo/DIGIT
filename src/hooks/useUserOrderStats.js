@@ -13,21 +13,32 @@ import {
 } from '../utils/userStats'
 
 export default function useUserOrderStats(user, userProfile) {
-  const [orders, setOrders] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-
   const role = resolveUserRole(userProfile)
 
-  useEffect(() => {
-    if (!user?.uid) {
+  const [orders, setOrders] = useState([])
+  const [loading, setLoading] = useState(() => !!user?.uid && ['customer', 'developer', 'manager', 'admin'].includes(role))
+  const [error, setError] = useState('')
+
+  const [prevUserUid, setPrevUserUid] = useState(user?.uid)
+  const [prevRole, setPrevRole] = useState(role)
+
+  if (user?.uid !== prevUserUid || role !== prevRole) {
+    setPrevUserUid(user?.uid)
+    setPrevRole(role)
+    if (!user?.uid || !['customer', 'developer', 'manager', 'admin'].includes(role)) {
       setOrders([])
       setLoading(false)
+      setError('')
+    } else {
+      setLoading(true)
+      setError('')
+    }
+  }
+
+  useEffect(() => {
+    if (!user?.uid || !['customer', 'developer', 'manager', 'admin'].includes(role)) {
       return undefined
     }
-
-    setLoading(true)
-    setError('')
 
     const handleOrders = (list) => {
       setOrders(list)
@@ -51,7 +62,6 @@ export default function useUserOrderStats(user, userProfile) {
       return subscribeToOrders('all', handleOrders, handleError)
     }
 
-    setLoading(false)
     return undefined
   }, [user?.uid, role])
 

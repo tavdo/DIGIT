@@ -48,10 +48,17 @@ function SpecialistProfile() {
     }
   }, [developerId])
 
+  const [prevDeveloperId, setPrevDeveloperId] = useState(developerId)
+  const [prevIsStaffViewer, setPrevIsStaffViewer] = useState(isStaffViewer)
+
+  if (developerId !== prevDeveloperId || isStaffViewer !== prevIsStaffViewer) {
+    setPrevDeveloperId(developerId)
+    setPrevIsStaffViewer(isStaffViewer)
+    setReviewsLoading(true)
+  }
+
   useEffect(() => {
     if (!developerId) return undefined
-
-    setReviewsLoading(true)
 
     const subscribe = isStaffViewer
       ? subscribeToDeveloperReviewsFromOrders

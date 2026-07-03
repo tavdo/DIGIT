@@ -172,12 +172,24 @@ function MyRequests() {
 
   const { user, isFirebaseConfigured } = useAuth()
   const [orders, setOrders] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(() => !!(user?.uid && isFirebaseConfigured))
   const [error, setError] = useState('')
+
+  const [prevUserUid, setPrevUserUid] = useState(user?.uid)
+  const [prevFirebaseConfigured, setPrevFirebaseConfigured] = useState(isFirebaseConfigured)
+
+  if (user?.uid !== prevUserUid || isFirebaseConfigured !== prevFirebaseConfigured) {
+    setPrevUserUid(user?.uid)
+    setPrevFirebaseConfigured(isFirebaseConfigured)
+    if (!user?.uid || !isFirebaseConfigured) {
+      setLoading(false)
+    } else {
+      setLoading(true)
+    }
+  }
 
   useEffect(() => {
     if (!user?.uid || !isFirebaseConfigured) {
-      setLoading(false)
       return undefined
     }
 

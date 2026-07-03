@@ -1,77 +1,118 @@
-import { formatDeveloperRating, formatOrderAmount } from '../../services/orderService'
+import { Loader2 } from 'lucide-react'
+import { formatOrderAmount } from '../../services/orderService'
 
-function StatCard({ label, value, hint }) {
-  return (
-    <div className="profile-stat">
-      <span className="profile-stat__value">{value}</span>
-      <span className="profile-stat__label">{label}</span>
-      {hint && <span className="profile-stat__hint">{hint}</span>}
-    </div>
-  )
-}
-
-function CustomerStats({ stats }) {
-  return (
-    <>
-      <StatCard label="სულ მოთხოვნა" value={stats.total} />
-      <StatCard label="აქტიური" value={stats.active} />
-      <StatCard label="დასრულებული" value={stats.completed} />
-      <StatCard label="გადახდილი ჯამი" value={formatOrderAmount(stats.totalSpent)} />
-    </>
-  )
-}
-
-function DeveloperStats({ stats, userProfile }) {
-  return (
-    <>
-      <StatCard label="რეიტინგი" value={formatDeveloperRating(userProfile)} />
-      <StatCard label="აქტიური ტასკი" value={stats.activeCount} />
-      <StatCard label="დასრულებული" value={stats.completed} />
-      <StatCard label="ამ თვეში" value={stats.completedThisMonth} hint="დასრულებული" />
-      <StatCard label="მოლოდინში" value={formatOrderAmount(stats.pendingTotal)} hint="ანაზღაურება" />
-      <StatCard label="გადარიცხული" value={formatOrderAmount(stats.paidTotal)} />
-    </>
-  )
-}
-
-function ManagerStats({ stats }) {
-  return (
-    <>
-      <StatCard label="სულ თიქეტი" value={stats.totalOrders} />
-      <StatCard label="აქტიური" value={stats.activeOrders} />
-      <StatCard label="დასრულებული" value={stats.completedOrders} />
-      <StatCard label="შენიშვნები" value={stats.notesAdded} hint={`${stats.ordersWithNotes} თიქეტზე`} />
-    </>
-  )
-}
-
-function AdminStats({ stats }) {
-  return (
-    <>
-      <StatCard label="სულ თიქეტი" value={stats.totalOrders} />
-      <StatCard label="აქტიური" value={stats.activeOrders} />
-      <StatCard label="დასრულებული" value={stats.completedOrders} />
-      <StatCard label="შემოსავალი" value={formatOrderAmount(stats.revenue)} hint="გადახდილი" />
-    </>
-  )
-}
-
-export default function UserStatsGrid({ role, stats, userProfile, loading }) {
+export default function UserStatsGrid({ role, stats, loading }) {
   if (loading) {
-    return <div className="profile-stats profile-stats--loading">სტატისტიკა იტვირთება...</div>
+    return (
+      <div className="profile-stats profile-stats--loading" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+        <Loader2 className="animate-spin" size={18} />
+        იტვირთება სტატისტიკა...
+      </div>
+    )
   }
 
   if (!stats) return null
 
-  return (
-    <section className="profile-stats" aria-label="სტატისტიკა">
-      <h2 className="profile-section__title">სტატისტიკა</h2>
-      <div className="profile-stats__grid">
-        {role === 'customer' && <CustomerStats stats={stats} />}
-        {role === 'developer' && <DeveloperStats stats={stats} userProfile={userProfile} />}
-        {role === 'manager' && <ManagerStats stats={stats} />}
-        {role === 'admin' && <AdminStats stats={stats} />}
+  const renderCustomerStats = () => (
+    <div className="profile-stats__grid">
+      <div className="profile-stat">
+        <span className="profile-stat__value">{stats.total || 0}</span>
+        <span className="profile-stat__label">სულ შეკვეთა</span>
       </div>
-    </section>
+      <div className="profile-stat">
+        <span className="profile-stat__value">{stats.active || 0}</span>
+        <span className="profile-stat__label">აქტიური</span>
+      </div>
+      <div className="profile-stat">
+        <span className="profile-stat__value">{stats.completed || 0}</span>
+        <span className="profile-stat__label">დასრულებული</span>
+      </div>
+      <div className="profile-stat">
+        <span className="profile-stat__value">{formatOrderAmount(stats.totalSpent)}</span>
+        <span className="profile-stat__label">სულ გადახდილი</span>
+      </div>
+    </div>
+  )
+
+  const renderDeveloperStats = () => (
+    <div className="profile-stats__grid">
+      <div className="profile-stat">
+        <span className="profile-stat__value">{stats.activeCount || 0}</span>
+        <span className="profile-stat__label">აქტიური ტასკი</span>
+      </div>
+      <div className="profile-stat">
+        <span className="profile-stat__value">{stats.completed || 0}</span>
+        <span className="profile-stat__label">დასრულებული ტასკი</span>
+        {stats.completedThisMonth > 0 && (
+          <span className="profile-stat__hint">ამ თვეში: {stats.completedThisMonth}</span>
+        )}
+      </div>
+      <div className="profile-stat">
+        <span className="profile-stat__value">{formatOrderAmount(stats.pendingTotal)}</span>
+        <span className="profile-stat__label">მისაღები ჰონორარი</span>
+      </div>
+      <div className="profile-stat">
+        <span className="profile-stat__value">{formatOrderAmount(stats.paidTotal)}</span>
+        <span className="profile-stat__label">გადახდილი ჰონორარი</span>
+        {stats.paidThisMonth > 0 && (
+          <span className="profile-stat__hint">ამ თვეში: {formatOrderAmount(stats.paidThisMonth)}</span>
+        )}
+      </div>
+    </div>
+  )
+
+  const renderManagerStats = () => (
+    <div className="profile-stats__grid">
+      <div className="profile-stat">
+        <span className="profile-stat__value">{stats.totalOrders || 0}</span>
+        <span className="profile-stat__label">პლატფორმის შეკვეთები</span>
+      </div>
+      <div className="profile-stat">
+        <span className="profile-stat__value">{stats.activeOrders || 0}</span>
+        <span className="profile-stat__label">აქტიური შეკვეთები</span>
+      </div>
+      <div className="profile-stat">
+        <span className="profile-stat__value">{stats.completedOrders || 0}</span>
+        <span className="profile-stat__label">დასრულებული</span>
+      </div>
+      <div className="profile-stat">
+        <span className="profile-stat__value">{stats.ordersWithNotes || 0}</span>
+        <span className="profile-stat__label">შეკვეთები ჩემი შენიშვნით</span>
+        {stats.notesAdded > 0 && (
+          <span className="profile-stat__hint">სულ შენიშვნა: {stats.notesAdded}</span>
+        )}
+      </div>
+    </div>
+  )
+
+  const renderAdminStats = () => (
+    <div className="profile-stats__grid">
+      <div className="profile-stat">
+        <span className="profile-stat__value">{stats.totalOrders || 0}</span>
+        <span className="profile-stat__label">სულ შეკვეთა</span>
+      </div>
+      <div className="profile-stat">
+        <span className="profile-stat__value">{stats.activeOrders || 0}</span>
+        <span className="profile-stat__label">აქტიური</span>
+      </div>
+      <div className="profile-stat">
+        <span className="profile-stat__value">{stats.completedOrders || 0}</span>
+        <span className="profile-stat__label">დასრულებული</span>
+      </div>
+      <div className="profile-stat">
+        <span className="profile-stat__value">{formatOrderAmount(stats.revenue)}</span>
+        <span className="profile-stat__label">საერთო ბრუნვა</span>
+      </div>
+    </div>
+  )
+
+  return (
+    <div className="profile-stats">
+      <h2 className="profile-section__title" style={{ margin: '0 0 1rem 0' }}>პლატფორმის აქტივობა</h2>
+      {role === 'customer' && renderCustomerStats()}
+      {role === 'developer' && renderDeveloperStats()}
+      {role === 'manager' && renderManagerStats()}
+      {role === 'admin' && renderAdminStats()}
+    </div>
   )
 }

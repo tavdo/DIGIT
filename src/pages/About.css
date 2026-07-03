@@ -37,7 +37,7 @@
   line-height: 1.1;
   letter-spacing: -0.03em;
   margin-bottom: 1.5rem;
-  color: var(--color-heading-accent);
+  color: var(--primary-color);
 }
 
 .about-mission__text {

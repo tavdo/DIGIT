@@ -22,6 +22,7 @@ function TicketAttachmentPicker({ files, onChange, disabled = false, error = '' 
       kind: file.type.startsWith('video/') ? 'video' : 'image',
     }))
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPreviews(nextPreviews)
 
     return () => {

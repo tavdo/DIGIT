@@ -9,7 +9,6 @@ export default function useSiteContent() {
 
   useEffect(() => {
     if (!isFirebaseConfigured) {
-      setLoading(false)
       return undefined
     }
 

@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
 import {
-  MessageCircle,
   UserSearch,
   ShieldCheck,
   CheckCircle2,

@@ -1,80 +1,95 @@
-import { Star, User } from 'lucide-react'
-import DeveloperCvSummary from '../DeveloperCvSummary'
-import { formatDeveloperRating } from '../../services/orderService'
+import {
+  formatExperienceCategories,
+  formatExperienceYears,
+} from '../../utils/developerProfile'
 import {
   formatReviewDate,
   renderStarRating,
 } from '../../services/developerReviewService'
+import { User, Loader2 } from 'lucide-react'
 import './DeveloperPublicProfile.css'
 
-function DeveloperReviewList({ reviews, loading }) {
-  if (loading) {
-    return <p className="dev-public__reviews-empty">შეფასებები იტვირთება...</p>
-  }
-
-  if (reviews.length === 0) {
-    return (
-      <p className="dev-public__reviews-empty">
-        ჯერ არ არის შეფასებები. დასრულებული სამუშაოების შემდეგ ბიზნესები დატოვებენ რეიტინგს.
-      </p>
-    )
-  }
-
-  return (
-    <ul className="dev-public__reviews">
-      {reviews.map((review) => (
-        <li key={review.id} className="dev-public__review">
-          <div className="dev-public__review-top">
-            <span className="dev-public__review-stars" aria-label={`${review.rating} ვარსკვლავი`}>
-              {renderStarRating(review.rating)}
-            </span>
-            <span className="dev-public__review-date">{formatReviewDate(review.createdAt)}</span>
-          </div>
-          {review.review && <p className="dev-public__review-text">{review.review}</p>}
-          <p className="dev-public__review-meta">
-            {review.customerName}
-            {review.serviceType && <> · {review.serviceType}</>}
-          </p>
-        </li>
-      ))}
-    </ul>
-  )
-}
-
 export default function DeveloperPublicProfile({ profile, reviews, reviewsLoading }) {
-  if (!profile) return null
-
-  const completedJobs = profile.ratingCount ?? 0
+  const ratingAvg = Number(profile.ratingAvg) || 0
+  const ratingCount = profile.ratingCount || 0
 
   return (
-    <div className="dev-public">
-      <header className="dev-public__header">
-        <div className="dev-public__avatar">
-          <User size={28} />
+    <div className="dev-pub-profile">
+      {/* Profile Info Card */}
+      <div className="dev-pub-card">
+        <div className="dev-pub-card__header">
+          <div className="dev-pub-card__avatar">
+            <User size={36} />
+          </div>
+          <div className="dev-pub-card__identity">
+            <h1>{profile.displayName || profile.name || 'შემსრულებელი'}</h1>
+            <div className="dev-pub-card__rating">
+              <span className="dev-pub-card__stars">{renderStarRating(ratingAvg)}</span>
+              {ratingCount > 0 ? (
+                <span>
+                  {ratingAvg.toFixed(1)} ({ratingCount} შეფასება)
+                </span>
+              ) : (
+                <span>შეფასების გარეშე</span>
+              )}
+            </div>
+          </div>
         </div>
-        <div className="dev-public__identity">
-          <h1>{profile.name || 'შემსრულებელი'}</h1>
-          <p className="dev-public__rating">
-            <Star size={16} />
-            {formatDeveloperRating(profile)}
-          </p>
-          <p className="dev-public__meta">
-            {completedJobs > 0
-              ? `${completedJobs} დასრულებული სამუშაო · პროფესიონალური პროფილი`
-              : 'ახალი შემსრულებელი'}
-          </p>
-        </div>
-      </header>
 
-      <section className="dev-public__section">
-        <h2>სპეციალისტის CV</h2>
-        <DeveloperCvSummary profile={profile} />
-      </section>
+        <dl className="dev-pub-card__details">
+          <div>
+            <dt>გამოცდილება</dt>
+            <dd>{formatExperienceYears(profile.experienceYears)}</dd>
+          </div>
+          <div style={{ gridColumn: '1 / -1' }}>
+            <dt>სპეციალიზაცია (კატეგორიები)</dt>
+            <dd>{formatExperienceCategories(profile.experienceCategories)}</dd>
+          </div>
+        </dl>
 
-      <section className="dev-public__section">
-        <h2>შეფასებები და მიმოხილვები</h2>
-        <DeveloperReviewList reviews={reviews} loading={reviewsLoading} />
-      </section>
+        {profile.bio && (
+          <div className="dev-pub-card__bio">
+            <h3>ბიოგრაფია / ჩემს შესახებ</h3>
+            <p>{profile.bio}</p>
+          </div>
+        )}
+      </div>
+
+      {/* Reviews Card */}
+      <div className="dev-reviews-section">
+        <h2>კლიენტების შეფასებები ({reviews.length})</h2>
+
+        {reviewsLoading ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)' }}>
+            <Loader2 className="animate-spin" size={16} />
+            იტვირთება შეფასებები...
+          </div>
+        ) : reviews.length === 0 ? (
+          <p style={{ color: 'var(--text-muted)', margin: 0 }}>შეფასებები ჯერ არ არის.</p>
+        ) : (
+          <div className="dev-reviews-list">
+            {reviews.map((review) => (
+              <div key={review.id} className="dev-review-item">
+                <div className="dev-review-item__header">
+                  <div className="dev-review-item__meta">
+                    <span className="dev-review-item__author">{review.customerName}</span>
+                    <span className="dev-review-item__date">
+                      {formatReviewDate(review.createdAt)}
+                    </span>
+                    {review.serviceType && (
+                      <span className="dev-review-item__service">{review.serviceType}</span>
+                    )}
+                  </div>
+                  <span className="dev-review-item__stars">
+                    {renderStarRating(review.rating)}
+                  </span>
+                </div>
+                {review.review && <p className="dev-review-item__comment">{review.review}</p>}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

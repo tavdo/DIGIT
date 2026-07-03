@@ -1,652 +1,535 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import {
-  Banknote,
-  RefreshCw,
-  Save,
-  Send,
-  StickyNote,
-  UserCheck,
-  Wallet,
-} from 'lucide-react'
-import OrderAttachments from '../OrderAttachments'
-import {
-  addOrderNote,
+  subscribeToOrders,
+  subscribeToDevelopers,
+  updateOrderCompensation,
+  updateOrderPaymentStatus,
+  updateOrderPayoutStatus,
   assignDeveloperToOrder,
-  canAssignDeveloper,
-  canOfferPrice,
-  filterOrdersByCompensation,
-  formatDeveloperRating,
-  formatOrderAmount,
+  updateOrderStatus,
+  addOrderNote,
   formatOrderDate,
   formatOrderNoteTime,
-  offerOrderPrice,
-  ORDER_PRIORITY_LABELS,
   ORDER_STATUS,
   ORDER_STATUS_LABELS,
-  parseOrderAmountInput,
   PAYMENT_STATUS,
   PAYMENT_STATUS_LABELS,
   PAYOUT_STATUS,
   PAYOUT_STATUS_LABELS,
-  resolvePaymentStatus,
-  resolvePayoutStatus,
-  subscribeToDevelopers,
-  subscribeToOrder,
-  subscribeToOrders,
-  updateOrderCompensation,
-  updateOrderPaymentStatus,
-  updateOrderPayoutStatus,
-  updateOrderStatus,
 } from '../../services/orderService'
-import { MAX_NOTE_LENGTH, validateMessageLength } from '../../utils/validation'
-import './ManagerOrdersPanel.css'
+import {
+  Loader2,
+  Send,
+  User,
+  DollarSign,
+  Calendar,
+  FileText,
+  Paperclip,
+  AlertCircle,
+} from 'lucide-react'
 
-const STATUS_FILTERS = [
-  { value: 'all', label: 'ყველა' },
-  { value: ORDER_STATUS.NEW, label: ORDER_STATUS_LABELS.new },
-  { value: ORDER_STATUS.QUOTE_OFFERED, label: ORDER_STATUS_LABELS.quote_offered },
-  { value: ORDER_STATUS.QUOTE_CONFIRMED, label: ORDER_STATUS_LABELS.quote_confirmed },
-  { value: ORDER_STATUS.ASSIGNED, label: ORDER_STATUS_LABELS.assigned },
-  { value: ORDER_STATUS.IN_PROGRESS, label: ORDER_STATUS_LABELS.in_progress },
-  { value: ORDER_STATUS.COMPLETED, label: ORDER_STATUS_LABELS.completed },
-]
-
-// TODO: ნამდვილი გადახდის ინტეგრაცია (Stripe ან მსგავსი) მომავალში — ხელით ფილტრაცია paymentStatus/payoutStatus-ით.
-const COMPENSATION_FILTERS = [
-  { value: 'all', label: 'ყველა გადახდა' },
-  { value: 'payment_unpaid', label: 'გადასახდელი' },
-  { value: 'payment_paid', label: 'ბიზნესისგან მიღებული' },
-  { value: 'payout_pending', label: 'ანაზღაურება მოლოდინში' },
-  { value: 'payout_paid', label: 'დეველოპერს გადარიცხული' },
-]
-
-const MANUAL_STATUS_OPTIONS = [
+const ACTIVE_STATUSES = [
+  ORDER_STATUS.NEW,
+  ORDER_STATUS.QUOTE_OFFERED,
+  ORDER_STATUS.QUOTE_CONFIRMED,
+  ORDER_STATUS.ASSIGNED,
   ORDER_STATUS.IN_PROGRESS,
-  ORDER_STATUS.COMPLETED,
-  ORDER_STATUS.CANCELLED,
 ]
 
-function PaymentStatusBadge({ order }) {
-  const status = resolvePaymentStatus(order)
-  return (
-    <span className={`comp-badge comp-badge--payment-${status}`}>
-      {PAYMENT_STATUS_LABELS[status]}
-    </span>
-  )
-}
-
-function PayoutStatusBadge({ order }) {
-  if (order.developerPayout == null || order.developerPayout <= 0) return null
-  const status = resolvePayoutStatus(order)
-  return (
-    <span className={`comp-badge comp-badge--payout-${status}`}>
-      {PAYOUT_STATUS_LABELS[status]}
-    </span>
-  )
-}
-
-function OrderDetail({ orderId, managerName, onError, onMissing }) {
-  const [order, setOrder] = useState(null)
-  const [orderLoaded, setOrderLoaded] = useState(false)
+export default function ManagerOrdersPanel({ managerName, onError }) {
+  const [orders, setOrders] = useState([])
   const [developers, setDevelopers] = useState([])
-  const [selectedDeveloperId, setSelectedDeveloperId] = useState('')
-  const [noteText, setNoteText] = useState('')
-  const [statusValue, setStatusValue] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [selectedOrderId, setSelectedOrderId] = useState(null)
+  const [filterType, setFilterType] = useState('active') // 'active' | 'completed' | 'all'
+
+  // Compensation form state
   const [priceInput, setPriceInput] = useState('')
   const [payoutInput, setPayoutInput] = useState('')
-  const [submitting, setSubmitting] = useState(false)
+  const [compensationSaving, setCompensationSaving] = useState(false)
+
+  // Assignment state
+  const [selectedDevId, setSelectedDevId] = useState('')
+  const [assigning, setAssigning] = useState(false)
+
+  // Note state
+  const [noteText, setNoteText] = useState('')
+  const [noteAdding, setNoteAdding] = useState(false)
+
+  // Status updating state
+  const [statusUpdating, setStatusUpdating] = useState(false)
+
+  const [prevOnError, setPrevOnError] = useState(() => onError)
+  if (onError !== prevOnError) {
+    setPrevOnError(() => onError)
+    setLoading(true)
+  }
 
   useEffect(() => {
-    if (!orderId) return undefined
-
-    const unsubscribe = subscribeToOrder(
-      orderId,
+    const unsubscribeOrders = subscribeToOrders(
+      'all',
       (data) => {
-        setOrder(data)
-        setOrderLoaded(true)
-        if (!data) {
-          onMissing?.()
-          return
-        }
-        setStatusValue(data.status ?? '')
-        setSelectedDeveloperId(data.assignedDeveloperId ?? '')
-        setPriceInput(data.price != null ? String(data.price) : '')
-        setPayoutInput(data.developerPayout != null ? String(data.developerPayout) : '')
+        setOrders(data)
+        setLoading(false)
       },
-      (err) => onError(err.message || 'შეკვეთის ჩატვირთვა ვერ მოხერხდა.'),
+      (err) => {
+        onError?.(err.message || 'შეკვეთების ჩატვირთვა ვერ მოხერხდა')
+        setLoading(false)
+      }
     )
 
-    return unsubscribe
-  }, [orderId, onError, onMissing])
-
-  useEffect(() => {
-    const unsubscribe = subscribeToDevelopers(setDevelopers, (err) =>
-      onError(err.message || 'დეველოპერების ჩატვირთვა ვერ მოხერხდა.'),
+    const unsubscribeDevs = subscribeToDevelopers(
+      (data) => {
+        setDevelopers(data)
+      },
+      (err) => {
+        onError?.(err.message || 'დეველოპერების ჩატვირთვა ვერ მოხერხდა')
+      }
     )
-    return unsubscribe
+
+    return () => {
+      unsubscribeOrders()
+      unsubscribeDevs()
+    }
   }, [onError])
 
-  const handleOfferPrice = async () => {
-    if (!orderId) return
+  // Get currently selected order
+  const selectedOrder = orders.find((o) => o.id === selectedOrderId)
 
-    setSubmitting(true)
-    try {
-      const price = parseOrderAmountInput(priceInput)
-      await offerOrderPrice(orderId, price)
-    } catch (err) {
-      onError(err.message || 'ფასის შეთავაზება ვერ მოხერხდა.')
-    } finally {
-      setSubmitting(false)
+  // Sync form inputs when selected order changes during render
+  const [prevSelectedOrder, setPrevSelectedOrder] = useState(null)
+  if (selectedOrder !== prevSelectedOrder) {
+    setPrevSelectedOrder(selectedOrder)
+    if (selectedOrder) {
+      setPriceInput(selectedOrder.price != null ? String(selectedOrder.price) : '')
+      setPayoutInput(
+        selectedOrder.developerPayout != null ? String(selectedOrder.developerPayout) : ''
+      )
+      setSelectedDevId(selectedOrder.assignedDeveloperId || '')
     }
   }
 
-  const handleAssign = async () => {
-    if (!orderId || !selectedDeveloperId) return
-    const developer = developers.find((d) => d.id === selectedDeveloperId)
-    if (!developer) return
+  // Filtered orders list
+  const filteredOrders = orders.filter((order) => {
+    if (filterType === 'active') return ACTIVE_STATUSES.includes(order.status)
+    if (filterType === 'completed') return order.status === ORDER_STATUS.COMPLETED
+    return true
+  })
 
-    setSubmitting(true)
+  // Handle compensation submit
+  const handleUpdateCompensation = async (e) => {
+    e.preventDefault()
+    if (!selectedOrder) return
+
+    setCompensationSaving(true)
     try {
-      await assignDeveloperToOrder(orderId, {
-        developerId: developer.id,
-        developerName: developer.name || developer.email,
+      const price = parseFloat(priceInput) || 0
+      const developerPayout = parseFloat(payoutInput) || 0
+      await updateOrderCompensation(selectedOrder.id, { price, developerPayout })
+    } catch (err) {
+      onError?.(err.message || 'ფასის განახლება ვერ მოხერხდა')
+    } finally {
+      setCompensationSaving(false)
+    }
+  }
+
+  // Handle developer assign
+  const handleAssignDeveloper = async (e) => {
+    e.preventDefault()
+    if (!selectedOrder || !selectedDevId) return
+
+    const dev = developers.find((d) => d.id === selectedDevId)
+    if (!dev) return
+
+    setAssigning(true)
+    try {
+      await assignDeveloperToOrder(selectedOrder.id, {
+        developerId: dev.id,
+        developerName: dev.displayName || dev.name || dev.email,
       })
     } catch (err) {
-      onError(err.message || 'დეველოპერის მინიჭება ვერ მოხერხდა.')
+      onError?.(err.message || 'შემსრულებლის მიბმა ვერ მოხერხდა')
     } finally {
-      setSubmitting(false)
+      setAssigning(false)
     }
   }
 
-  const handleStatusChange = async () => {
-    if (!orderId || !statusValue || statusValue === order?.status) return
-
-    setSubmitting(true)
+  // Handle order status update
+  const handleUpdateStatus = async (status) => {
+    if (!selectedOrder) return
+    setStatusUpdating(true)
     try {
-      await updateOrderStatus(orderId, statusValue)
+      await updateOrderStatus(selectedOrder.id, status)
     } catch (err) {
-      onError(err.message || 'სტატუსის განახლება ვერ მოხერხდა.')
+      onError?.(err.message || 'სტატუსის განახლება ვერ მოხერხდა')
     } finally {
-      setSubmitting(false)
+      setStatusUpdating(false)
     }
   }
 
-  const handleSaveCompensation = async () => {
-    if (!orderId) return
-
-    setSubmitting(true)
+  // Handle payment/payout status update
+  const handleUpdatePaymentStatus = async (status) => {
+    if (!selectedOrder) return
     try {
-      const price = parseOrderAmountInput(priceInput)
-      const developerPayout = parseOrderAmountInput(payoutInput)
-      await updateOrderCompensation(orderId, { price, developerPayout })
+      await updateOrderPaymentStatus(selectedOrder.id, status)
     } catch (err) {
-      onError(err.message || 'ანაზღაურების განახლება ვერ მოხერხდა.')
-    } finally {
-      setSubmitting(false)
+      onError?.(err.message || 'გადახდის სტატუსის განახლება ვერ მოხერხდა')
     }
   }
 
-  const handleTogglePaymentStatus = async () => {
-    if (!orderId || !order) return
-    const nextStatus =
-      resolvePaymentStatus(order) === PAYMENT_STATUS.PAID
-        ? PAYMENT_STATUS.UNPAID
-        : PAYMENT_STATUS.PAID
-
-    setSubmitting(true)
+  const handleUpdatePayoutStatus = async (status) => {
+    if (!selectedOrder) return
     try {
-      await updateOrderPaymentStatus(orderId, nextStatus)
+      await updateOrderPayoutStatus(selectedOrder.id, status)
     } catch (err) {
-      onError(err.message || 'გადახდის სტატუსის განახლება ვერ მოხერხდა.')
-    } finally {
-      setSubmitting(false)
+      onError?.(err.message || 'ჰონორარის სტატუსის განახლება ვერ მოხერხდა')
     }
   }
 
-  const handleTogglePayoutStatus = async () => {
-    if (!orderId || !order) return
-    const nextStatus =
-      resolvePayoutStatus(order) === PAYOUT_STATUS.PAID
-        ? PAYOUT_STATUS.PENDING
-        : PAYOUT_STATUS.PAID
-
-    setSubmitting(true)
-    try {
-      await updateOrderPayoutStatus(orderId, nextStatus)
-    } catch (err) {
-      onError(err.message || 'ანაზღაურების სტატუსის განახლება ვერ მოხერხდა.')
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
+  // Handle note submit
   const handleAddNote = async (e) => {
     e.preventDefault()
-    const trimmed = noteText.trim()
-    const lengthError = validateMessageLength(trimmed, MAX_NOTE_LENGTH)
-    if (!orderId || !trimmed || lengthError) {
-      if (lengthError) onError(lengthError)
-      return
-    }
+    if (!selectedOrder || !noteText.trim()) return
 
-    setSubmitting(true)
+    setNoteAdding(true)
     try {
-      await addOrderNote(orderId, {
-        text: trimmed,
+      await addOrderNote(selectedOrder.id, {
+        text: noteText.trim(),
         authorName: managerName,
       })
       setNoteText('')
     } catch (err) {
-      onError(err.message || 'შენიშვნის დამატება ვერ მოხერხდა.')
+      onError?.(err.message || 'შენიშვნის დამატება ვერ მოხერხდა')
     } finally {
-      setSubmitting(false)
+      setNoteAdding(false)
     }
   }
 
-  if (!orderLoaded) {
-    return <div className="orders-detail__empty">იტვირთება...</div>
-  }
-
-  if (!order) {
-    return (
-      <div className="orders-detail__empty">
-        შეკვეთა აღარ არსებობს ან წაშლილია.
-      </div>
-    )
-  }
-
-  const notes = [...(order.managerNotes || [])].reverse()
-
   return (
-    <div className="orders-detail">
-      <div className="orders-detail__header">
-        <div>
-          <h2 className="orders-detail__title">{order.customerName}</h2>
-          <p className="orders-detail__meta">{order.serviceType}</p>
-        </div>
-        <div className="orders-detail__badges-row">
-          <span className={`priority-badge priority-badge--${order.priority}`}>
-            {ORDER_PRIORITY_LABELS[order.priority] ?? order.priority}
-          </span>
-          <span className={`order-badge order-badge--${order.status}`}>
-            {ORDER_STATUS_LABELS[order.status] ?? order.status}
-          </span>
-        </div>
-      </div>
-
-      <section className="orders-detail__section">
-        <h3 className="orders-detail__section-title">აღწერა</h3>
-        <p className="orders-detail__description">{order.description}</p>
-        <OrderAttachments attachments={order.attachments} />
-        <p className="orders-detail__meta">
-          შექმნილია: {formatOrderDate(order.createdAt)}
-          {order.assignedDeveloperName && (
-            <>
-              {' '}
-              · შემსრულებელი:{' '}
-              {order.assignedDeveloperId ? (
-                <Link to={`/specialists/${order.assignedDeveloperId}`} className="orders-detail__dev-link">
-                  {order.assignedDeveloperName}
-                </Link>
-              ) : (
-                order.assignedDeveloperName
-              )}
-            </>
-          )}
-        </p>
-      </section>
-
-      <section className="orders-detail__section orders-detail__section--compensation">
-        <h3 className="orders-detail__section-title">ფასის შეთავაზება</h3>
-        <p className="orders-detail__hint">
-          დააფიქსირე ფასი და გაუგზავნე ბიზნესს დადასტურებისთვის.
-        </p>
-
-        <div className="orders-detail__comp-grid">
-          <label className="orders-detail__field">
-            <span className="orders-detail__field-label">ფასი ბიზნესისთვის (₾)</span>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              className="orders-detail__input"
-              value={priceInput}
-              onChange={(e) => setPriceInput(e.target.value)}
-              disabled={submitting}
-              placeholder="0.00"
-            />
-          </label>
-          <label className="orders-detail__field">
-            <span className="orders-detail__field-label">შემსრულებლის ანაზღაურება (₾)</span>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              className="orders-detail__input"
-              value={payoutInput}
-              onChange={(e) => setPayoutInput(e.target.value)}
-              disabled={submitting}
-              placeholder="0.00"
-            />
-          </label>
-        </div>
-
-        <div className="orders-detail__row orders-detail__row--actions">
-          {canOfferPrice(order) && (
-            <button
-              type="button"
-              className="btn btn--primary btn--sm"
-              onClick={handleOfferPrice}
-              disabled={submitting || !priceInput.trim()}
-            >
-              <Send size={16} />
-              ფასის შეთავაზება
-            </button>
-          )}
+    <div className="dashboard-body">
+      {/* Sidebar Section */}
+      <div className="dashboard-sidebar">
+        <div className="dashboard-filters">
           <button
             type="button"
-            className="btn btn--outline btn--sm orders-detail__save-comp"
-            onClick={handleSaveCompensation}
-            disabled={submitting}
+            className={`dashboard-filter ${filterType === 'active' ? 'dashboard-filter--active' : ''}`}
+            onClick={() => setFilterType('active')}
           >
-            <Save size={16} />
-            თანხების შენახვა
-          </button>
-        </div>
-
-        {order.price != null && (
-          <p className="orders-detail__meta orders-detail__meta--saved">
-            შეთავაზებული ფასი: {formatOrderAmount(order.price)}
-            {order.developerPayout != null && (
-              <> · ანაზღაურება {formatOrderAmount(order.developerPayout)}</>
-            )}
-          </p>
-        )}
-
-        <div className="orders-detail__badges">
-          <PaymentStatusBadge order={order} />
-          <PayoutStatusBadge order={order} />
-        </div>
-
-        <div className="orders-detail__toggles">
-          <button
-            type="button"
-            className={`orders-detail__toggle ${resolvePaymentStatus(order) === PAYMENT_STATUS.PAID ? 'orders-detail__toggle--active' : ''}`}
-            onClick={handleTogglePaymentStatus}
-            disabled={submitting}
-          >
-            <Banknote size={14} />
-            ბიზნესისგან მიღებულია გადახდა
+            აქტიური
           </button>
           <button
             type="button"
-            className={`orders-detail__toggle ${resolvePayoutStatus(order) === PAYOUT_STATUS.PAID ? 'orders-detail__toggle--active' : ''}`}
-            onClick={handleTogglePayoutStatus}
-            disabled={submitting}
+            className={`dashboard-filter ${filterType === 'completed' ? 'dashboard-filter--active' : ''}`}
+            onClick={() => setFilterType('completed')}
           >
-            <Wallet size={14} />
-            შემსრულებლისთვის გადარიცხულია
+            დასრულებული
           </button>
-        </div>
-      </section>
-
-      <section className="orders-detail__section">
-        <h3 className="orders-detail__section-title">შემსრულებლის მინიჭება</h3>
-        {!canAssignDeveloper(order) && order.status !== ORDER_STATUS.ASSIGNED && (
-          <p className="orders-detail__hint">
-            მინიჭება შესაძლებელია მხოლოდ ფასის დადასტურების შემდეგ.
-          </p>
-        )}
-        <div className="orders-detail__row">
-          <select
-            className="orders-detail__select"
-            value={selectedDeveloperId}
-            onChange={(e) => setSelectedDeveloperId(e.target.value)}
-            disabled={submitting || !canAssignDeveloper(order)}
-          >
-            <option value="">აირჩიე შემსრულებელი</option>
-            {developers.map((dev) => (
-              <option key={dev.id} value={dev.id}>
-                {dev.name || dev.email} — {formatDeveloperRating(dev)}
-              </option>
-            ))}
-          </select>
           <button
             type="button"
-            className="btn btn--primary btn--sm"
-            onClick={handleAssign}
-            disabled={submitting || !selectedDeveloperId || !canAssignDeveloper(order)}
+            className={`dashboard-filter ${filterType === 'all' ? 'dashboard-filter--active' : ''}`}
+            onClick={() => setFilterType('all')}
           >
-            <UserCheck size={16} />
-            მინიჭება
+            ყველა
           </button>
         </div>
-        <ul className="orders-detail__dev-list">
-          {developers.map((dev) => (
-            <li key={dev.id}>
-              <Link to={`/specialists/${dev.id}`} className="orders-detail__dev-link">
-                {dev.name || dev.email}
-              </Link>
-              <span className="orders-detail__dev-rating">{formatDeveloperRating(dev)}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
 
-      <section className="orders-detail__section">
-        <h3 className="orders-detail__section-title">სტატუსის ცვლილება</h3>
-        <div className="orders-detail__row">
-          <select
-            className="orders-detail__select"
-            value={statusValue}
-            onChange={(e) => setStatusValue(e.target.value)}
-            disabled={submitting}
-          >
-            <option value={ORDER_STATUS.NEW}>{ORDER_STATUS_LABELS.new}</option>
-            <option value={ORDER_STATUS.QUOTE_OFFERED}>{ORDER_STATUS_LABELS.quote_offered}</option>
-            <option value={ORDER_STATUS.QUOTE_CONFIRMED}>{ORDER_STATUS_LABELS.quote_confirmed}</option>
-            <option value={ORDER_STATUS.ASSIGNED}>{ORDER_STATUS_LABELS.assigned}</option>
-            {MANUAL_STATUS_OPTIONS.map((status) => (
-              <option key={status} value={status}>
-                {ORDER_STATUS_LABELS[status]}
-              </option>
-            ))}
-          </select>
-          <button
-            type="button"
-            className="btn btn--outline btn--sm"
-            onClick={handleStatusChange}
-            disabled={submitting || statusValue === order.status}
-          >
-            <RefreshCw size={16} />
-            განახლება
-          </button>
-        </div>
-      </section>
-
-      <section className="orders-detail__section">
-        <h3 className="orders-detail__section-title">შიდა შენიშვნები</h3>
-        <form className="orders-detail__note-form" onSubmit={handleAddNote}>
-          <textarea
-            className="orders-detail__textarea"
-            rows={3}
-            placeholder="ახალი შენიშვნა (მხოლოდ მენეჯერისთვის)..."
-            value={noteText}
-            onChange={(e) => setNoteText(e.target.value)}
-            disabled={submitting}
-            maxLength={MAX_NOTE_LENGTH}
-          />
-          <button
-            type="submit"
-            className="btn btn--primary btn--sm"
-            disabled={submitting || !noteText.trim()}
-          >
-            <StickyNote size={16} />
-            შენიშვნის დამატება
-          </button>
-        </form>
-
-        {notes.length === 0 ? (
-          <p className="orders-detail__empty-notes">შენიშვნები ჯერ არ არის.</p>
-        ) : (
-          <ul className="orders-notes">
-            {notes.map((note, index) => (
-              <li key={`${note.createdAt?.seconds ?? index}-${index}`} className="orders-note">
-                <p>{note.text}</p>
-                <span>
-                  {note.authorName} · {formatOrderNoteTime(note.createdAt)}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-    </div>
-  )
-}
-
-function ManagerOrdersPanel({ managerName, initialOrderId, onError }) {
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [compensationFilter, setCompensationFilter] = useState('all')
-  const [orders, setOrders] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [selectedOrderId, setSelectedOrderId] = useState(initialOrderId ?? null)
-
-  const visibleOrders = useMemo(
-    () => filterOrdersByCompensation(orders, compensationFilter),
-    [orders, compensationFilter],
-  )
-
-  const handleOrderMissing = useCallback(() => {
-    setSelectedOrderId(null)
-  }, [])
-
-  useEffect(() => {
-    const unsubscribe = subscribeToOrders(
-      statusFilter,
-      (list) => {
-        setOrders(list)
-        setLoading(false)
-        setSelectedOrderId((prev) => {
-          if (initialOrderId && list.some((order) => order.id === initialOrderId)) {
-            return initialOrderId
-          }
-          if (prev && list.some((order) => order.id === prev)) return prev
-          return list[0]?.id ?? null
-        })
-      },
-      (err) => {
-        onError(err.message || 'შეკვეთების ჩატვირთვა ვერ მოხერხდა.')
-        setLoading(false)
-      },
-    )
-
-    return unsubscribe
-  }, [statusFilter, initialOrderId, onError])
-
-  useEffect(() => {
-    setSelectedOrderId((prev) => {
-      if (prev && visibleOrders.some((order) => order.id === prev)) return prev
-      return visibleOrders[0]?.id ?? null
-    })
-  }, [visibleOrders])
-
-  return (
-    <div className="orders-panel">
-      <aside className="orders-panel__list">
-        <div className="orders-panel__filter-bar">
-          <label className="orders-panel__filter-field">
-            <span className="orders-panel__filter-label">სტატუსი</span>
-            <select
-              className="orders-panel__filter-select"
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value)
-                setLoading(true)
-              }}
-              aria-label="სტატუსის ფილტრი"
-            >
-              {STATUS_FILTERS.map(({ value, label }) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="orders-panel__filter-field">
-            <span className="orders-panel__filter-label">გადახდა</span>
-            <select
-              className="orders-panel__filter-select"
-              value={compensationFilter}
-              onChange={(e) => setCompensationFilter(e.target.value)}
-              aria-label="გადახდის ფილტრი"
-            >
-              {COMPENSATION_FILTERS.map(({ value, label }) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-
-        <div className="orders-panel__items">
+        <div className="dashboard-list">
           {loading ? (
-            <p className="dashboard-list__empty">იტვირთება...</p>
-          ) : visibleOrders.length === 0 ? (
-            <p className="dashboard-list__empty">შეკვეთები არ არის.</p>
+            <div className="dashboard-list__empty">
+              <Loader2 className="animate-spin" style={{ margin: '0 auto' }} size={20} />
+              <p style={{ marginTop: '0.5rem' }}>იტვირთება...</p>
+            </div>
+          ) : filteredOrders.length === 0 ? (
+            <div className="dashboard-list__empty">შეკვეთები არ არის</div>
           ) : (
-            visibleOrders.map((order) => (
-              <button
-                key={order.id}
-                type="button"
-                className={`orders-item ${selectedOrderId === order.id ? 'orders-item--active' : ''}`}
-                onClick={() => setSelectedOrderId(order.id)}
-              >
-                <div className="orders-item__top">
-                  <span className="orders-item__name">{order.customerName}</span>
-                  <span className={`priority-badge priority-badge--${order.priority}`}>
-                    {ORDER_PRIORITY_LABELS[order.priority] ?? ''}
-                  </span>
-                </div>
-                <div className="orders-item__top">
-                  <span className={`order-badge order-badge--${order.status}`}>
-                    {ORDER_STATUS_LABELS[order.status] ?? order.status}
-                  </span>
-                </div>
-                <div className="orders-item__badges">
-                  <PaymentStatusBadge order={order} />
-                  <PayoutStatusBadge order={order} />
-                </div>
-                <p className="orders-item__service">{order.serviceType}</p>
-                <p className="orders-item__meta">
-                  {order.assignedDeveloperName
-                    ? `დეველოპერი: ${order.assignedDeveloperName}`
-                    : 'დეველოპერი არ არის მინიჭებული'}
-                  {order.price != null && <> · {formatOrderAmount(order.price)}</>}
-                </p>
-              </button>
-            ))
+            filteredOrders.map((order) => {
+              const isActive = order.id === selectedOrderId
+              const isOpen = order.status !== ORDER_STATUS.COMPLETED
+              return (
+                <button
+                  key={order.id}
+                  type="button"
+                  className={`dashboard-conv ${isActive ? 'dashboard-conv--active' : ''}`}
+                  onClick={() => setSelectedOrderId(order.id)}
+                >
+                  <div className="dashboard-conv__top">
+                    <span className="dashboard-conv__name">
+                      {order.customerName || 'კლიენტი'}
+                    </span>
+                    <span
+                      className={`dashboard-conv__status ${isOpen ? 'dashboard-conv__status--open' : 'dashboard-conv__status--closed'}`}
+                    >
+                      {ORDER_STATUS_LABELS[order.status] || order.status}
+                    </span>
+                  </div>
+                  <div className="dashboard-conv__preview">
+                    {order.serviceType} &middot; {order.description || 'აღწერის გარეშე'}
+                  </div>
+                  <div className="dashboard-conv__time">
+                    {formatOrderDate(order.createdAt)}
+                  </div>
+                </button>
+              )
+            })
           )}
         </div>
-      </aside>
+      </div>
 
-      <main className="orders-panel__detail">
-        {!selectedOrderId ? (
-          <div className="orders-detail__empty">აირჩიეთ შეკვეთა სიიდან</div>
+      {/* Main Order Details Section */}
+      <div className="dashboard-chat">
+        {!selectedOrder ? (
+          <div className="dashboard-chat__placeholder">
+            აირჩიეთ შეკვეთა სიიდან დეტალების სანახავად
+          </div>
         ) : (
-          <OrderDetail
-            key={selectedOrderId}
-            orderId={selectedOrderId}
-            managerName={managerName}
-            onError={onError}
-            onMissing={handleOrderMissing}
-          />
+          <>
+            {/* Detail Header */}
+            <div className="dashboard-chat__header">
+              <div>
+                <h2 className="dashboard-chat__title">{selectedOrder.serviceType}</h2>
+                <div className="dashboard-chat__meta">
+                  შემკვეთი: {selectedOrder.customerName || 'უცნობი'} &middot;
+                  სტატუსი: <strong>{ORDER_STATUS_LABELS[selectedOrder.status] || selectedOrder.status}</strong>
+                </div>
+              </div>
+              <div className="dashboard-chat__header-actions">
+                {selectedOrder.status !== ORDER_STATUS.COMPLETED && (
+                  <button
+                    type="button"
+                    className="dashboard-chat__close-btn"
+                    disabled={statusUpdating}
+                    onClick={() => handleUpdateStatus(ORDER_STATUS.COMPLETED)}
+                  >
+                    დასრულებულად მონიშვნა
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Scrollable details and logs */}
+            <div className="dashboard-chat__messages">
+              {/* Core Order Info Card */}
+              <div className="profile-card" style={{ boxShadow: 'none', margin: 0 }}>
+                <h3 className="profile-section__title" style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                  <FileText size={16} /> დეტალური ინფორმაცია
+                </h3>
+                <p style={{ fontSize: '0.925rem', lineHeight: '1.65', whiteSpace: 'pre-wrap', margin: '0.5rem 0' }}>
+                  {selectedOrder.description || 'აღწერის გარეშე'}
+                </p>
+                <div className="profile-meta" style={{ borderBottom: 'none', paddingBottom: 0, marginTop: '1rem' }}>
+                  <div>
+                    <dt><Calendar size={12} style={{ display: 'inline', marginRight: '0.25rem' }} /> თარიღი</dt>
+                    <dd>{formatOrderDate(selectedOrder.createdAt)}</dd>
+                  </div>
+                  <div>
+                    <dt><AlertCircle size={12} style={{ display: 'inline', marginRight: '0.25rem' }} /> პრიორიტეტი</dt>
+                    <dd style={{ textTransform: 'capitalize' }}>{selectedOrder.priority || 'ნორმალური'}</dd>
+                  </div>
+                </div>
+
+                {/* Attachments */}
+                {selectedOrder.attachments?.length > 0 && (
+                  <div style={{ marginTop: '1rem', borderTop: '1px solid var(--color-border)', paddingTop: '1rem' }}>
+                    <dt style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
+                      <Paperclip size={12} style={{ display: 'inline', marginRight: '0.25rem' }} /> მიბმული ფაილები
+                    </dt>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      {selectedOrder.attachments.map((url, i) => (
+                        <a
+                          key={i}
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn--outline btn--sm"
+                          style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
+                        >
+                          ფაილი {i + 1}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Price & Payout Management Form */}
+              <div className="profile-card" style={{ boxShadow: 'none', margin: 0 }}>
+                <h3 className="profile-section__title" style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                  <DollarSign size={16} /> ფინანსური მართვა
+                </h3>
+                <form onSubmit={handleUpdateCompensation} className="profile-form" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div className="profile-form__field">
+                      <span>კლიენტის ფასი (₾)</span>
+                      <input
+                        type="number"
+                        placeholder="მაგ: 150"
+                        value={priceInput}
+                        onChange={(e) => setPriceInput(e.target.value)}
+                        disabled={compensationSaving}
+                      />
+                    </div>
+                    <div className="profile-form__field">
+                      <span>შემსრულებლის ჰონორარი (₾)</span>
+                      <input
+                        type="number"
+                        placeholder="მაგ: 100"
+                        value={payoutInput}
+                        onChange={(e) => setPayoutInput(e.target.value)}
+                        disabled={compensationSaving}
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="submit"
+                    className="btn btn--outline btn--sm"
+                    disabled={compensationSaving}
+                    style={{ alignSelf: 'flex-end', marginTop: '0.5rem' }}
+                  >
+                    {compensationSaving ? 'ინახება...' : 'ფასების განახლება'}
+                  </button>
+                </form>
+
+                {/* Payment & Payout dropdown updates */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem', borderTop: '1px solid var(--color-border)', paddingTop: '1rem' }}>
+                  <div className="profile-form__field">
+                    <span>გადახდის სტატუსი</span>
+                    <select
+                      className="admin-table__select"
+                      style={{ width: '100%' }}
+                      value={selectedOrder.paymentStatus || PAYMENT_STATUS.UNPAID}
+                      onChange={(e) => handleUpdatePaymentStatus(e.target.value)}
+                    >
+                      {Object.entries(PAYMENT_STATUS_LABELS).map(([val, label]) => (
+                        <option key={val} value={val}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="profile-form__field">
+                    <span>ჰონორარის გაცემა</span>
+                    <select
+                      className="admin-table__select"
+                      style={{ width: '100%' }}
+                      value={selectedOrder.payoutStatus || PAYOUT_STATUS.PENDING}
+                      onChange={(e) => handleUpdatePayoutStatus(e.target.value)}
+                    >
+                      {Object.entries(PAYOUT_STATUS_LABELS).map(([val, label]) => (
+                        <option key={val} value={val}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Developer Assignment Section */}
+              <div className="profile-card" style={{ boxShadow: 'none', margin: 0 }}>
+                <h3 className="profile-section__title" style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                  <User size={16} /> შემსრულებლის მიბმა
+                </h3>
+                {selectedOrder.assignedDeveloperId ? (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ fontSize: '0.9rem' }}>
+                      მიბმულია: <strong>{selectedOrder.assignedDeveloperName || 'სახელის გარეშე'}</strong>
+                    </div>
+                    {selectedOrder.status !== ORDER_STATUS.COMPLETED && (
+                      <button
+                        type="button"
+                        className="btn btn--outline btn--sm"
+                        onClick={() => setSelectedDevId('')}
+                        style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
+                      >
+                        შეცვლა
+                      </button>
+                    )}
+                  </div>
+                ) : null}
+
+                {(!selectedOrder.assignedDeveloperId || selectedDevId === '') && (
+                  <form onSubmit={handleAssignDeveloper} className="profile-form" style={{ marginTop: '0.5rem', paddingTop: 0, borderTop: 'none', display: 'flex', gap: '0.5rem', flexDirection: 'row', alignItems: 'flex-end' }}>
+                    <div className="profile-form__field" style={{ flex: 1 }}>
+                      <span>აირჩიეთ დეველოპერი</span>
+                      <select
+                        className="admin-table__select"
+                        style={{ width: '100%' }}
+                        value={selectedDevId}
+                        onChange={(e) => setSelectedDevId(e.target.value)}
+                        disabled={assigning}
+                      >
+                        <option value="">აირჩიეთ შემსრულებელი</option>
+                        {developers.map((dev) => (
+                          <option key={dev.id} value={dev.id}>
+                            {dev.displayName || dev.name || dev.email}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <button
+                      type="submit"
+                      className="btn btn--accent btn--sm"
+                      disabled={assigning || !selectedDevId}
+                      style={{ height: '38px' }}
+                    >
+                      მიბმა
+                    </button>
+                  </form>
+                )}
+              </div>
+
+              {/* Notes / Logs History */}
+              <div style={{ marginTop: '1rem' }}>
+                <h3 className="profile-section__title">მენეჯერის შენიშვნები</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {(!selectedOrder.managerNotes || selectedOrder.managerNotes.length === 0) ? (
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>
+                      შენიშვნები ჯერ არ არის დამატებული.
+                    </p>
+                  ) : (
+                    selectedOrder.managerNotes.map((note, index) => (
+                      <div
+                        key={index}
+                        className="dashboard-bubble dashboard-bubble--customer"
+                        style={{ maxWidth: '100%', alignSelf: 'stretch', background: 'var(--bg-color)' }}
+                      >
+                        <p>{note.text}</p>
+                        <span className="dashboard-bubble__time">
+                          {note.authorName} &middot; {formatOrderNoteTime(note.createdAt)}
+                        </span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Note text field input */}
+            <form onSubmit={handleAddNote} className="dashboard-chat__input">
+              <input
+                type="text"
+                className="dashboard-chat__field"
+                placeholder="დაამატე ახალი შენიშვნა შეკვეთაზე..."
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
+                disabled={noteAdding}
+              />
+              <button
+                type="submit"
+                className="btn btn--accent dashboard-chat__send"
+                disabled={noteAdding || !noteText.trim()}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                {noteAdding ? (
+                  <Loader2 className="animate-spin" size={16} />
+                ) : (
+                  <Send size={16} />
+                )}
+              </button>
+            </form>
+          </>
         )}
-      </main>
+      </div>
     </div>
   )
 }
-
-export default ManagerOrdersPanel

@@ -1,175 +1,248 @@
 import { useEffect, useState } from 'react'
-import { Save } from 'lucide-react'
-import { getDefaultSiteContent } from '../../services/siteContentService'
-import { updateSiteContent } from '../../services/siteContentService'
-import useSiteContent from '../../hooks/useSiteContent'
+import {
+  subscribeToSiteContent,
+  updateSiteContent,
+} from '../../services/siteContentService'
+import { Loader2, Save } from 'lucide-react'
 
-function AdminSitePanel({ adminId, onError }) {
-  const { content } = useSiteContent()
-  const [form, setForm] = useState(getDefaultSiteContent())
+export default function AdminSitePanel({ adminId, onError }) {
+  const [content, setContent] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [saveSuccess, setSaveSuccess] = useState(false)
 
   useEffect(() => {
-    setForm(content)
-  }, [content])
+    const unsubscribe = subscribeToSiteContent(
+      (data) => {
+        setContent(data)
+      },
+      (err) => {
+        onError?.(err.message || 'საიტის კონტენტის ჩატვირთვა ვერ მოხერხდა')
+      }
+    )
 
-  const handleField = (field, value) => {
-    setForm((prev) => ({ ...prev, [field]: value }))
+    return () => unsubscribe()
+  }, [onError])
+
+  const handleInputChange = (field, value) => {
+    setSaveSuccess(false)
+    setContent((prev) => ({
+      ...prev,
+      [field]: value,
+    }))
   }
 
-  const handleServiceField = (serviceId, field, value) => {
-    setForm((prev) => ({
-      ...prev,
-      services: prev.services.map((service) =>
-        service.id === serviceId ? { ...service, [field]: value } : service,
-      ),
-    }))
+  const handleServiceChange = (index, field, value) => {
+    setSaveSuccess(false)
+    setContent((prev) => {
+      const updatedServices = [...prev.services]
+      updatedServices[index] = {
+        ...updatedServices[index],
+        [field]: value,
+      }
+      return {
+        ...prev,
+        services: updatedServices,
+      }
+    })
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!adminId) return
-
     setSaving(true)
+    setSaveSuccess(false)
     try {
-      await updateSiteContent(form, adminId)
+      await updateSiteContent(content, adminId)
+      setSaveSuccess(true)
+      setTimeout(() => setSaveSuccess(false), 3000)
     } catch (err) {
-      onError(err.message || 'საიტის შენახვა ვერ მოხერხდა.')
+      onError?.(err.message || 'საიტის კონტენტის განახლება ვერ მოხერხდა')
     } finally {
       setSaving(false)
     }
   }
 
+  if (!content) {
+    return (
+      <div className="admin-panel__empty">
+        <Loader2 className="animate-spin" style={{ margin: '0 auto' }} size={24} />
+        <p style={{ marginTop: '0.5rem' }}>იტვირთება საიტის მონაცემები...</p>
+      </div>
+    )
+  }
+
   return (
-    <form className="admin-section admin-site-form" onSubmit={handleSubmit}>
+    <form className="admin-site-form" onSubmit={handleSubmit}>
       <div className="admin-section__head">
         <div>
-          <h2>საიტის კონტენტი</h2>
-          <p>შეცვალე მთავარი გვერდის ტექსტები, კონტაქტი და სერვისები.</p>
+          <h2>საიტის კონტენტის მართვა</h2>
+          <p>აქედან შეგიძლიათ შეცვალოთ საიტზე გამოქვეყნებული ტექსტები და სერვისები</p>
         </div>
-        <button type="submit" className="btn btn--primary btn--sm" disabled={saving}>
-          <Save size={16} />
+        <button
+          type="submit"
+          className="btn btn--accent btn--sm"
+          disabled={saving}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+        >
+          {saving ? (
+            <Loader2 className="animate-spin" size={16} />
+          ) : (
+            <Save size={16} />
+          )}
           {saving ? 'ინახება...' : 'შენახვა'}
         </button>
       </div>
 
-      <section className="admin-site-form__block">
-        <h3>მთავარი გვერდი</h3>
-        <label className="admin-site-form__field">
-          <span>ზედა ხაზი</span>
-          <input
-            value={form.heroEyebrow}
-            onChange={(e) => handleField('heroEyebrow', e.target.value)}
-          />
-        </label>
-        <label className="admin-site-form__field">
-          <span>სათაური</span>
-          <input
-            value={form.heroTitle}
-            onChange={(e) => handleField('heroTitle', e.target.value)}
-          />
-        </label>
-        <label className="admin-site-form__field">
-          <span>აქცენტი</span>
-          <input
-            value={form.heroTitleAccent}
-            onChange={(e) => handleField('heroTitleAccent', e.target.value)}
-          />
-        </label>
-        <label className="admin-site-form__field">
-          <span>ქვესათაური</span>
-          <textarea
-            rows={3}
-            value={form.heroSubtitle}
-            onChange={(e) => handleField('heroSubtitle', e.target.value)}
-          />
-        </label>
-        <label className="admin-site-form__field">
-          <span>ტაგლაინი</span>
-          <input value={form.tagline} onChange={(e) => handleField('tagline', e.target.value)} />
-        </label>
-        <label className="admin-site-form__field">
-          <span>აღწერა (SEO)</span>
-          <textarea
-            rows={2}
-            value={form.siteDescription}
-            onChange={(e) => handleField('siteDescription', e.target.value)}
-          />
-        </label>
-      </section>
+      {saveSuccess && (
+        <div className="auth-form__alert" style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#4ade80', borderColor: 'rgba(34, 197, 94, 0.2)', marginBottom: '1rem' }}>
+          კონტენტი წარმატებით შეინახა!
+        </div>
+      )}
 
-      <section className="admin-site-form__block">
-        <h3>კონტაქტი</h3>
-        <label className="admin-site-form__field">
-          <span>ტელეფონი</span>
+      {/* Hero Section copy */}
+      <div className="admin-site-form__block">
+        <h3>მთავარი სექცია (Hero)</h3>
+        <div className="admin-site-form__field">
+          <label htmlFor="heroEyebrow">ზედა სათაური (Eyebrow)</label>
           <input
-            value={form.contactPhone}
-            onChange={(e) => handleField('contactPhone', e.target.value)}
+            id="heroEyebrow"
+            type="text"
+            value={content.heroEyebrow || ''}
+            onChange={(e) => handleInputChange('heroEyebrow', e.target.value)}
           />
-        </label>
-        <label className="admin-site-form__field">
-          <span>ელ. ფოსტა</span>
+        </div>
+        <div className="admin-site-form__field">
+          <label htmlFor="heroTitle">მთავარი სათაური</label>
           <input
+            id="heroTitle"
+            type="text"
+            value={content.heroTitle || ''}
+            onChange={(e) => handleInputChange('heroTitle', e.target.value)}
+          />
+        </div>
+        <div className="admin-site-form__field">
+          <label htmlFor="heroTitleAccent">გამოკვეთილი სათაური (Accent)</label>
+          <input
+            id="heroTitleAccent"
+            type="text"
+            value={content.heroTitleAccent || ''}
+            onChange={(e) => handleInputChange('heroTitleAccent', e.target.value)}
+          />
+        </div>
+        <div className="admin-site-form__field">
+          <label htmlFor="heroSubtitle">ქვესათაური (Subtitle)</label>
+          <textarea
+            id="heroSubtitle"
+            rows="3"
+            value={content.heroSubtitle || ''}
+            onChange={(e) => handleInputChange('heroSubtitle', e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* Brand & About Info */}
+      <div className="admin-site-form__block">
+        <h3>ბრენდი და ჩვენს შესახებ</h3>
+        <div className="admin-site-form__field">
+          <label htmlFor="tagline">ტაგლაინი (Tagline)</label>
+          <input
+            id="tagline"
+            type="text"
+            value={content.tagline || ''}
+            onChange={(e) => handleInputChange('tagline', e.target.value)}
+          />
+        </div>
+        <div className="admin-site-form__field">
+          <label htmlFor="siteDescription">საიტის აღწერა (SEO)</label>
+          <textarea
+            id="siteDescription"
+            rows="2"
+            value={content.siteDescription || ''}
+            onChange={(e) => handleInputChange('siteDescription', e.target.value)}
+          />
+        </div>
+        <div className="admin-site-form__field">
+          <label htmlFor="aboutIntro">შესავალი ტექსტი (ჩვენს შესახებ)</label>
+          <textarea
+            id="aboutIntro"
+            rows="4"
+            value={content.aboutIntro || ''}
+            onChange={(e) => handleInputChange('aboutIntro', e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* Contact Information */}
+      <div className="admin-site-form__block">
+        <h3>საკონტაქტო ინფორმაცია</h3>
+        <div className="admin-site-form__field">
+          <label htmlFor="contactPhone">საკონტაქტო ტელეფონი</label>
+          <input
+            id="contactPhone"
+            type="text"
+            value={content.contactPhone || ''}
+            onChange={(e) => handleInputChange('contactPhone', e.target.value)}
+          />
+        </div>
+        <div className="admin-site-form__field">
+          <label htmlFor="contactEmail">საკონტაქტო ელ.ფოსტა</label>
+          <input
+            id="contactEmail"
             type="email"
-            value={form.contactEmail}
-            onChange={(e) => handleField('contactEmail', e.target.value)}
+            value={content.contactEmail || ''}
+            onChange={(e) => handleInputChange('contactEmail', e.target.value)}
           />
-        </label>
-        <label className="admin-site-form__field">
-          <span>სამუშაო საათები</span>
+        </div>
+        <div className="admin-site-form__field">
+          <label htmlFor="workingHours">სამუშაო საათები</label>
           <input
-            value={form.workingHours}
-            onChange={(e) => handleField('workingHours', e.target.value)}
+            id="workingHours"
+            type="text"
+            value={content.workingHours || ''}
+            onChange={(e) => handleInputChange('workingHours', e.target.value)}
           />
-        </label>
-      </section>
+        </div>
+      </div>
 
-      <section className="admin-site-form__block">
-        <h3>ჩვენ შესახებ</h3>
-        <label className="admin-site-form__field">
-          <span>შესავალი ტექსტი</span>
-          <textarea
-            rows={4}
-            value={form.aboutIntro}
-            onChange={(e) => handleField('aboutIntro', e.target.value)}
-          />
-        </label>
-      </section>
-
-      <section className="admin-site-form__block">
+      {/* Services Configuration */}
+      <div className="admin-site-form__block">
         <h3>სერვისები</h3>
         <div className="admin-site-form__services">
-          {form.services.map((service) => (
-            <article key={service.id} className="admin-site-form__service">
-              <label className="admin-site-form__checkbox">
+          {content.services?.map((service, index) => (
+            <div key={service.id} className="admin-site-form__service">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label className="admin-site-form__checkbox" style={{ fontWeight: '600' }}>
+                  <input
+                    type="checkbox"
+                    checked={service.enabled}
+                    onChange={(e) => handleServiceChange(index, 'enabled', e.target.checked)}
+                  />
+                  აქტიურია (სერვისის ID: {service.id})
+                </label>
+              </div>
+
+              <div className="admin-site-form__field" style={{ marginTop: '0.5rem' }}>
+                <label htmlFor={`service-title-${service.id}`}>სერვისის დასახელება</label>
                 <input
-                  type="checkbox"
-                  checked={service.enabled !== false}
-                  onChange={(e) => handleServiceField(service.id, 'enabled', e.target.checked)}
+                  id={`service-title-${service.id}`}
+                  type="text"
+                  value={service.title || ''}
+                  onChange={(e) => handleServiceChange(index, 'title', e.target.value)}
                 />
-                ჩართული
-              </label>
-              <label className="admin-site-form__field">
-                <span>სათაური</span>
-                <input
-                  value={service.title}
-                  onChange={(e) => handleServiceField(service.id, 'title', e.target.value)}
-                />
-              </label>
-              <label className="admin-site-form__field">
-                <span>აღწერა</span>
+              </div>
+
+              <div className="admin-site-form__field">
+                <label htmlFor={`service-desc-${service.id}`}>სერვისის აღწერა</label>
                 <textarea
-                  rows={3}
-                  value={service.description}
-                  onChange={(e) => handleServiceField(service.id, 'description', e.target.value)}
+                  id={`service-desc-${service.id}`}
+                  rows="2"
+                  value={service.description || ''}
+                  onChange={(e) => handleServiceChange(index, 'description', e.target.value)}
                 />
-              </label>
-            </article>
+              </div>
+            </div>
           ))}
         </div>
-      </section>
+      </div>
     </form>
   )
 }
-
-export default AdminSitePanel
