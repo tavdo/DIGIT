@@ -4,6 +4,7 @@ import { LogIn, LogOut, UserPlus } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { resolveUserRole } from '../utils/roles'
 import DigitMark from './DigitMark'
+import ThemeToggle from './ThemeToggle'
 import { SITE_NAME } from '../constants/brand'
 import './Navbar.css'
 
@@ -110,7 +111,8 @@ function Navbar() {
             ))}
           </ul>
 
-          <div className="navbar__auth">
+          <div className="navbar__auth" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <ThemeToggle />
             {loading ? (
               <span className="navbar__auth-loading">...</span>
             ) : user ? (

@@ -4,6 +4,7 @@ import { Home, LogOut, ShieldCheck, User, Users } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { isAdminRole } from '../utils/roles'
 import ManagerOrdersPanel from '../components/orders/ManagerOrdersPanel'
+import ThemeToggle from '../components/ThemeToggle'
 import usePageMeta from '../hooks/usePageMeta'
 import { pageTitle } from '../constants/brand'
 import './Dashboard.css'
@@ -25,7 +26,8 @@ function Dashboard() {
           <span className="dashboard-header__badge">Manager</span>
           <h1 className="dashboard-header__title">თიქეტების პანელი</h1>
         </div>
-        <div className="dashboard-header__actions">
+        <div className="dashboard-header__actions" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <ThemeToggle />
           {isAdminRole(userProfile?.role) && (
             <Link to="/admin" className="dashboard-header__link">
               <ShieldCheck size={18} />

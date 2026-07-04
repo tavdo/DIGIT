@@ -24,6 +24,7 @@ export const ORDER_STATUS = {
   QUOTE_REJECTED: 'quote_rejected',
   ASSIGNED: 'assigned',
   IN_PROGRESS: 'in_progress',
+  WAITING_APPROVAL: 'waiting_approval',
   COMPLETED: 'completed',
   CANCELLED: 'cancelled',
 }
@@ -35,6 +36,7 @@ export const ORDER_STATUS_LABELS = {
   quote_rejected: 'ფასი უარყოფილი',
   assigned: 'მინიჭებული',
   in_progress: 'მიმდინარე',
+  waiting_approval: 'შემოწმებაზეა',
   completed: 'დასრულებული',
   cancelled: 'გაუქმებული',
 }
@@ -98,9 +100,9 @@ export async function createTicket({
     customerId,
     customerName,
     serviceId: serviceId || null,
-    serviceType,
+    serviceType: serviceType || 'პრობლემა',
     description,
-    priority,
+    priority: priority || ORDER_PRIORITY.FLEXIBLE,
     status: ORDER_STATUS.NEW,
     assignedDeveloperId: null,
     assignedDeveloperName: null,
@@ -230,6 +232,7 @@ export function subscribeToDeveloperOrders(developerId, onOrders, onError) {
 export const ACTIVE_ORDER_STATUSES = [
   ORDER_STATUS.ASSIGNED,
   ORDER_STATUS.IN_PROGRESS,
+  ORDER_STATUS.WAITING_APPROVAL,
 ]
 export const ARCHIVED_ORDER_STATUSES = [
   ORDER_STATUS.COMPLETED,
@@ -243,6 +246,7 @@ const STATUS_SORT_WEIGHT = {
   [ORDER_STATUS.QUOTE_CONFIRMED]: 2,
   [ORDER_STATUS.QUOTE_OFFERED]: 3,
   [ORDER_STATUS.NEW]: 4,
+  [ORDER_STATUS.WAITING_APPROVAL]: 4.5,
   [ORDER_STATUS.COMPLETED]: 5,
   [ORDER_STATUS.CANCELLED]: 6,
   [ORDER_STATUS.QUOTE_REJECTED]: 7,
@@ -400,7 +404,7 @@ export function filterOrdersByCompensation(orders, compensationFilter) {
   })
 }
 
-export async function offerOrderPrice(orderId, price) {
+export async function offerOrderPrice(orderId, price, explanation) {
   if (price == null || price <= 0) {
     throw new Error('შეიყვანეთ სწორი ფასი.')
   }
@@ -408,6 +412,7 @@ export async function offerOrderPrice(orderId, price) {
   const firestore = requireDb()
   await updateDoc(doc(firestore, 'orders', orderId), {
     price,
+    priceExplanation: explanation?.trim() || '',
     status: ORDER_STATUS.QUOTE_OFFERED,
     updatedAt: serverTimestamp(),
   })
@@ -417,6 +422,7 @@ export async function confirmOrderPrice(orderId) {
   const firestore = requireDb()
   await updateDoc(doc(firestore, 'orders', orderId), {
     status: ORDER_STATUS.QUOTE_CONFIRMED,
+    quoteConfirmedAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   })
 }
@@ -429,10 +435,15 @@ export async function rejectOrderPrice(orderId) {
   })
 }
 
-export async function submitOrderRating(orderId, developerId, { rating, review }) {
+export async function submitOrderRating(orderId, developerId, { rating, companyRating, review }) {
   const value = Number(rating)
   if (!Number.isInteger(value) || value < 1 || value > 5) {
     throw new Error('რეიტინგი უნდა იყოს 1-დან 5-მდე.')
+  }
+
+  const compValue = Number(companyRating)
+  if (!Number.isInteger(compValue) || compValue < 1 || compValue > 5) {
+    throw new Error('კომპანიის რეიტინგი უნდა იყოს 1-დან 5-მდე.')
   }
 
   const firestore = requireDb()
@@ -453,6 +464,7 @@ export async function submitOrderRating(orderId, developerId, { rating, review }
 
   await updateDoc(orderRef, {
     customerRating: value,
+    companyRating: compValue,
     customerReview: review?.trim() || '',
     updatedAt: serverTimestamp(),
   })
@@ -534,14 +546,35 @@ export function formatOrderDate(timestamp) {
 }
 
 export async function updateDeveloperOrderStatus(orderId, status) {
-  if (![ORDER_STATUS.IN_PROGRESS, ORDER_STATUS.COMPLETED].includes(status)) {
-    throw new Error('დეველოპერს მხოლოდ in_progress ან completed სტატუსის დაყენება შეუძლია.')
+  if (![ORDER_STATUS.IN_PROGRESS, ORDER_STATUS.WAITING_APPROVAL, ORDER_STATUS.COMPLETED].includes(status)) {
+    throw new Error('დეველოპერს მხოლოდ შესაბამისი სტატუსების დაყენება შეუძლია.')
   }
 
   return updateOrderStatus(orderId, status)
 }
 
-export async function assignDeveloperToOrder(orderId, { developerId, developerName }) {
+export async function updateOrderTimelineEvent(orderId, eventName, nextStatus = null) {
+  const firestore = requireDb()
+  const payload = {
+    [`${eventName}At`]: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  }
+  if (nextStatus) {
+    payload.status = nextStatus
+  }
+  await updateDoc(doc(firestore, 'orders', orderId), payload)
+}
+
+export async function approveOrderCompletion(orderId) {
+  const firestore = requireDb()
+  await updateDoc(doc(firestore, 'orders', orderId), {
+    status: ORDER_STATUS.COMPLETED,
+    managerApprovedAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  })
+}
+
+export async function assignDeveloperToOrder(orderId, { developerId, developerName, comment }) {
   const firestore = requireDb()
   const orderSnap = await getDoc(doc(firestore, 'orders', orderId))
   if (!orderSnap.exists()) {
@@ -554,7 +587,9 @@ export async function assignDeveloperToOrder(orderId, { developerId, developerNa
   await updateDoc(doc(firestore, 'orders', orderId), {
     assignedDeveloperId: developerId,
     assignedDeveloperName: developerName,
+    assignedDeveloperComment: comment?.trim() || '',
     status: ORDER_STATUS.ASSIGNED,
+    assignedAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   })
 }

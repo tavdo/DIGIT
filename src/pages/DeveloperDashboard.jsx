@@ -8,6 +8,9 @@ import {
   LogOut,
   Play,
   User,
+  Camera,
+  MapPin,
+  CheckSquare,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
@@ -20,12 +23,14 @@ import {
   partitionDeveloperOrders,
   subscribeToDeveloperOrders,
   subscribeToOrder,
-  updateDeveloperOrderStatus,
+  updateOrderTimelineEvent,
 } from '../services/orderService'
+import { uploadCompletionAttachment } from '../services/attachmentService'
 import UserProfileEditor from '../components/profile/UserProfileEditor'
 import UserStatsGrid from '../components/profile/UserStatsGrid'
 import useUserOrderStats from '../hooks/useUserOrderStats'
 import DigitMark from '../components/DigitMark'
+import ThemeToggle from '../components/ThemeToggle'
 import OrderAttachments from '../components/OrderAttachments'
 import usePageMeta from '../hooks/usePageMeta'
 import { pageTitle } from '../constants/brand'
@@ -52,9 +57,12 @@ function TaskCard({ order, onClick }) {
 }
 
 function TaskDetailScreen({ orderId, onBack, onError, readOnly = false }) {
+  const { user } = useAuth()
   const [order, setOrder] = useState(null)
   const [loaded, setLoaded] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [completionFile, setCompletionFile] = useState(null)
+  const [completionPreview, setCompletionPreview] = useState(null)
 
   useEffect(() => {
     if (!orderId) return undefined
@@ -72,24 +80,70 @@ function TaskDetailScreen({ orderId, onBack, onError, readOnly = false }) {
     return unsubscribe
   }, [orderId, onBack, onError])
 
-  const handleStart = async () => {
+  // Automatically log viewed timestamp when order details are loaded
+  useEffect(() => {
+    if (loaded && order && !order.viewedAt && !readOnly) {
+      updateOrderTimelineEvent(order.id, 'viewed').catch((err) => {
+        console.error('Failed to log viewedAt:', err)
+      })
+    }
+  }, [loaded, order, readOnly])
+
+  const handleConfirm = async () => {
     setSubmitting(true)
     try {
-      await updateDeveloperOrderStatus(orderId, ORDER_STATUS.IN_PROGRESS)
+      await updateOrderTimelineEvent(orderId, 'confirmed')
     } catch (err) {
-      onError(err.message || 'სტატუსის განახლება ვერ მოხერხდა.')
+      onError(err.message || 'დადასტურება ვერ მოხერხდა.')
     } finally {
       setSubmitting(false)
     }
   }
 
-  const handleComplete = async () => {
+  const handleArrive = async () => {
     setSubmitting(true)
     try {
-      await updateDeveloperOrderStatus(orderId, ORDER_STATUS.COMPLETED)
+      await updateOrderTimelineEvent(orderId, 'arrived')
+    } catch (err) {
+      onError(err.message || 'მისვლის დადასტურება ვერ მოხერხდა.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleStart = async () => {
+    setSubmitting(true)
+    try {
+      await updateOrderTimelineEvent(orderId, 'started', ORDER_STATUS.IN_PROGRESS)
+    } catch (err) {
+      onError(err.message || 'დაწყება ვერ მოხერხდა.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      setCompletionFile(file)
+      setCompletionPreview(URL.createObjectURL(file))
+    }
+  }
+
+  const handleCompleteSubmit = async () => {
+    if (!completionFile) {
+      onError('დასრულებისთვის აუცილებელია დამადასტურებელი ფოტოს ატვირთვა.')
+      return
+    }
+    setSubmitting(true)
+    try {
+      // 1. Upload photo
+      await uploadCompletionAttachment(orderId, user.uid, completionFile)
+      // 2. Set status to waiting approval
+      await updateOrderTimelineEvent(orderId, 'completed', ORDER_STATUS.WAITING_APPROVAL)
       onBack()
     } catch (err) {
-      onError(err.message || 'სტატუსის განახლება ვერ მოხერხდა.')
+      onError(err.message || 'დასრულება ვერ მოხერხდა.')
     } finally {
       setSubmitting(false)
     }
@@ -105,8 +159,16 @@ function TaskDetailScreen({ orderId, onBack, onError, readOnly = false }) {
 
   if (!order) return null
 
-  const canStart = !readOnly && order.status === ORDER_STATUS.ASSIGNED
-  const canComplete = !readOnly && order.status === ORDER_STATUS.IN_PROGRESS
+  // Timeline list for visual dashboard
+  const timelineEvents = [
+    { label: 'მინიჭება', time: order.assignedAt, done: !!order.assignedAt },
+    { label: 'ნახვა', time: order.viewedAt, done: !!order.viewedAt },
+    { label: 'დადასტურება', time: order.confirmedAt, done: !!order.confirmedAt },
+    { label: 'მისვლა', time: order.arrivedAt, done: !!order.arrivedAt },
+    { label: 'დაწყება', time: order.startedAt, done: !!order.startedAt },
+    { label: 'დასრულება', time: order.completedAt, done: !!order.completedAt },
+    { label: 'შემოწმება', time: order.managerApprovedAt, done: !!order.managerApprovedAt },
+  ]
 
   return (
     <div className="dev-app__screen dev-app__screen--detail">
@@ -122,14 +184,75 @@ function TaskDetailScreen({ orderId, onBack, onError, readOnly = false }) {
 
       <div className="dev-task-detail">
         <h2 className="dev-task-detail__title">{order.serviceType}</h2>
-        <p className="dev-task-detail__priority">
-          პრიორიტეტი: {ORDER_PRIORITY_LABELS[order.priority] ?? '—'}
-        </p>
+
+        {/* Timeline visualization bar */}
+        <div className="dev-task-timeline" style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          margin: '1.25rem 0',
+          background: 'var(--color-navy-soft)',
+          padding: '1rem 0.5rem',
+          borderRadius: 'var(--radius-lg)',
+          border: '1px solid var(--color-border)',
+          flexWrap: 'wrap',
+          gap: '0.5rem'
+        }}>
+          {timelineEvents.map((ev, idx) => (
+            <div key={idx} style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              flex: 1,
+              minWidth: '60px',
+              textAlign: 'center',
+              opacity: ev.done ? 1 : 0.35
+            }}>
+              <div style={{
+                width: '20px',
+                height: '20px',
+                borderRadius: '50%',
+                background: ev.done ? 'var(--color-royal)' : 'var(--color-slate)',
+                color: ev.done ? '#000000' : 'var(--text-color)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '0.65rem',
+                fontWeight: 'bold',
+                marginBottom: '0.25rem'
+              }}>
+                {idx + 1}
+              </div>
+              <span style={{ fontSize: '0.6rem', fontWeight: 'bold' }}>{ev.label}</span>
+              {ev.time && (
+                <span style={{ fontSize: '0.5rem', color: 'var(--color-muted)', marginTop: '2px' }}>
+                  {new Date(ev.time.toDate ? ev.time.toDate() : ev.time).toLocaleTimeString('ka-GE', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Manager Comment block */}
+        {order.assignedDeveloperComment && (
+          <section className="dev-task-detail__block" style={{
+            background: 'var(--color-navy-soft)',
+            borderLeft: '4px solid var(--color-royal)',
+            padding: '1rem',
+            borderRadius: '0 var(--radius-md) var(--radius-md) 0',
+            marginBottom: '1.25rem'
+          }}>
+            <h3 style={{ fontSize: '0.9rem', color: 'var(--color-royal)', marginBottom: '0.25rem' }}>მენეჯერის კომენტარი:</h3>
+            <p style={{ fontStyle: 'italic', fontSize: '0.9rem', margin: 0 }}>"{order.assignedDeveloperComment}"</p>
+          </section>
+        )}
+
         <section className="dev-task-detail__block">
           <h3>აღწერა</h3>
           <p>{order.description}</p>
         </section>
-        <OrderAttachments attachments={order.attachments} title="ფოტო / ვიდეო" />
+
+        <OrderAttachments attachments={order.attachments} title="კლიენტის ფოტო / ვიდეო" />
+
         <section className="dev-task-detail__block">
           <h3>დეტალები</h3>
           <dl className="dev-task-detail__facts">
@@ -138,7 +261,7 @@ function TaskDetailScreen({ orderId, onBack, onError, readOnly = false }) {
               <dd>{order.customerName}</dd>
             </div>
             <div>
-              <dt>თარიღი</dt>
+              <dt>შექმნის თარიღი</dt>
               <dd>{formatOrderDate(order.createdAt)}</dd>
             </div>
             {order.developerPayout > 0 && (
@@ -149,31 +272,130 @@ function TaskDetailScreen({ orderId, onBack, onError, readOnly = false }) {
             )}
           </dl>
         </section>
+
+        {/* Showing completion photo if uploaded */}
+        {order.completionAttachment && (
+          <section className="dev-task-detail__block">
+            <h3>დასრულების ფოტო</h3>
+            <div style={{ marginTop: '0.5rem', borderRadius: 'var(--radius-md)', overflow: 'hidden', border: '1px solid var(--color-border)' }}>
+              <img
+                src={order.completionAttachment.url}
+                alt="completion"
+                style={{ width: '100%', display: 'block', maxHeight: '300px', objectFit: 'contain', background: '#0a0a0c' }}
+              />
+            </div>
+          </section>
+        )}
       </div>
 
-      {(canStart || canComplete) && (
-        <div className="dev-app__actions">
-          {canStart && (
+      {/* Action buttons workflow */}
+      {!readOnly && order.status !== ORDER_STATUS.COMPLETED && (
+        <div className="dev-app__actions" style={{ padding: '1rem', background: 'var(--color-paper-deep)', borderTop: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          
+          {/* 1. If not confirmed */}
+          {!order.confirmedAt && (
+            <button
+              type="button"
+              className="btn btn--primary btn--lg dev-app__action-btn"
+              onClick={handleConfirm}
+              disabled={submitting}
+              style={{ width: '100%' }}
+            >
+              {submitting ? <Loader2 size={18} className="dev-app__spin animate-spin" /> : <CheckSquare size={18} />}
+              დავალების დადასტურება
+            </button>
+          )}
+
+          {/* 2. If confirmed but not arrived */}
+          {order.confirmedAt && !order.arrivedAt && (
+            <button
+              type="button"
+              className="btn btn--primary btn--lg dev-app__action-btn"
+              onClick={handleArrive}
+              disabled={submitting}
+              style={{ width: '100%' }}
+            >
+              {submitting ? <Loader2 size={18} className="dev-app__spin animate-spin" /> : <MapPin size={18} />}
+              ადგილზე მისვლა
+            </button>
+          )}
+
+          {/* 3. If arrived but not started */}
+          {order.arrivedAt && !order.startedAt && (
             <button
               type="button"
               className="btn btn--primary btn--lg dev-app__action-btn"
               onClick={handleStart}
               disabled={submitting}
+              style={{ width: '100%' }}
             >
-              {submitting ? <Loader2 size={18} className="dev-app__spin" /> : <Play size={18} />}
+              {submitting ? <Loader2 size={18} className="dev-app__spin animate-spin" /> : <Play size={18} />}
               სამუშაოს დაწყება
             </button>
           )}
-          {canComplete && (
-            <button
-              type="button"
-              className="btn btn--primary btn--lg dev-app__action-btn"
-              onClick={handleComplete}
-              disabled={submitting}
-            >
-              {submitting ? <Loader2 size={18} className="dev-app__spin" /> : <CheckCircle2 size={18} />}
-              დასრულება
-            </button>
+
+          {/* 4. If in progress, upload completion image */}
+          {order.status === ORDER_STATUS.IN_PROGRESS && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%' }}>
+              <div style={{
+                border: '2px dashed var(--color-border-strong)',
+                borderRadius: 'var(--radius-md)',
+                padding: '1.25rem',
+                textAlign: 'center',
+                background: 'var(--color-navy-soft)',
+                position: 'relative',
+                cursor: 'pointer'
+              }}>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  style={{
+                    position: 'absolute',
+                    top: 0, left: 0, width: '100%', height: '100%',
+                    opacity: 0, cursor: 'pointer'
+                  }}
+                  disabled={submitting}
+                />
+                <Camera size={24} style={{ color: 'var(--color-royal)', marginBottom: '0.5rem' }} />
+                <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: 'bold' }}>
+                  {completionFile ? completionFile.name : 'გადაიღე/ატვირთე დასრულების ფოტო'}
+                </p>
+                <span style={{ fontSize: '0.7rem', color: 'var(--color-muted)' }}>ფოტო აუცილებელია დასრულებისთვის</span>
+              </div>
+
+              {completionPreview && (
+                <div style={{ borderRadius: 'var(--radius-md)', overflow: 'hidden', border: '1px solid var(--color-border)', height: '120px' }}>
+                  <img src={completionPreview} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </div>
+              )}
+
+              <button
+                type="button"
+                className="btn btn--primary btn--lg dev-app__action-btn"
+                onClick={handleCompleteSubmit}
+                disabled={submitting || !completionFile}
+                style={{ width: '100%' }}
+              >
+                {submitting ? <Loader2 size={18} className="dev-app__spin animate-spin" /> : <CheckCircle2 size={18} />}
+                დასრულება და გაგზავნა
+              </button>
+            </div>
+          )}
+
+          {/* 5. If waiting manager approval */}
+          {order.status === ORDER_STATUS.WAITING_APPROVAL && (
+            <div style={{
+              background: 'rgba(0, 255, 102, 0.05)',
+              border: '1px solid var(--color-royal)',
+              padding: '1rem',
+              borderRadius: 'var(--radius-md)',
+              textAlign: 'center',
+              fontSize: '0.9rem',
+              color: 'var(--color-royal)'
+            }}>
+              სამუშაო გაგზავნილია მენეჯერთან შესამოწმებლად. გთხოვთ დაელოდოთ დადასტურებას.
+            </div>
           )}
         </div>
       )}
@@ -268,9 +490,12 @@ function DeveloperDashboard() {
             <strong>{userProfile?.name || 'ჩემი ტასკები'}</strong>
           </div>
         </div>
-        <button type="button" className="dev-app__logout" onClick={logout} aria-label="გასვლა">
-          <LogOut size={18} />
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <ThemeToggle />
+          <button type="button" className="dev-app__logout" onClick={logout} aria-label="გასვლა">
+            <LogOut size={18} />
+          </button>
+        </div>
       </header>
 
       {error && <div className="dev-app__error">{error}</div>}

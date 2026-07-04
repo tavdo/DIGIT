@@ -16,6 +16,8 @@ import {
   PAYMENT_STATUS_LABELS,
   PAYOUT_STATUS,
   PAYOUT_STATUS_LABELS,
+  offerOrderPrice,
+  approveOrderCompletion,
 } from '../../services/orderService'
 import {
   Loader2,
@@ -26,6 +28,7 @@ import {
   FileText,
   Paperclip,
   AlertCircle,
+  Clock,
 } from 'lucide-react'
 
 const ACTIVE_STATUSES = [
@@ -34,6 +37,7 @@ const ACTIVE_STATUSES = [
   ORDER_STATUS.QUOTE_CONFIRMED,
   ORDER_STATUS.ASSIGNED,
   ORDER_STATUS.IN_PROGRESS,
+  ORDER_STATUS.WAITING_APPROVAL,
 ]
 
 export default function ManagerOrdersPanel({ managerName, onError }) {
@@ -43,13 +47,15 @@ export default function ManagerOrdersPanel({ managerName, onError }) {
   const [selectedOrderId, setSelectedOrderId] = useState(null)
   const [filterType, setFilterType] = useState('active') // 'active' | 'completed' | 'all'
 
-  // Compensation form state
+  // Pricing form state
   const [priceInput, setPriceInput] = useState('')
+  const [priceExplanationInput, setPriceExplanationInput] = useState('')
   const [payoutInput, setPayoutInput] = useState('')
   const [compensationSaving, setCompensationSaving] = useState(false)
 
   // Assignment state
   const [selectedDevId, setSelectedDevId] = useState('')
+  const [assignedDeveloperCommentInput, setAssignedDeveloperCommentInput] = useState('')
   const [assigning, setAssigning] = useState(false)
 
   // Note state
@@ -102,10 +108,12 @@ export default function ManagerOrdersPanel({ managerName, onError }) {
     setPrevSelectedOrder(selectedOrder)
     if (selectedOrder) {
       setPriceInput(selectedOrder.price != null ? String(selectedOrder.price) : '')
+      setPriceExplanationInput(selectedOrder.priceExplanation || '')
       setPayoutInput(
         selectedOrder.developerPayout != null ? String(selectedOrder.developerPayout) : ''
       )
       setSelectedDevId(selectedOrder.assignedDeveloperId || '')
+      setAssignedDeveloperCommentInput(selectedOrder.assignedDeveloperComment || '')
     }
   }
 
@@ -133,7 +141,23 @@ export default function ManagerOrdersPanel({ managerName, onError }) {
     }
   }
 
-  // Handle developer assign
+  // Handle price offer suggestion with explanation text
+  const handleOfferPrice = async (e) => {
+    e.preventDefault()
+    if (!selectedOrder) return
+
+    setCompensationSaving(true)
+    try {
+      const price = parseFloat(priceInput) || 0
+      await offerOrderPrice(selectedOrder.id, price, priceExplanationInput)
+    } catch (err) {
+      onError?.(err.message || 'ფასის შეთავაზება ვერ მოხერხდა')
+    } finally {
+      setCompensationSaving(false)
+    }
+  }
+
+  // Handle developer assign with comment
   const handleAssignDeveloper = async (e) => {
     e.preventDefault()
     if (!selectedOrder || !selectedDevId) return
@@ -146,11 +170,25 @@ export default function ManagerOrdersPanel({ managerName, onError }) {
       await assignDeveloperToOrder(selectedOrder.id, {
         developerId: dev.id,
         developerName: dev.displayName || dev.name || dev.email,
+        comment: assignedDeveloperCommentInput,
       })
     } catch (err) {
       onError?.(err.message || 'შემსრულებლის მიბმა ვერ მოხერხდა')
     } finally {
       setAssigning(false)
+    }
+  }
+
+  // Handle approval of completion
+  const handleApproveCompletion = async () => {
+    if (!selectedOrder) return
+    setStatusUpdating(true)
+    try {
+      await approveOrderCompletion(selectedOrder.id)
+    } catch (err) {
+      onError?.(err.message || 'დასრულების დადასტურება ვერ მოხერხდა')
+    } finally {
+      setStatusUpdating(false)
     }
   }
 
@@ -293,7 +331,18 @@ export default function ManagerOrdersPanel({ managerName, onError }) {
                 </div>
               </div>
               <div className="dashboard-chat__header-actions">
-                {selectedOrder.status !== ORDER_STATUS.COMPLETED && (
+                {selectedOrder.status === ORDER_STATUS.WAITING_APPROVAL && (
+                  <button
+                    type="button"
+                    className="dashboard-chat__close-btn"
+                    style={{ background: 'var(--color-royal)', color: '#000000', fontWeight: 'bold', border: '1px solid var(--color-royal)' }}
+                    disabled={statusUpdating}
+                    onClick={handleApproveCompletion}
+                  >
+                    დასრულების დადასტურება
+                  </button>
+                )}
+                {selectedOrder.status !== ORDER_STATUS.COMPLETED && selectedOrder.status !== ORDER_STATUS.WAITING_APPROVAL && (
                   <button
                     type="button"
                     className="dashboard-chat__close-btn"
@@ -307,7 +356,8 @@ export default function ManagerOrdersPanel({ managerName, onError }) {
             </div>
 
             {/* Scrollable details and logs */}
-            <div className="dashboard-chat__messages">
+            <div className="dashboard-chat__messages" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              
               {/* Core Order Info Card */}
               <div className="profile-card" style={{ boxShadow: 'none', margin: 0 }}>
                 <h3 className="profile-section__title" style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
@@ -337,7 +387,7 @@ export default function ManagerOrdersPanel({ managerName, onError }) {
                       {selectedOrder.attachments.map((url, i) => (
                         <a
                           key={i}
-                          href={url}
+                          href={url.url || url}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="btn btn--outline btn--sm"
@@ -351,78 +401,208 @@ export default function ManagerOrdersPanel({ managerName, onError }) {
                 )}
               </div>
 
-              {/* Price & Payout Management Form */}
+              {/* Performer Completion Photo Section */}
+              {selectedOrder.completionAttachment && (
+                <div className="profile-card" style={{ boxShadow: 'none', margin: 0, border: '1px solid var(--color-royal)' }}>
+                  <h3 className="profile-section__title" style={{ color: 'var(--color-royal)' }}>
+                    შემსრულებლის რეპორტი (სამუშაო დასრულებულია)
+                  </h3>
+                  <div style={{ marginTop: '0.75rem', borderRadius: 'var(--radius-md)', overflow: 'hidden', border: '1px solid var(--color-border)' }}>
+                    <img
+                      src={selectedOrder.completionAttachment.url}
+                      alt="Completion Proof"
+                      style={{ width: '100%', display: 'block', maxHeight: '350px', objectFit: 'contain', background: '#0a0a0c' }}
+                    />
+                  </div>
+                  {selectedOrder.status === ORDER_STATUS.WAITING_APPROVAL && (
+                    <button
+                      type="button"
+                      className="btn btn--accent btn--lg"
+                      onClick={handleApproveCompletion}
+                      disabled={statusUpdating}
+                      style={{ width: '100%', marginTop: '1rem', background: 'var(--color-royal)', color: '#000000', fontWeight: 'bold' }}
+                    >
+                      დასრულების დადასტურება (მომხმარებელთან გაგზავნა)
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Visual Timeline Section */}
               <div className="profile-card" style={{ boxShadow: 'none', margin: 0 }}>
                 <h3 className="profile-section__title" style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                  <DollarSign size={16} /> ფინანსური მართვა
+                  <Clock size={16} /> დავალების თაიმლაინი
                 </h3>
-                <form onSubmit={handleUpdateCompensation} className="profile-form" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '1rem',
+                  marginTop: '1rem',
+                  position: 'relative',
+                  paddingLeft: '1.25rem',
+                  borderLeft: '2px solid var(--color-border)'
+                }}>
+                  {[
+                    { key: 'createdAt', label: 'პრობლემის გაგზავნა', time: selectedOrder.createdAt },
+                    { key: 'priceExplanation', label: 'ფასის შეთავაზება მენეჯერისგან', time: selectedOrder.price != null ? (selectedOrder.quoteConfirmedAt || selectedOrder.updatedAt) : null, extra: selectedOrder.price ? `${selectedOrder.price} ₾` : null },
+                    { key: 'quoteConfirmedAt', label: 'ფასის დადასტურება მომხმარებლისგან', time: selectedOrder.quoteConfirmedAt },
+                    { key: 'assignedAt', label: 'შემსრულებლის დავალებაზე მიბმა', time: selectedOrder.assignedAt, extra: selectedOrder.assignedDeveloperName },
+                    { key: 'viewedAt', label: 'შემსრულებელმა მიიღო/ნახა დავალება', time: selectedOrder.viewedAt },
+                    { key: 'confirmedAt', label: 'შემსრულებელმა დაადასტურა დავალება', time: selectedOrder.confirmedAt },
+                    { key: 'arrivedAt', label: 'შემსრულებელი მივიდა ადგილზე', time: selectedOrder.arrivedAt },
+                    { key: 'startedAt', label: 'შემსრულებელმა დაიწყო მუშაობა', time: selectedOrder.startedAt },
+                    { key: 'completedAt', label: 'შემსრულებელმა დაასრულა და გაგზავნა ფოტო', time: selectedOrder.completedAt },
+                    { key: 'managerApprovedAt', label: 'მენეჯერმა დაადასტურა შესრულება', time: selectedOrder.managerApprovedAt },
+                  ].map((ev, i) => {
+                    const hasTime = !!ev.time
+                    const formatted = ev.time ? (typeof ev.time.toDate === 'function' ? ev.time.toDate() : new Date(ev.time)).toLocaleString('ka-GE', {
+                      hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short'
+                    }) : null
+
+                    return (
+                      <div key={i} style={{ position: 'relative', opacity: hasTime ? 1 : 0.35 }}>
+                        <div style={{
+                          position: 'absolute',
+                          left: '-26px',
+                          top: '5px',
+                          width: '10px',
+                          height: '10px',
+                          borderRadius: '50%',
+                          background: hasTime ? 'var(--color-royal)' : 'var(--color-slate)',
+                          boxShadow: hasTime ? '0 0 8px var(--color-royal)' : 'none'
+                        }} />
+                        <div style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>{ev.label}</div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--color-muted)', marginTop: '2px' }}>
+                          <span>{ev.extra ? `(${ev.extra})` : ''}</span>
+                          <span>{formatted || 'ჯერ არ მომხდარა'}</span>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Price & Payout Management Form */}
+              {(selectedOrder.status === ORDER_STATUS.NEW || selectedOrder.status === ORDER_STATUS.QUOTE_REJECTED) ? (
+                <div className="profile-card" style={{ boxShadow: 'none', margin: 0 }}>
+                  <h3 className="profile-section__title" style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                    <DollarSign size={16} /> საფასურის შეთავაზება კლიენტისთვის
+                  </h3>
+                  <form onSubmit={handleOfferPrice} className="profile-form" style={{ marginTop: '0.5rem', paddingTop: 0, borderTop: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                     <div className="profile-form__field">
-                      <span>კლიენტის ფასი (₾)</span>
+                      <span>ფასი მომხმარებელს (₾)</span>
                       <input
                         type="number"
                         placeholder="მაგ: 150"
                         value={priceInput}
                         onChange={(e) => setPriceInput(e.target.value)}
                         disabled={compensationSaving}
+                        required
                       />
                     </div>
                     <div className="profile-form__field">
-                      <span>შემსრულებლის ჰონორარი (₾)</span>
-                      <input
-                        type="number"
-                        placeholder="მაგ: 100"
-                        value={payoutInput}
-                        onChange={(e) => setPayoutInput(e.target.value)}
+                      <span>რატომ ჯდება ეს ფასი? (განმარტება)</span>
+                      <textarea
+                        rows={2}
+                        placeholder="მაგ: მოითხოვს სადენების სრულ გამოცვლას და სპეც. ხელსაწყოების გამოყენებას..."
+                        value={priceExplanationInput}
+                        onChange={(e) => setPriceExplanationInput(e.target.value)}
                         disabled={compensationSaving}
+                        required
+                        style={{ width: '100%', background: 'var(--color-paper)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', color: 'var(--text-color)', padding: '0.5rem', fontFamily: 'inherit' }}
                       />
                     </div>
-                  </div>
-                  <button
-                    type="submit"
-                    className="btn btn--outline btn--sm"
-                    disabled={compensationSaving}
-                    style={{ alignSelf: 'flex-end', marginTop: '0.5rem' }}
-                  >
-                    {compensationSaving ? 'ინახება...' : 'ფასების განახლება'}
-                  </button>
-                </form>
+                    <button
+                      type="submit"
+                      className="btn btn--accent btn--sm"
+                      disabled={compensationSaving || !priceInput || !priceExplanationInput.trim()}
+                      style={{ alignSelf: 'flex-end' }}
+                    >
+                      {compensationSaving ? 'იგზავნება...' : 'ფასის შეთავაზება'}
+                    </button>
+                  </form>
+                </div>
+              ) : (
+                <div className="profile-card" style={{ boxShadow: 'none', margin: 0 }}>
+                  <h3 className="profile-section__title" style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                    <DollarSign size={16} /> ფინანსური მართვა
+                  </h3>
+                  
+                  {selectedOrder.priceExplanation && (
+                    <div style={{ fontSize: '0.85rem', marginBottom: '1rem', padding: '0.75rem', background: 'var(--color-navy-soft)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
+                      <span style={{ fontWeight: 'bold', display: 'block', color: 'var(--color-royal)' }}>ფასის განმარტება:</span>
+                      <span style={{ fontStyle: 'italic' }}>"{selectedOrder.priceExplanation}"</span>
+                    </div>
+                  )}
 
-                {/* Payment & Payout dropdown updates */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem', borderTop: '1px solid var(--color-border)', paddingTop: '1rem' }}>
-                  <div className="profile-form__field">
-                    <span>გადახდის სტატუსი</span>
-                    <select
-                      className="admin-table__select"
-                      style={{ width: '100%' }}
-                      value={selectedOrder.paymentStatus || PAYMENT_STATUS.UNPAID}
-                      onChange={(e) => handleUpdatePaymentStatus(e.target.value)}
+                  <form onSubmit={handleUpdateCompensation} className="profile-form" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                      <div className="profile-form__field">
+                        <span>კლიენტის ფასი (₾)</span>
+                        <input
+                          type="number"
+                          placeholder="მაგ: 150"
+                          value={priceInput}
+                          onChange={(e) => setPriceInput(e.target.value)}
+                          disabled={compensationSaving}
+                        />
+                      </div>
+                      <div className="profile-form__field">
+                        <span>შემსრულებლის ჰონორარი (₾)</span>
+                        <input
+                          type="number"
+                          placeholder="მაგ: 100"
+                          value={payoutInput}
+                          onChange={(e) => setPayoutInput(e.target.value)}
+                          disabled={compensationSaving}
+                        />
+                      </div>
+                    </div>
+                    <button
+                      type="submit"
+                      className="btn btn--outline btn--sm"
+                      disabled={compensationSaving}
+                      style={{ alignSelf: 'flex-end', marginTop: '0.5rem' }}
                     >
-                      {Object.entries(PAYMENT_STATUS_LABELS).map(([val, label]) => (
-                        <option key={val} value={val}>
-                          {label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="profile-form__field">
-                    <span>ჰონორარის გაცემა</span>
-                    <select
-                      className="admin-table__select"
-                      style={{ width: '100%' }}
-                      value={selectedOrder.payoutStatus || PAYOUT_STATUS.PENDING}
-                      onChange={(e) => handleUpdatePayoutStatus(e.target.value)}
-                    >
-                      {Object.entries(PAYOUT_STATUS_LABELS).map(([val, label]) => (
-                        <option key={val} value={val}>
-                          {label}
-                        </option>
-                      ))}
-                    </select>
+                      {compensationSaving ? 'ინახება...' : 'ფასების განახლება'}
+                    </button>
+                  </form>
+
+                  {/* Payment & Payout dropdown updates */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem', borderTop: '1px solid var(--color-border)', paddingTop: '1rem' }}>
+                    <div className="profile-form__field">
+                      <span>გადახდის სტატუსი</span>
+                      <select
+                        className="admin-table__select"
+                        style={{ width: '100%' }}
+                        value={selectedOrder.paymentStatus || PAYMENT_STATUS.UNPAID}
+                        onChange={(e) => handleUpdatePaymentStatus(e.target.value)}
+                      >
+                        {Object.entries(PAYMENT_STATUS_LABELS).map(([val, label]) => (
+                          <option key={val} value={val}>
+                            {label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="profile-form__field">
+                      <span>ჰონორარის გაცემა</span>
+                      <select
+                        className="admin-table__select"
+                        style={{ width: '100%' }}
+                        value={selectedOrder.payoutStatus || PAYOUT_STATUS.PENDING}
+                        onChange={(e) => handleUpdatePayoutStatus(e.target.value)}
+                      >
+                        {Object.entries(PAYOUT_STATUS_LABELS).map(([val, label]) => (
+                          <option key={val} value={val}>
+                            {label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Developer Assignment Section */}
               <div className="profile-card" style={{ boxShadow: 'none', margin: 0 }}>
@@ -430,50 +610,71 @@ export default function ManagerOrdersPanel({ managerName, onError }) {
                   <User size={16} /> შემსრულებლის მიბმა
                 </h3>
                 {selectedOrder.assignedDeveloperId ? (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ fontSize: '0.9rem' }}>
-                      მიბმულია: <strong>{selectedOrder.assignedDeveloperName || 'სახელის გარეშე'}</strong>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ fontSize: '0.9rem' }}>
+                        მიბმულია: <strong>{selectedOrder.assignedDeveloperName || 'სახელის გარეშე'}</strong>
+                      </div>
+                      {selectedOrder.status !== ORDER_STATUS.COMPLETED && (
+                        <button
+                          type="button"
+                          className="btn btn--outline btn--sm"
+                          onClick={() => setSelectedDevId('')}
+                          style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
+                        >
+                          შეცვლა
+                        </button>
+                      )}
                     </div>
-                    {selectedOrder.status !== ORDER_STATUS.COMPLETED && (
-                      <button
-                        type="button"
-                        className="btn btn--outline btn--sm"
-                        onClick={() => setSelectedDevId('')}
-                        style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
-                      >
-                        შეცვლა
-                      </button>
+                    {selectedOrder.assignedDeveloperComment && (
+                      <div style={{ fontSize: '0.85rem', fontStyle: 'italic', padding: '0.5rem', background: 'var(--color-navy-soft)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', marginTop: '0.25rem' }}>
+                        შემსრულებლის კომენტარი: "{selectedOrder.assignedDeveloperComment}"
+                      </div>
                     )}
                   </div>
                 ) : null}
 
                 {(!selectedOrder.assignedDeveloperId || selectedDevId === '') && (
-                  <form onSubmit={handleAssignDeveloper} className="profile-form" style={{ marginTop: '0.5rem', paddingTop: 0, borderTop: 'none', display: 'flex', gap: '0.5rem', flexDirection: 'row', alignItems: 'flex-end' }}>
-                    <div className="profile-form__field" style={{ flex: 1 }}>
-                      <span>აირჩიეთ დეველოპერი</span>
-                      <select
-                        className="admin-table__select"
-                        style={{ width: '100%' }}
-                        value={selectedDevId}
-                        onChange={(e) => setSelectedDevId(e.target.value)}
-                        disabled={assigning}
+                  <form onSubmit={handleAssignDeveloper} className="profile-form" style={{ marginTop: '0.5rem', paddingTop: 0, borderTop: 'none', display: 'flex', gap: '0.75rem', flexDirection: 'column' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
+                      <div className="profile-form__field" style={{ flex: 1 }}>
+                        <span>აირჩიეთ დეველოპერი</span>
+                        <select
+                          className="admin-table__select"
+                          style={{ width: '100%' }}
+                          value={selectedDevId}
+                          onChange={(e) => setSelectedDevId(e.target.value)}
+                          disabled={assigning}
+                        >
+                          <option value="">აირჩიეთ შემსრულებელი</option>
+                          {developers.map((dev) => (
+                            <option key={dev.id} value={dev.id}>
+                              {dev.displayName || dev.name || dev.email}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <button
+                        type="submit"
+                        className="btn btn--accent btn--sm"
+                        disabled={assigning || !selectedDevId}
+                        style={{ height: '38px' }}
                       >
-                        <option value="">აირჩიეთ შემსრულებელი</option>
-                        {developers.map((dev) => (
-                          <option key={dev.id} value={dev.id}>
-                            {dev.displayName || dev.name || dev.email}
-                          </option>
-                        ))}
-                      </select>
+                        მიბმა
+                      </button>
                     </div>
-                    <button
-                      type="submit"
-                      className="btn btn--accent btn--sm"
-                      disabled={assigning || !selectedDevId}
-                      style={{ height: '38px' }}
-                    >
-                      მიბმა
-                    </button>
+
+                    <div className="profile-form__field">
+                      <span>კომენტარი შემსრულებელს (ინსტრუქცია)</span>
+                      <textarea
+                        rows={2}
+                        placeholder="მაგ: შეამოწმე კაბელები, დაზიანება სავარაუდოდ გარეთა კედელზეა..."
+                        value={assignedDeveloperCommentInput}
+                        onChange={(e) => setAssignedDeveloperCommentInput(e.target.value)}
+                        disabled={assigning}
+                        style={{ width: '100%', background: 'var(--color-paper)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', color: 'var(--text-color)', padding: '0.5rem', fontFamily: 'inherit' }}
+                      />
+                    </div>
                   </form>
                 )}
               </div>

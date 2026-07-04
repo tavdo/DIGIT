@@ -69,6 +69,61 @@
   --gradient-text: linear-gradient(135deg, #ffffff 0%, #00ff66 100%);
 }
 
+.light-mode {
+  /* ── DIGIT Light Mode overrides ── */
+  --color-navy: #ffffff;
+  --color-navy-soft: #f4f4f5;
+  --color-royal: #00b33c;
+  --color-sky: #0066cc;
+  --color-ice: #18181b;
+
+  --color-ink: #18181b;
+  --color-slate: #e4e4e7;
+  --color-paper: #ffffff;
+  --color-paper-deep: #f4f4f5;
+  --color-surface: #ffffff;
+  --color-copper: #00b33c;
+  --color-copper-glow: rgba(0, 179, 60, 0.15);
+  --color-copper-dim: #00802b;
+  --color-relay: #00b33c;
+  --color-relay-soft: rgba(0, 179, 60, 0.05);
+  --color-sage: #00b33c;
+  --color-white: #000000;
+  --color-muted: #71717a;
+  --color-border: #e4e4e7;
+  --color-border-strong: #d4d4d8;
+  --color-border-hover: #00b33c;
+  --color-border-on-dark: #e4e4e7;
+  --color-error: #df2a2a;
+  --color-error-bg: rgba(223, 42, 42, 0.1);
+  --color-highlight: rgba(0, 179, 60, 0.06);
+
+  /* Legacy aliases */
+  --primary-color: #000000;
+  --primary-light: #00b33c;
+  --secondary-color: var(--color-copper);
+  --accent-color: var(--color-copper);
+  --bg-color: #ffffff;
+  --bg-alt: #f4f4f5;
+  --text-color: #18181b;
+  --text-muted: var(--color-muted);
+  --text-inverse: #ffffff;
+  --text-on-dark-muted: #71717a;
+  --border-color: var(--color-border);
+
+  /* Gradients */
+  --gradient-brand: linear-gradient(135deg, #00b33c 0%, #0066cc 100%);
+  --gradient-hero: linear-gradient(180deg, #ffffff 0%, #f4f4f5 100%);
+  --gradient-surface: linear-gradient(180deg, #f4f4f5 0%, #ffffff 100%);
+  --gradient-text: linear-gradient(135deg, #000000 0%, #00b33c 100%);
+}
+
+.light-mode body {
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+}
+
 *,
 *::before,
 *::after {

@@ -235,7 +235,7 @@ service cloud.firestore {
         || customerRatingUpdate()
         || (
           isAssignedDeveloper(resource.data)
-          && request.resource.data.status in ['in_progress', 'completed']
+          && request.resource.data.status in ['assigned', 'in_progress', 'completed', 'waiting_approval']
           && request.resource.data.assignedDeveloperId == resource.data.assignedDeveloperId
           && request.resource.data.assignedDeveloperName == resource.data.assignedDeveloperName
           && request.resource.data.customerId == resource.data.customerId

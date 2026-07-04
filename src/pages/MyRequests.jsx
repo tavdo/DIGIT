@@ -9,7 +9,6 @@ import {
   confirmOrderPrice,
   formatOrderAmount,
   formatOrderDate,
-  ORDER_PRIORITY_LABELS,
   ORDER_STATUS,
   ORDER_STATUS_LABELS,
   rejectOrderPrice,
@@ -21,6 +20,7 @@ import './MyRequests.css'
 
 function RatingForm({ order, onRated, onError }) {
   const [rating, setRating] = useState(5)
+  const [companyRating, setCompanyRating] = useState(5)
   const [review, setReview] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
@@ -28,7 +28,7 @@ function RatingForm({ order, onRated, onError }) {
     e.preventDefault()
     setSubmitting(true)
     try {
-      await submitOrderRating(order.id, order.assignedDeveloperId, { rating, review })
+      await submitOrderRating(order.id, order.assignedDeveloperId, { rating, companyRating, review })
       onRated()
     } catch (err) {
       onError(err.message || 'შეფასება ვერ ჩაიწერა.')
@@ -38,30 +38,77 @@ function RatingForm({ order, onRated, onError }) {
   }
 
   return (
-    <form className="my-request__rating" onSubmit={handleSubmit}>
-      <p className="my-request__rating-label">შეაფასე შემსრულებელი:</p>
-      <div className="my-request__stars">
-        {[1, 2, 3, 4, 5].map((value) => (
-          <button
-            key={value}
-            type="button"
-            className={`my-request__star ${rating >= value ? 'my-request__star--active' : ''}`}
-            onClick={() => setRating(value)}
-            aria-label={`${value} ვარსკვლავი`}
-          >
-            <Star size={20} />
-          </button>
-        ))}
+    <form className="my-request__rating" onSubmit={handleSubmit} style={{
+      background: 'var(--color-navy-soft)',
+      border: '1px solid var(--color-border-strong)',
+      padding: '1.25rem',
+      borderRadius: 'var(--radius-lg)',
+      marginTop: '1.5rem',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '1rem'
+    }}>
+      <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--color-royal)' }}>დავალება შესრულებულია! გთხოვთ შეაფასოთ:</h4>
+
+      <div>
+        <p className="my-request__rating-label" style={{ marginBottom: '0.25rem', fontSize: '0.9rem' }}>შეაფასე შემსრულებელი ({order.assignedDeveloperName || 'სპეციალისტი'}):</p>
+        <div className="my-request__stars" style={{ display: 'flex', gap: '0.25rem' }}>
+          {[1, 2, 3, 4, 5].map((value) => (
+            <button
+              key={value}
+              type="button"
+              className={`my-request__star ${rating >= value ? 'my-request__star--active' : ''}`}
+              onClick={() => setRating(value)}
+              aria-label={`${value} ვარსკვლავი`}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', color: rating >= value ? '#ffd700' : 'var(--color-muted)' }}
+            >
+              <Star size={20} fill={rating >= value ? '#ffd700' : 'none'} />
+            </button>
+          ))}
+        </div>
       </div>
-      <textarea
-        className="my-request__review"
-        rows={2}
-        placeholder="კომენტარი (არასავალდებულო)"
-        value={review}
-        onChange={(e) => setReview(e.target.value)}
-        disabled={submitting}
-      />
-      <button type="submit" className="btn btn--primary btn--sm" disabled={submitting}>
+
+      <div>
+        <p className="my-request__rating-label" style={{ marginBottom: '0.25rem', fontSize: '0.9rem' }}>შეაფასე კომპანია:</p>
+        <div className="my-request__stars" style={{ display: 'flex', gap: '0.25rem' }}>
+          {[1, 2, 3, 4, 5].map((value) => (
+            <button
+              key={value}
+              type="button"
+              className={`my-request__star ${companyRating >= value ? 'my-request__star--active' : ''}`}
+              onClick={() => setCompanyRating(value)}
+              aria-label={`${value} ვარსკვლავი`}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', color: companyRating >= value ? '#ffd700' : 'var(--color-muted)' }}
+            >
+              <Star size={20} fill={companyRating >= value ? '#ffd700' : 'none'} />
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <p className="my-request__rating-label" style={{ marginBottom: '0.25rem', fontSize: '0.9rem' }}>დატოვე კომენტარი შესრულებულ დავალებაზე:</p>
+        <textarea
+          className="my-request__review"
+          rows={3}
+          placeholder="კომენტარი (არასავალდებულო)"
+          value={review}
+          onChange={(e) => setReview(e.target.value)}
+          disabled={submitting}
+          style={{
+            width: '100%',
+            background: 'var(--color-paper)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 'var(--radius-md)',
+            color: 'var(--text-color)',
+            padding: '0.5rem',
+            fontFamily: 'inherit',
+            resize: 'vertical'
+          }}
+        />
+      </div>
+
+      <button type="submit" className="btn btn--primary btn--sm" disabled={submitting} style={{ alignSelf: 'flex-start' }}>
         შეფასების გაგზავნა
       </button>
     </form>
@@ -99,8 +146,7 @@ function RequestCard({ order, onError }) {
         <div>
           <h2 className="my-request__title">{order.serviceType}</h2>
           <p className="my-request__meta">
-            {formatOrderDate(order.createdAt)} ·{' '}
-            {ORDER_PRIORITY_LABELS[order.priority] ?? order.priority}
+            {formatOrderDate(order.createdAt)}
           </p>
         </div>
         <span className={`order-badge order-badge--${order.status}`}>
@@ -113,9 +159,22 @@ function RequestCard({ order, onError }) {
       <OrderAttachments attachments={order.attachments} />
 
       {order.price != null && order.status !== ORDER_STATUS.NEW && (
-        <p className="my-request__price">
-          შეთავაზებული ფასი: <strong>{formatOrderAmount(order.price)}</strong>
-        </p>
+        <div className="my-request__price-box" style={{
+          background: 'var(--color-navy-soft)',
+          border: '1px solid var(--color-border)',
+          padding: '0.75rem 1rem',
+          borderRadius: 'var(--radius-md)',
+          margin: '1rem 0'
+        }}>
+          <p className="my-request__price" style={{ margin: 0 }}>
+            შეთავაზებული ფასი: <strong>{formatOrderAmount(order.price)}</strong>
+          </p>
+          {order.priceExplanation && (
+            <p className="my-request__price-explanation" style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: 'var(--color-muted)' }}>
+              რატომ ჯდება ეს ფასი: <em>{order.priceExplanation}</em>
+            </p>
+          )}
+        </div>
       )}
 
       {order.assignedDeveloperName && (
@@ -159,9 +218,22 @@ function RequestCard({ order, onError }) {
       )}
 
       {order.customerRating != null && (
-        <p className="my-request__rated">
-          შენი შეფასება: {'★'.repeat(order.customerRating)}
-        </p>
+        <div className="my-request__rated" style={{
+          background: 'var(--color-navy-soft)',
+          border: '1px solid var(--color-border)',
+          padding: '1rem',
+          borderRadius: 'var(--radius-md)',
+          marginTop: '1rem',
+          fontSize: '0.9rem'
+        }}>
+          <p style={{ margin: '0 0 0.25rem 0' }}>შენი შეფასება სპეციალისტს: <strong>{'★'.repeat(order.customerRating)}</strong></p>
+          {order.companyRating != null && (
+            <p style={{ margin: '0 0 0.25rem 0' }}>შენი შეფასება კომპანიას: <strong>{'★'.repeat(order.companyRating)}</strong></p>
+          )}
+          {order.customerReview && (
+            <p style={{ margin: 0, fontStyle: 'italic', color: 'var(--color-muted)' }}>"{order.customerReview}"</p>
+          )}
+        </div>
       )}
     </article>
   )

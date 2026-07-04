@@ -1,29 +1,20 @@
 import { useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { Send, Phone, Mail, Clock, Zap, Calendar, Timer } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Send, Phone, Mail, Clock } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import FirebaseSetupNotice from '../components/FirebaseSetupNotice'
 import Reveal from '../components/Reveal'
 import usePageMeta from '../hooks/usePageMeta'
 import { pageTitle } from '../constants/brand'
-import { allServices } from '../data/services'
-import { getServiceFromContent, getServicesFromContent } from '../utils/siteServices'
 import useSiteContent from '../hooks/useSiteContent'
 import {
   createTicket,
   ORDER_PRIORITY,
-  ORDER_PRIORITY_LABELS,
 } from '../services/orderService'
 import { MAX_ORDER_DESCRIPTION_LENGTH, validateMessageLength } from '../utils/validation'
 import { validateTicketAttachmentSelection } from '../utils/attachmentValidation'
 import TicketAttachmentPicker from '../components/TicketAttachmentPicker'
 import './Contact.css'
-
-const PRIORITY_OPTIONS = [
-  { value: ORDER_PRIORITY.URGENT, label: ORDER_PRIORITY_LABELS.urgent, icon: Zap },
-  { value: ORDER_PRIORITY.TOMORROW, label: ORDER_PRIORITY_LABELS.tomorrow, icon: Calendar },
-  { value: ORDER_PRIORITY.FLEXIBLE, label: ORDER_PRIORITY_LABELS.flexible, icon: Timer },
-]
 
 function Contact() {
   usePageMeta(
@@ -34,22 +25,13 @@ function Contact() {
   const { user, userProfile, isFirebaseConfigured } = useAuth()
   const { content } = useSiteContent()
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const serviceIdFromUrl = searchParams.get('service')
 
-  const [serviceId, setServiceId] = useState(
-    () => serviceIdFromUrl || allServices[0]?.id || '',
-  )
   const [description, setDescription] = useState('')
-  const [priority, setPriority] = useState(ORDER_PRIORITY.TOMORROW)
   const [attachmentFiles, setAttachmentFiles] = useState([])
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [attachmentError, setAttachmentError] = useState('')
   const [success, setSuccess] = useState(false)
-
-  const services = getServicesFromContent(content)
-  const selectedService = getServiceFromContent(content, serviceId) || services[0]
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -76,10 +58,10 @@ function Contact() {
         customerId: user.uid,
         customerName:
           userProfile?.name || user.displayName || user.email?.split('@')[0] || 'ბიზნესი',
-        serviceId,
-        serviceType: selectedService?.title || serviceId,
+        serviceId: null,
+        serviceType: 'ზოგადი პრობლემა',
         description: trimmed,
-        priority,
+        priority: ORDER_PRIORITY.FLEXIBLE,
         attachmentFiles,
       })
       setSuccess(true)
@@ -98,7 +80,7 @@ function Contact() {
           <Reveal>
             <h1 className="page-hero__title">გამოიძახე დახმარება</h1>
             <p className="page-hero__text">
-              აირჩიე კატეგორია, აღწერე პრობლემა, სურვილისამებრ მიმაგრე ფოტო და მიუთითე პრიორიტეტი.
+              აღწერე პრობლემა და სურვილისამებრ მიმაგრე ფოტო ან ვიდეო.
             </p>
           </Reveal>
         </div>
@@ -120,47 +102,6 @@ function Contact() {
             <div className="ticket-layout">
               <form className="ticket-form" onSubmit={handleSubmit} noValidate>
                 {error && <div className="contact-page__error">{error}</div>}
-
-                <div className="ticket-form__field">
-                  <label htmlFor="ticket-service" className="ticket-form__label">
-                    კატეგორია
-                  </label>
-                  <select
-                    id="ticket-service"
-                    className="ticket-form__select"
-                    value={serviceId}
-                    onChange={(e) => setServiceId(e.target.value)}
-                    disabled={submitting}
-                    required
-                  >
-                    {services.map(({ id, title }) => (
-                      <option key={id} value={id}>
-                        {title}
-                      </option>
-                    ))}
-                  </select>
-                  {selectedService && (
-                    <p className="ticket-form__hint">{selectedService.description}</p>
-                  )}
-                </div>
-
-                <div className="ticket-form__field">
-                  <span className="ticket-form__label">პრიორიტეტი</span>
-                  <div className="ticket-priority">
-                    {PRIORITY_OPTIONS.map(({ value, label, icon: Icon }) => (
-                      <button
-                        key={value}
-                        type="button"
-                        className={`ticket-priority__btn ${priority === value ? 'ticket-priority__btn--active' : ''} ticket-priority__btn--${value}`}
-                        onClick={() => setPriority(value)}
-                        disabled={submitting}
-                      >
-                        <Icon size={18} />
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
 
                 <div className="ticket-form__field">
                   <label htmlFor="ticket-description" className="ticket-form__label">
