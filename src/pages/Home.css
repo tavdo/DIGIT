@@ -5,7 +5,7 @@
 /* ── Hero ── */
 .hero {
   position: relative;
-  background: #000000;
+  background: var(--color-paper);
   color: var(--text-color);
   padding: clamp(5rem, 12vw, 8rem) 0 clamp(5rem, 10vw, 7rem);
   overflow: hidden;
@@ -59,11 +59,11 @@
   line-height: 1.05;
   margin-bottom: 1.5rem;
   letter-spacing: -0.02em;
-  color: #ffffff;
+  color: var(--color-ink);
 }
 
 .hero__title-main {
-  color: #ffffff;
+  color: var(--color-ink);
 }
 
 .hero__title-accent {
@@ -118,7 +118,7 @@
   font-size: clamp(1.875rem, 4vw, 2.375rem);
   margin-bottom: 1rem;
   letter-spacing: -0.02em;
-  color: #ffffff;
+  color: var(--color-ink);
 }
 
 .section__subtitle {
@@ -175,13 +175,13 @@
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--color-copper);
-  background: #000000;
+  background: var(--color-paper);
   border: 1.5px solid var(--color-border-strong);
   border-radius: var(--radius-sm);
 }
 
 .step-card__body {
-  background: #060608;
+  background: var(--color-paper-deep);
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-sm);
   padding: 2rem 1.5rem;
@@ -214,7 +214,7 @@
   font-family: var(--font-display);
   font-size: 1rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--color-ink);
   margin-bottom: 0.5rem;
 }
 
@@ -234,7 +234,7 @@
 
 .service-card {
   position: relative;
-  background: #060608;
+  background: var(--color-paper-deep);
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-sm);
   padding: 2rem 1.75rem;
@@ -267,7 +267,7 @@
   font-family: var(--font-display);
   font-size: 1rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--color-ink);
   margin-bottom: 0.5rem;
 }
 
@@ -329,7 +329,7 @@
   display: block;
   font-family: var(--font-display);
   font-size: 0.9375rem;
-  color: #ffffff;
+  color: var(--color-ink);
   margin-bottom: 0.25rem;
 }
 
@@ -347,7 +347,7 @@
 
 .trust__quote {
   padding: 2rem;
-  background: #060608;
+  background: var(--color-paper-deep);
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-sm);
   font-family: var(--font-display);
@@ -373,7 +373,7 @@
   gap: 1rem;
   align-items: center;
   padding: 1.25rem 1.5rem;
-  background: #060608;
+  background: var(--color-paper-deep);
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-sm);
 }
@@ -382,7 +382,7 @@
   display: block;
   font-family: var(--font-display);
   font-size: 0.9375rem;
-  color: #ffffff;
+  color: var(--color-ink);
   margin-bottom: 0.15rem;
 }
 
@@ -400,7 +400,7 @@
 /* ── CTA ── */
 .cta {
   position: relative;
-  background: #000000;
+  background: var(--color-paper);
   padding: clamp(5rem, 10vw, 7rem) 0;
   overflow: hidden;
   border-top: 1.5px solid var(--color-border-strong);
@@ -422,7 +422,7 @@
 .cta__title {
   font-family: var(--font-display);
   font-size: clamp(1.875rem, 4vw, 2.5rem);
-  color: #ffffff;
+  color: var(--color-ink);
   margin-bottom: 1rem;
   letter-spacing: -0.02em;
 }
