@@ -139,10 +139,10 @@ service cloud.firestore {
         && request.resource.data.status in ['quote_confirmed', 'quote_rejected']
         && request.resource.data.price == resource.data.price
         && request.resource.data.customerId == resource.data.customerId
-        && request.resource.data.serviceType == resource.data.serviceType
-        && request.resource.data.description == resource.data.description
-        && request.resource.data.priority == resource.data.priority
-        && request.resource.data.attachments == resource.data.attachments;
+        && (!('serviceType' in resource.data) || request.resource.data.serviceType == resource.data.serviceType)
+        && (!('description' in resource.data) || request.resource.data.description == resource.data.description)
+        && (!('priority' in resource.data) || request.resource.data.priority == resource.data.priority)
+        && (!('attachments' in resource.data) || request.resource.data.attachments == resource.data.attachments);
     }
 
     function customerRatingUpdate() {
@@ -154,7 +154,7 @@ service cloud.firestore {
         && request.resource.data.customerRating >= 1
         && request.resource.data.customerRating <= 5
         && request.resource.data.status == 'completed'
-        && request.resource.data.attachments == resource.data.attachments;
+        && (!('attachments' in resource.data) || request.resource.data.attachments == resource.data.attachments);
     }
 
     match /users/{userId} {
