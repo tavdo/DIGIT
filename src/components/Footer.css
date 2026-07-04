@@ -1,6 +1,6 @@
 .footer {
-  background: #000000;
-  color: #ffffff;
+  background: var(--color-paper-deep);
+  color: var(--color-ink);
   padding: 4rem 0 0;
   border-top: 1.5px solid var(--color-border-strong);
 }
@@ -61,8 +61,8 @@
 }
 
 .footer__list a:hover {
-  color: #ffffff;
-  text-shadow: 0 0 5px rgba(255, 255, 255, 0.4);
+  color: var(--color-ink);
+  text-shadow: 0 0 5px var(--color-copper-glow);
 }
 
 .footer__list li {
