@@ -6,11 +6,6 @@
     transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.reveal--visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
 .reveal--fade {
   transform: none;
 }
@@ -19,16 +14,17 @@
   transform: scale(0.96);
 }
 
-.reveal--scale.reveal--visible {
-  transform: scale(1);
-}
-
 .reveal--slide-left {
   transform: translateX(-32px);
 }
 
 .reveal--slide-right {
   transform: translateX(32px);
+}
+
+.reveal--visible {
+  opacity: 1;
+  transform: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
