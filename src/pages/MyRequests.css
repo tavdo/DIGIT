@@ -47,6 +47,14 @@
   margin-bottom: 0.75rem;
 }
 
+@media (max-width: 560px) {
+  .my-request__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}
+
 .my-request__title {
   font-size: 1.0625rem;
   font-weight: 600;
