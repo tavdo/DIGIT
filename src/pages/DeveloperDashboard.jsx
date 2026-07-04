@@ -205,7 +205,7 @@ function TaskDetailScreen({ orderId, onBack, onError, readOnly = false }) {
               flex: 1,
               minWidth: '60px',
               textAlign: 'center',
-              opacity: ev.done ? 1 : 0.35
+              opacity: ev.done ? 1 : 0.55
             }}>
               <div style={{
                 width: '20px',

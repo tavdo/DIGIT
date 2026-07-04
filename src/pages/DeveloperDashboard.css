@@ -1,12 +1,11 @@
-/* ── Executor app shell (taxi-driver style) ── */
 .dev-app {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
   max-width: 480px;
   margin: 0 auto;
-  background: var(--color-ink);
-  color: var(--text-inverse);
+  background: var(--color-paper);
+  color: var(--color-ink);
 }
 
 .dev-app__header {
@@ -113,7 +112,7 @@
   padding: 0;
   border: none;
   background: none;
-  color: var(--color-copper-glow);
+  color: var(--color-royal);
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
@@ -197,7 +196,7 @@
 }
 
 .dev-app__tab--active {
-  color: var(--color-copper-glow);
+  color: var(--color-royal);
   background: rgba(79, 109, 245, 0.1);
 }
 
@@ -226,7 +225,7 @@
   width: 100%;
   max-width: 480px;
   padding: 1rem 1.125rem calc(1rem + env(safe-area-inset-bottom));
-  background: linear-gradient(180deg, transparent, var(--color-ink) 30%);
+  background: linear-gradient(180deg, transparent, var(--color-paper) 30%);
 }
 
 .dev-app__action-btn {
@@ -333,7 +332,7 @@
 
 .dev-task-card__payout {
   font-weight: 700;
-  color: var(--color-copper-glow);
+  color: var(--color-royal);
 }
 
 /* ── Task detail ── */
@@ -403,7 +402,7 @@
 
 .dev-task-detail__payout {
   font-weight: 700;
-  color: var(--color-copper-glow);
+  color: var(--color-royal);
 }
 
 /* ── Profile (shared components in dev app) ── */
@@ -420,7 +419,7 @@
   margin-top: 1rem;
   text-align: center;
   font-size: 0.8125rem;
-  color: var(--color-copper-glow);
+  color: var(--color-royal);
 }
 
 .dev-app__screen--profile .profile-card {
