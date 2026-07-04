@@ -39,3 +39,100 @@
   padding: 3rem 1rem;
   color: var(--text-muted);
 }
+
+.specialists-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.specialist-card {
+  background: var(--color-navy-soft);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+
+.specialist-card:hover {
+  border-color: var(--color-royal);
+  transform: translateY(-2px);
+  box-shadow: 0 0 15px var(--color-copper-glow);
+}
+
+.specialist-card__top {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.specialist-card__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-slate);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-royal);
+}
+
+.specialist-card__name {
+  font-family: var(--font-display);
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: var(--primary-color);
+  text-transform: uppercase;
+}
+
+.specialist-card__rating {
+  font-size: 0.8rem;
+  color: #ffd700;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.15rem;
+}
+
+.specialist-card__bio {
+  font-size: 0.85rem;
+  color: var(--text-color);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
+}
+
+.specialist-card__categories {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-royal);
+  background: var(--color-relay-soft);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  align-self: flex-start;
+  margin: 0;
+}
+
+.specialist-card__link {
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: var(--color-royal);
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.specialist-card:hover .specialist-card__link {
+  text-decoration: underline;
+}
