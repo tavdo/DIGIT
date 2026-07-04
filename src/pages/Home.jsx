@@ -11,7 +11,6 @@ import {
   ClipboardList,
 } from 'lucide-react'
 import Reveal from '../components/Reveal'
-import ControlBridge from '../components/ControlBridge'
 import usePageMeta from '../hooks/usePageMeta'
 import useSiteContent from '../hooks/useSiteContent'
 import { pageTitle, SITE_DESCRIPTION } from '../constants/brand'
@@ -94,11 +93,7 @@ function Home() {
                 როგორ მუშაობს
               </Link>
             </Reveal>
-          </div>
-
-          <Reveal variant="right" delay={200} className="hero__visual">
-            <ControlBridge />
-          </Reveal>
+          </div>          {/* Removed ControlBridge visual */}
         </div>
       </section>
 
