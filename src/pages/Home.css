@@ -86,16 +86,16 @@
 }
 
 .hero__btn-outline {
-  color: #ffffff;
+  color: var(--color-ink);
   border-color: var(--color-border-strong);
   background: transparent;
 }
 
 @media (hover: hover) {
   .hero__btn-outline:hover {
-    background: rgba(255, 255, 255, 0.04);
-    border-color: #ffffff;
-    color: #ffffff;
+    background: var(--color-navy-soft);
+    border-color: var(--color-royal);
+    color: var(--color-royal);
   }
 }
 
