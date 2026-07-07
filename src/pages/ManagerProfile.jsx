@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, User, Mail, Phone, CheckCircle } from 'lucide-react'
-import { doc, getDoc } from 'firebase/firestore'
-import { db } from '../firebase'
 import { subscribeToOrders } from '../services/orderService'
 import { useAuth } from '../context/AuthContext'
 import usePageMeta from '../hooks/usePageMeta'
@@ -27,11 +25,14 @@ function ManagerProfile() {
 
     const fetchProfile = async () => {
       try {
-        const docRef = doc(db, 'users', managerId)
-        const docSnap = await getDoc(docRef)
+        const token = localStorage.getItem('token')
+        const res = await fetch(`/api/users/${managerId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
         if (!cancelled) {
-          if (docSnap.exists()) {
-            setProfile({ id: docSnap.id, ...docSnap.data() })
+          if (res.ok) {
+            const data = await res.json()
+            setProfile(data)
           } else {
             setError('მენეჯერი ვერ მოიძებნა.')
           }

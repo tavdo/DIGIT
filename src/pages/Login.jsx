@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Loader2, LogIn } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useTranslation } from '../context/LanguageContext'
-import FirebaseSetupNotice from '../components/FirebaseSetupNotice'
+
 import GoogleIcon from '../components/icons/GoogleIcon'
 import {
   getAuthErrorMessage,
@@ -18,7 +18,7 @@ import './Auth.css'
 function Login() {
   const { t } = useTranslation()
   usePageMeta(pageTitle(t('auth.loginTitle')), 'DIGIT — Log in to your account.')
-  const { user, userProfile, loading, login, loginWithGoogle, refreshUserProfile, isFirebaseConfigured } = useAuth()
+  const { user, userProfile, loading, login, loginWithGoogle, refreshUserProfile } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const from = location.state?.from?.pathname || '/'
@@ -97,7 +97,7 @@ function Login() {
           <h1 className="auth-card__title">{t('auth.loginTitle')}</h1>
           <p className="auth-card__subtitle">{t('auth.loginSubtitle')}</p>
 
-          {!isFirebaseConfigured && <FirebaseSetupNotice />}
+
 
           {formError && <div className="auth-form__alert">{formError}</div>}
 
@@ -113,7 +113,7 @@ function Login() {
                 className={`auth-form__input ${fieldErrors.email ? 'auth-form__input--error' : ''}`}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={submitting || !isFirebaseConfigured}
+                disabled={submitting}
               />
               {fieldErrors.email && (
                 <span className="auth-form__error">{fieldErrors.email}</span>
@@ -131,7 +131,7 @@ function Login() {
                 className={`auth-form__input ${fieldErrors.password ? 'auth-form__input--error' : ''}`}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={submitting || !isFirebaseConfigured}
+                disabled={submitting}
               />
               {fieldErrors.password && (
                 <span className="auth-form__error">{fieldErrors.password}</span>
@@ -141,7 +141,7 @@ function Login() {
             <button
               type="submit"
               className="btn btn--primary btn--lg auth-form__submit"
-              disabled={submitting || !isFirebaseConfigured}
+              disabled={submitting}
             >
               {submitting ? (
                 <>

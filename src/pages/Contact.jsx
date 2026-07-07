@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Send, Phone, Mail, Clock } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useTranslation } from '../context/LanguageContext'
-import FirebaseSetupNotice from '../components/FirebaseSetupNotice'
+
 import Reveal from '../components/Reveal'
 import usePageMeta from '../hooks/usePageMeta'
 import { pageTitle } from '../constants/brand'
@@ -25,7 +25,7 @@ function Contact() {
     t('contact.metaDesc'),
   )
 
-  const { user, userProfile, isFirebaseConfigured } = useAuth()
+  const { user, userProfile } = useAuth()
   const { content } = useSiteContent()
   const navigate = useNavigate()
 
@@ -114,7 +114,7 @@ function Contact() {
 
       <div className="page contact-page">
         <div className="container">
-          {!isFirebaseConfigured && <FirebaseSetupNotice />}
+
 
           {success ? (
             <div className="ticket-success">
@@ -206,7 +206,7 @@ function Contact() {
                     placeholder={t('contact.placeholderDesc')}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    disabled={submitting || !isFirebaseConfigured}
+                    disabled={submitting}
                     required
                     maxLength={MAX_ORDER_DESCRIPTION_LENGTH}
                   />
@@ -215,14 +215,14 @@ function Contact() {
                 <TicketAttachmentPicker
                   files={attachmentFiles}
                   onChange={setAttachmentFiles}
-                  disabled={submitting || !isFirebaseConfigured}
+                  disabled={submitting}
                   error={attachmentError}
                 />
 
                 <button
                   type="submit"
                   className="btn btn--primary btn--lg ticket-form__submit"
-                  disabled={submitting || !description.trim() || !isFirebaseConfigured}
+                  disabled={submitting || !description.trim()}
                 >
                   <Send size={18} />
                   {submitting

@@ -62,20 +62,5 @@ export function formatAttachmentSize(bytes) {
 }
 
 export function getStorageErrorMessage(error) {
-  const code = error?.code || ''
-
-  if (code === 'storage/unauthorized' || code === 'storage/unauthenticated') {
-    return 'ფოტოს ატვირთვა უარყოფილია. გადადი ხელახლა ანგარიშში.'
-  }
-  if (code === 'storage/quota-exceeded') {
-    return 'Storage ლიმიტი ამოიწურა. სცადე პატარა ფოტო.'
-  }
-  if (code === 'storage/canceled') {
-    return 'ატვირთვა გაუქმდა.'
-  }
-  if (code.includes('storage/')) {
-    return 'ფოტოს ატვირთვა ვერ მოხერხდა. დარწმუნდი, რომ Firebase Storage ჩართულია პროექტში.'
-  }
-
-  return error?.message || 'ფოტოს ატვირთვა ვერ მოხერხდა.'
+  return error?.message || 'ფაილის ატვირთვა ვერ მოხერხდა.'
 }

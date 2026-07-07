@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { CheckCircle2, Plus, Star, XCircle } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useTranslation } from '../context/LanguageContext'
-import FirebaseSetupNotice from '../components/FirebaseSetupNotice'
+
 import usePageMeta from '../hooks/usePageMeta'
 import { pageTitle } from '../constants/brand'
 import {
@@ -247,18 +247,16 @@ function MyRequests() {
   const { t } = useTranslation()
   usePageMeta(pageTitle(t('myRequests.metaTitle')), t('myRequests.metaDesc'))
 
-  const { user, isFirebaseConfigured } = useAuth()
+  const { user } = useAuth()
   const [orders, setOrders] = useState([])
-  const [loading, setLoading] = useState(() => !!(user?.uid && isFirebaseConfigured))
+  const [loading, setLoading] = useState(() => !!user?.uid)
   const [error, setError] = useState('')
 
   const [prevUserUid, setPrevUserUid] = useState(user?.uid)
-  const [prevFirebaseConfigured, setPrevFirebaseConfigured] = useState(isFirebaseConfigured)
 
-  if (user?.uid !== prevUserUid || isFirebaseConfigured !== prevFirebaseConfigured) {
+  if (user?.uid !== prevUserUid) {
     setPrevUserUid(user?.uid)
-    setPrevFirebaseConfigured(isFirebaseConfigured)
-    if (!user?.uid || !isFirebaseConfigured) {
+    if (!user?.uid) {
       setLoading(false)
     } else {
       setLoading(true)
@@ -266,7 +264,7 @@ function MyRequests() {
   }
 
   useEffect(() => {
-    if (!user?.uid || !isFirebaseConfigured) {
+    if (!user?.uid) {
       return undefined
     }
 
@@ -283,7 +281,7 @@ function MyRequests() {
     )
 
     return unsubscribe
-  }, [user?.uid, isFirebaseConfigured])
+  }, [user?.uid])
 
   return (
     <>
@@ -296,7 +294,7 @@ function MyRequests() {
 
       <div className="page my-requests-page">
         <div className="container">
-          {!isFirebaseConfigured && <FirebaseSetupNotice />}
+
           {error && <div className="my-requests-page__error">{error}</div>}
 
           <div className="my-requests-page__toolbar">

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Loader2, UserPlus } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useTranslation } from '../context/LanguageContext'
-import FirebaseSetupNotice from '../components/FirebaseSetupNotice'
+
 import GoogleIcon from '../components/icons/GoogleIcon'
 import {
   getAuthErrorMessage,
@@ -22,7 +22,7 @@ import './Auth.css'
 function Register() {
   const { t } = useTranslation()
   usePageMeta(pageTitle(t('auth.registerTitle')), 'DIGIT — Create an account.')
-  const { signup, loginWithGoogle, refreshUserProfile, isFirebaseConfigured } = useAuth()
+  const { signup, loginWithGoogle, refreshUserProfile } = useAuth()
   const navigate = useNavigate()
 
   const [name, setName] = useState('')
@@ -122,7 +122,7 @@ function Register() {
           <h1 className="auth-card__title">{t('auth.registerTitle')}</h1>
           <p className="auth-card__subtitle">{t('auth.registerSubtitle')}</p>
 
-          {!isFirebaseConfigured && <FirebaseSetupNotice />}
+
 
           {formError && <div className="auth-form__alert">{formError}</div>}
           {successMessage && <div className="auth-form__success">{successMessage}</div>}
@@ -139,7 +139,7 @@ function Register() {
                 className={`auth-form__input ${fieldErrors.name ? 'auth-form__input--error' : ''}`}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                disabled={submitting || !isFirebaseConfigured || !!successMessage}
+                disabled={submitting || !!successMessage}
               />
               {fieldErrors.name && (
                 <span className="auth-form__error">{fieldErrors.name}</span>
@@ -157,7 +157,7 @@ function Register() {
                 className={`auth-form__input ${fieldErrors.email ? 'auth-form__input--error' : ''}`}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={submitting || !isFirebaseConfigured || !!successMessage}
+                disabled={submitting || !!successMessage}
               />
               {fieldErrors.email && (
                 <span className="auth-form__error">{fieldErrors.email}</span>
@@ -175,7 +175,7 @@ function Register() {
                 className={`auth-form__input ${fieldErrors.password ? 'auth-form__input--error' : ''}`}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={submitting || !isFirebaseConfigured || !!successMessage}
+                disabled={submitting || !!successMessage}
               />
               {fieldErrors.password && (
                 <span className="auth-form__error">{fieldErrors.password}</span>
@@ -193,7 +193,7 @@ function Register() {
                 className={`auth-form__input ${fieldErrors.confirmPassword ? 'auth-form__input--error' : ''}`}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                disabled={submitting || !isFirebaseConfigured || !!successMessage}
+                disabled={submitting || !!successMessage}
               />
               {fieldErrors.confirmPassword && (
                 <span className="auth-form__error">{fieldErrors.confirmPassword}</span>
@@ -209,7 +209,7 @@ function Register() {
                   value="customer"
                   checked={accountType === 'customer'}
                   onChange={() => setAccountType('customer')}
-                  disabled={submitting || !isFirebaseConfigured || !!successMessage}
+                  disabled={submitting || !!successMessage}
                 />
                 <span className="auth-role-select__content">
                   <strong>{t('auth.businessRole')}</strong>
@@ -223,7 +223,7 @@ function Register() {
                   value="developer"
                   checked={accountType === 'developer'}
                   onChange={() => setAccountType('developer')}
-                  disabled={submitting || !isFirebaseConfigured || !!successMessage}
+                  disabled={submitting || !!successMessage}
                 />
                 <span className="auth-role-select__content">
                   <strong>{t('auth.developerRole')}</strong>
@@ -242,7 +242,7 @@ function Register() {
                 experienceYears={experienceYears}
                 onExperienceYearsChange={setExperienceYears}
                 fieldErrors={fieldErrors}
-                disabled={submitting || !isFirebaseConfigured || !!successMessage}
+                disabled={submitting || !!successMessage}
               />
             )}
 
@@ -271,7 +271,7 @@ function Register() {
             type="button"
             className="btn btn--outline auth-google"
             onClick={handleGoogleSignup}
-            disabled={submitting || !isFirebaseConfigured}
+            disabled={submitting}
           >
             <GoogleIcon size={18} />
             {t('auth.registerWithGoogle')}

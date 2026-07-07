@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useTranslation } from '../context/LanguageContext'
-import FirebaseSetupNotice from '../components/FirebaseSetupNotice'
+
 import AdminUsersPanel from '../components/admin/AdminUsersPanel'
 import AdminSitePanel from '../components/admin/AdminSitePanel'
 import AdminDevelopersPanel from '../components/admin/AdminDevelopersPanel'
@@ -22,7 +22,7 @@ import {
   validatePassword,
 } from '../utils/authErrors'
 import { DEVELOPER_REQUEST_STATUS, isAdminRole } from '../utils/roles'
-import { ensureAdminAccount } from '../utils/ensureAdminAccount'
+
 import usePageMeta from '../hooks/usePageMeta'
 import { pageTitle } from '../constants/brand'
 import './Auth.css'
@@ -36,7 +36,7 @@ const ADMIN_TABS = [
 
 function AdminLogin({ onLoggedIn }) {
   const { t } = useTranslation()
-  const { login, isFirebaseConfigured } = useAuth()
+  const { login } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fieldErrors, setFieldErrors] = useState({})
@@ -79,16 +79,10 @@ function AdminLogin({ onLoggedIn }) {
             ? 'Complete site and user management administration'
             : 'საიტის და მომხმარებლების სრული მართვა'}
         </p>
-        {import.meta.env.VITE_USE_FIREBASE_EMULATOR === 'true' && (
-          <p className="admin-page__hint">
-            {t('lang') === 'en'
-              ? 'Local admin: admin@gmail.com / admin123'
-              : 'ლოკალური admin: admin@gmail.com / admin123'}
-          </p>
-        )}
+
       </div>
 
-      {!isFirebaseConfigured && <FirebaseSetupNotice />}
+
       {formError && <div className="auth-form__alert">{formError}</div>}
 
       <form className="auth-form" onSubmit={handleSubmit} noValidate>
@@ -103,7 +97,7 @@ function AdminLogin({ onLoggedIn }) {
             className={`auth-form__input ${fieldErrors.email ? 'auth-form__input--error' : ''}`}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            disabled={submitting || !isFirebaseConfigured}
+            disabled={submitting}
           />
           {fieldErrors.email && <span className="auth-form__error">{fieldErrors.email}</span>}
         </div>
@@ -119,7 +113,7 @@ function AdminLogin({ onLoggedIn }) {
             className={`auth-form__input ${fieldErrors.password ? 'auth-form__input--error' : ''}`}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            disabled={submitting || !isFirebaseConfigured}
+            disabled={submitting}
           />
           {fieldErrors.password && (
             <span className="auth-form__error">{fieldErrors.password}</span>
@@ -220,36 +214,8 @@ function Admin() {
   const { user, userProfile, loading, logout, refreshUserProfile } = useAuth()
   const [checkingAccess, setCheckingAccess] = useState(false)
   const [accessError, setAccessError] = useState('')
-  const [adminReady, setAdminReady] = useState(
-    import.meta.env.VITE_USE_FIREBASE_EMULATOR !== 'true',
-  )
+  const [adminReady, setAdminReady] = useState(true)
   const [adminSeedError, setAdminSeedError] = useState('')
-
-  useEffect(() => {
-    if (import.meta.env.VITE_USE_FIREBASE_EMULATOR !== 'true') return undefined
-
-    let cancelled = false
-
-    ensureAdminAccount()
-      .then(() => {
-        if (!cancelled) {
-          setAdminReady(true)
-          setAdminSeedError('')
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setAdminReady(true)
-          setAdminSeedError(
-            err.message || 'Admin account could not be created. Restart dev server (npm run dev:all).',
-          )
-        }
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
 
   const handleLoggedIn = async () => {
     setCheckingAccess(true)
