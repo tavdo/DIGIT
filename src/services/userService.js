@@ -1,21 +1,8 @@
-import { doc, serverTimestamp, updateDoc } from 'firebase/firestore'
-import { updateProfile } from 'firebase/auth'
-import { auth, db } from '../firebase'
-
-function requireDb() {
-  if (!db) {
-    throw new Error('Firebase არ არის კონფიგურირებული.')
-  }
-  return db
-}
-
 export async function updateUserProfile(userId, role, { name, companyName, phone, bio, experienceCategories, experienceYears }) {
-  const firestore = requireDb()
   const payload = {
     name: name?.trim() || '',
     companyName: companyName?.trim() || '',
     phone: phone?.trim() || '',
-    profileUpdatedAt: serverTimestamp(),
   }
 
   if (role === 'developer') {
@@ -24,14 +11,19 @@ export async function updateUserProfile(userId, role, { name, companyName, phone
     payload.experienceYears = experienceYears || ''
   }
 
-  await updateDoc(doc(firestore, 'users', userId), payload)
+  const token = localStorage.getItem('token')
+  const res = await fetch(`/api/users/${userId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(payload)
+  })
 
-  if (auth?.currentUser?.uid === userId && name?.trim()) {
-    try {
-      await updateProfile(auth.currentUser, { displayName: name.trim() })
-    } catch {
-      // displayName sync is optional
-    }
+  if (!res.ok) {
+    const errData = await res.json()
+    throw new Error(errData.message || 'პროფილის განახლება ვერ მოხერხდა.')
   }
 }
 

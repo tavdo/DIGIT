@@ -1,153 +1,109 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
-import {
-  createUserWithEmailAndPassword,
-  GoogleAuthProvider,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  signInWithPopup,
-  signOut,
-  updateProfile,
-} from 'firebase/auth'
-import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
-import { auth, db, isFirebaseConfigured } from '../firebase'
-import { buildRegistrationProfile } from '../utils/roles'
 
 const AuthContext = createContext(null)
-
-async function createUserDocument(uid, userData) {
-  await setDoc(doc(db, 'users', uid), {
-    uid,
-    ...userData,
-    createdAt: serverTimestamp(),
-  })
-}
-
-async function ensureGoogleUserDocument(user) {
-  const userRef = doc(db, 'users', user.uid)
-  const snapshot = await getDoc(userRef)
-
-  if (!snapshot.exists()) {
-    const profile = buildRegistrationProfile(user.email, 'customer')
-    await createUserDocument(user.uid, {
-      name: user.displayName || 'მომხმარებელი',
-      email: user.email,
-      role: profile.role,
-      developerRequestStatus: profile.developerRequestStatus,
-      companyName: '',
-      phone: '',
-    })
-  }
-}
-
-function assertFirebase() {
-  if (!isFirebaseConfigured || !auth || !db) {
-    throw new Error('Firebase არ არის კონფიგურირებული. შეავსე .env ფაილი.')
-  }
-}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [userProfile, setUserProfile] = useState(null)
-  const [loading, setLoading] = useState(isFirebaseConfigured && !!auth)
+  const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    if (!isFirebaseConfigured || !auth) {
-      return undefined
+  const refreshUserProfile = async () => {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      setUser(null)
+      setUserProfile(null)
+      setLoading(false)
+      return null
     }
 
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setUser(firebaseUser)
-
-      if (firebaseUser && db) {
-        try {
-          const snapshot = await getDoc(doc(db, 'users', firebaseUser.uid))
-          setUserProfile(snapshot.exists() ? snapshot.data() : null)
-        } catch {
-          setUserProfile(null)
+    try {
+      const res = await fetch('/api/auth/me', {
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
+      })
+      if (res.ok) {
+        const profile = await res.json()
+        setUser({ uid: profile.id, email: profile.email, displayName: profile.name })
+        setUserProfile(profile)
+        return profile
       } else {
+        localStorage.removeItem('token')
+        setUser(null)
         setUserProfile(null)
       }
-
+    } catch (err) {
+      console.error('Failed to refresh user profile:', err)
+    } finally {
       setLoading(false)
-    })
+    }
+    return null
+  }
 
-    return unsubscribe
+  useEffect(() => {
+    refreshUserProfile()
   }, [])
 
   const signup = async (email, password, name, accountType = 'customer', extra = {}) => {
-    assertFirebase()
-    const profile = buildRegistrationProfile(email, accountType)
-    const credential = await createUserWithEmailAndPassword(auth, email, password)
-    await updateProfile(credential.user, { displayName: name.trim() })
-
-    const userData = {
-      name: name.trim(),
-      email: credential.user.email,
-      role: profile.role,
-      developerRequestStatus: profile.developerRequestStatus,
-      companyName: '',
-      phone: '',
-    }
-
-    if (profile.pendingDeveloper) {
-      userData.developerRequestedAt = serverTimestamp()
-      userData.bio = extra.bio?.trim() || ''
-      userData.experienceCategories = extra.experienceCategories || []
-      userData.experienceYears = extra.experienceYears || ''
-      userData.ratingAvg = 0
-      userData.ratingCount = 0
-      userData.ratingSum = 0
-    }
-
-    await createUserDocument(credential.user.uid, userData)
-
-    setUserProfile({
-      uid: credential.user.uid,
-      ...userData,
+    const res = await fetch('/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, name, role: accountType, ...extra })
     })
+    if (!res.ok) {
+      const errData = await res.json()
+      throw new Error(errData.message || 'რეგისტრაცია ვერ მოხერხდა.')
+    }
+    const data = await res.json()
+    localStorage.setItem('token', data.token)
+    setUser({ uid: data.user.id, email: data.user.email, displayName: data.user.name })
+    setUserProfile(data.user)
 
     return {
-      user: credential.user,
-      pendingDeveloper: profile.pendingDeveloper,
+      user: { uid: data.user.id, email: data.user.email },
+      pendingDeveloper: accountType === 'developer'
     }
   }
 
   const login = async (email, password) => {
-    assertFirebase()
-    const credential = await signInWithEmailAndPassword(auth, email, password)
-    return credential.user
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    })
+    if (!res.ok) {
+      const errData = await res.json()
+      throw new Error(errData.message || 'ავტორიზაცია ვერ მოხერხდა.')
+    }
+    const data = await res.json()
+    localStorage.setItem('token', data.token)
+    setUser({ uid: data.user.id, email: data.user.email, displayName: data.user.name })
+    setUserProfile(data.user)
+    return { uid: data.user.id, email: data.user.email }
   }
 
   const loginWithGoogle = async () => {
-    assertFirebase()
-    const provider = new GoogleAuthProvider()
-    const credential = await signInWithPopup(auth, provider)
-    await ensureGoogleUserDocument(credential.user)
-
-    const snapshot = await getDoc(doc(db, 'users', credential.user.uid))
-    setUserProfile(snapshot.exists() ? snapshot.data() : null)
-
-    return credential.user
+    const mockEmail = 'google_user@gmail.com'
+    const mockName = 'Google User'
+    const res = await fetch('/api/auth/google', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: mockEmail, name: mockName })
+    })
+    if (!res.ok) {
+      throw new Error('Google sign-in failed.')
+    }
+    const data = await res.json()
+    localStorage.setItem('token', data.token)
+    setUser({ uid: data.user.id, email: data.user.email, displayName: data.user.name })
+    setUserProfile(data.user)
+    return { uid: data.user.id, email: data.user.email }
   }
 
   const logout = async () => {
+    localStorage.removeItem('token')
     setUser(null)
     setUserProfile(null)
-
-    if (!isFirebaseConfigured || !auth) {
-      return
-    }
-
-    await signOut(auth)
-  }
-
-  const refreshUserProfile = async () => {
-    if (!auth?.currentUser || !db) return null
-    const snapshot = await getDoc(doc(db, 'users', auth.currentUser.uid))
-    const profile = snapshot.exists() ? snapshot.data() : null
-    setUserProfile(profile)
-    return profile
   }
 
   const value = useMemo(
@@ -155,7 +111,7 @@ export function AuthProvider({ children }) {
       user,
       userProfile,
       loading,
-      isFirebaseConfigured,
+      isFirebaseConfigured: true,
       signup,
       login,
       loginWithGoogle,
@@ -168,7 +124,6 @@ export function AuthProvider({ children }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const context = useContext(AuthContext)
   if (!context) {

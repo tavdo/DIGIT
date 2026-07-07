@@ -1,22 +1,3 @@
-import {
-  collection,
-  doc,
-  onSnapshot,
-  query,
-  serverTimestamp,
-  updateDoc,
-  where,
-} from 'firebase/firestore'
-import { db } from '../firebase'
-import { DEVELOPER_REQUEST_STATUS } from '../utils/roles'
-
-function requireDb() {
-  if (!db) {
-    throw new Error('Firebase არ არის კონფიგურირებული.')
-  }
-  return db
-}
-
 export const ASSIGNABLE_ROLES = [
   { value: 'customer', label: 'ბიზნესი' },
   { value: 'manager', label: 'მენეჯერი' },
@@ -25,68 +6,91 @@ export const ASSIGNABLE_ROLES = [
 ]
 
 export function subscribeToAllUsers(onUsers, onError) {
-  const firestore = requireDb()
+  let active = true
 
-  return onSnapshot(
-    collection(firestore, 'users'),
-    (snapshot) => {
-      const users = snapshot.docs
-        .map((docSnap) => ({
-          id: docSnap.id,
-          ...docSnap.data(),
-        }))
-        .sort((a, b) => (a.email || '').localeCompare(b.email || ''))
-      onUsers(users)
-    },
-    onError,
-  )
+  const poll = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch('/api/users', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!res.ok) throw new Error('Failed to fetch all users')
+      const users = await res.json()
+      const sorted = users.sort((a, b) => (a.email || '').localeCompare(b.email || ''))
+      if (active) {
+        onUsers(sorted)
+      }
+    } catch (err) {
+      if (active) onError(err)
+    }
+  }
+
+  poll()
+  const interval = setInterval(poll, 4000)
+
+  return () => {
+    active = false
+    clearInterval(interval)
+  }
 }
 
 export function subscribeToPendingDeveloperRequests(onRequests, onError) {
-  const firestore = requireDb()
-  const pendingQuery = query(
-    collection(firestore, 'users'),
-    where('developerRequestStatus', '==', DEVELOPER_REQUEST_STATUS.PENDING),
-  )
+  let active = true
 
-  return onSnapshot(
-    pendingQuery,
-    (snapshot) => {
-      const requests = snapshot.docs
-        .map((docSnap) => ({
-          id: docSnap.id,
-          ...docSnap.data(),
-        }))
-        .sort((a, b) => {
-          const aTime = a.developerRequestedAt?.toMillis?.() ?? 0
-          const bTime = b.developerRequestedAt?.toMillis?.() ?? 0
-          return bTime - aTime
-        })
-      onRequests(requests)
-    },
-    onError,
-  )
+  const poll = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch('/api/users?developerRequestStatus=pending', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!res.ok) throw new Error('Failed to fetch pending requests')
+      const requests = await res.json()
+      const sorted = requests.sort((a, b) => {
+        const aTime = new Date(a.developerRequestedAt || 0).getTime()
+        const bTime = new Date(b.developerRequestedAt || 0).getTime()
+        return bTime - aTime
+      })
+      if (active) {
+        onRequests(sorted)
+      }
+    } catch (err) {
+      if (active) onError(err)
+    }
+  }
+
+  poll()
+  const interval = setInterval(poll, 4000)
+
+  return () => {
+    active = false
+    clearInterval(interval)
+  }
 }
 
 export async function setUserRole(userId, role, adminId) {
-  const firestore = requireDb()
+  const token = localStorage.getItem('token')
   const payload = {
     role,
-    updatedAt: serverTimestamp(),
-    updatedBy: adminId,
+    updatedBy: adminId
   }
 
   if (role === 'developer') {
-    payload.developerRequestStatus = DEVELOPER_REQUEST_STATUS.APPROVED
-    payload.developerReviewedAt = serverTimestamp()
+    payload.developerRequestStatus = 'approved'
+    payload.developerReviewedAt = new Date()
     payload.developerReviewedBy = adminId
-  } else if (role === 'customer') {
-    payload.developerRequestStatus = DEVELOPER_REQUEST_STATUS.NONE
   } else {
-    payload.developerRequestStatus = DEVELOPER_REQUEST_STATUS.NONE
+    payload.developerRequestStatus = 'none'
   }
 
-  await updateDoc(doc(firestore, 'users', userId), payload)
+  const res = await fetch(`/api/users/${userId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(payload)
+  })
+  if (!res.ok) throw new Error('სტატუსის განახლება ვერ მოხერხდა.')
 }
 
 export async function approveDeveloperRequest(userId, adminId) {
@@ -94,13 +98,20 @@ export async function approveDeveloperRequest(userId, adminId) {
 }
 
 export async function rejectDeveloperRequest(userId, adminId) {
-  const firestore = requireDb()
-  await updateDoc(doc(firestore, 'users', userId), {
-    role: 'customer',
-    developerRequestStatus: DEVELOPER_REQUEST_STATUS.REJECTED,
-    developerReviewedAt: serverTimestamp(),
-    developerReviewedBy: adminId,
-    updatedAt: serverTimestamp(),
-    updatedBy: adminId,
+  const token = localStorage.getItem('token')
+  const res = await fetch(`/api/users/${userId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      role: 'customer',
+      developerRequestStatus: 'rejected',
+      developerReviewedAt: new Date(),
+      developerReviewedBy: adminId,
+      updatedBy: adminId
+    })
   })
+  if (!res.ok) throw new Error('მოთხოვნის უარყოფა ვერ მოხერხდა.')
 }

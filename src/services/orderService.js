@@ -1,19 +1,3 @@
-import {
-  addDoc,
-  arrayUnion,
-  collection,
-  deleteDoc,
-  doc,
-  getDoc,
-  onSnapshot,
-  orderBy,
-  query,
-  serverTimestamp,
-  Timestamp,
-  updateDoc,
-  where,
-} from 'firebase/firestore'
-import { db } from '../firebase'
 import { uploadOrderAttachments } from './attachmentService'
 import { saveDeveloperReview } from './developerReviewService'
 
@@ -79,13 +63,6 @@ export const PAYOUT_STATUS_LABELS = {
   paid: 'გადარიცხულია',
 }
 
-function requireDb() {
-  if (!db) {
-    throw new Error('Firebase არ არის კონფიგურირებული.')
-  }
-  return db
-}
-
 export async function createTicket({
   customerId,
   customerName,
@@ -97,162 +74,214 @@ export async function createTicket({
   managerId = null,
   managerName = null,
 }) {
-  const firestore = requireDb()
-  const ref = await addDoc(collection(firestore, 'orders'), {
-    customerId,
-    customerName,
-    serviceId: serviceId || null,
-    serviceType: serviceType || 'პრობლემა',
-    description,
-    priority: priority || ORDER_PRIORITY.FLEXIBLE,
-    status: ORDER_STATUS.NEW,
-    assignedDeveloperId: null,
-    assignedDeveloperName: null,
-    managerId: managerId || null,
-    managerName: managerName || null,
-    managerNotes: [],
-    attachments: [],
-    price: null,
-    paymentStatus: PAYMENT_STATUS.UNPAID,
-    developerPayout: null,
-    payoutStatus: PAYOUT_STATUS.PENDING,
-    customerRating: null,
-    customerReview: null,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
+  const token = localStorage.getItem('token')
+  const res = await fetch('/api/orders', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      customerId,
+      customerName,
+      serviceId,
+      serviceType,
+      description,
+      priority,
+      managerId,
+      managerName
+    })
   })
+
+  if (!res.ok) {
+    const errData = await res.json()
+    throw new Error(errData.message || 'შეკვეთის შექმნა ვერ მოხერხდა.')
+  }
+
+  const order = await res.json()
 
   if (attachmentFiles.length > 0) {
     try {
-      await uploadOrderAttachments(ref.id, customerId, attachmentFiles)
+      await uploadOrderAttachments(order.id, customerId, attachmentFiles)
     } catch (err) {
-      await deleteDoc(ref)
-      throw err
+      console.error('ფაილების ატვირთვა ვერ მოხერხდა შეკვეთის შექმნისას:', err)
     }
   }
 
-  return ref.id
+  return order.id
 }
 
 export function subscribeToOrders(statusFilter, onOrders, onError) {
-  const firestore = requireDb()
-  const ordersQuery =
-    statusFilter === 'all'
-      ? query(collection(firestore, 'orders'), orderBy('updatedAt', 'desc'))
-      : query(
-          collection(firestore, 'orders'),
-          where('status', '==', statusFilter),
-          orderBy('updatedAt', 'desc'),
-        )
+  let active = true
 
-  return onSnapshot(
-    ordersQuery,
-    (snapshot) => {
-      const orders = snapshot.docs.map((docSnap) => ({
-        id: docSnap.id,
-        ...docSnap.data(),
-      }))
-      onOrders(sortOrdersByPriority(orders))
-    },
-    onError,
-  )
+  const poll = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch('/api/orders', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!res.ok) throw new Error('Failed to fetch orders')
+      let orders = await res.json()
+      if (statusFilter !== 'all') {
+        orders = orders.filter(o => o.status === statusFilter)
+      }
+      if (active) {
+        onOrders(sortOrdersByPriority(orders))
+      }
+    } catch (err) {
+      if (active) onError(err)
+    }
+  }
+
+  poll()
+  const interval = setInterval(poll, 4000)
+
+  return () => {
+    active = false
+    clearInterval(interval)
+  }
 }
 
 export function subscribeToCustomerOrders(customerId, onOrders, onError) {
-  const firestore = requireDb()
-  const ordersQuery = query(
-    collection(firestore, 'orders'),
-    where('customerId', '==', customerId),
-    orderBy('updatedAt', 'desc'),
-  )
+  let active = true
 
-  return onSnapshot(
-    ordersQuery,
-    (snapshot) => {
-      const orders = snapshot.docs.map((docSnap) => ({
-        id: docSnap.id,
-        ...docSnap.data(),
-      }))
-      onOrders(orders)
-    },
-    onError,
-  )
+  const poll = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch(`/api/orders?customerId=${customerId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!res.ok) throw new Error('Failed to fetch customer orders')
+      const orders = await res.json()
+      if (active) {
+        onOrders(orders)
+      }
+    } catch (err) {
+      if (active) onError(err)
+    }
+  }
+
+  poll()
+  const interval = setInterval(poll, 4000)
+
+  return () => {
+    active = false
+    clearInterval(interval)
+  }
 }
 
 export function subscribeToOrder(orderId, onOrder, onError) {
-  const firestore = requireDb()
-  return onSnapshot(
-    doc(firestore, 'orders', orderId),
-    (snapshot) => {
-      onOrder(snapshot.exists() ? { id: snapshot.id, ...snapshot.data() } : null)
-    },
-    onError,
-  )
+  let active = true
+
+  const poll = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch(`/api/orders/${orderId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!res.ok) throw new Error('Failed to fetch order details')
+      const order = await res.json()
+      if (active) {
+        onOrder(order)
+      }
+    } catch (err) {
+      if (active) onError(err)
+    }
+  }
+
+  poll()
+  const interval = setInterval(poll, 4000)
+
+  return () => {
+    active = false
+    clearInterval(interval)
+  }
 }
 
 export function subscribeToDevelopers(onDevelopers, onError) {
-  const firestore = requireDb()
-  const developersQuery = query(
-    collection(firestore, 'users'),
-    where('role', '==', 'developer'),
-  )
+  let active = true
 
-  return onSnapshot(
-    developersQuery,
-    (snapshot) => {
-      const developers = snapshot.docs
-        .map((docSnap) => ({
-          id: docSnap.id,
-          ...docSnap.data(),
-        }))
-        .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ka'))
-      onDevelopers(developers)
-    },
-    onError,
-  )
+  const poll = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch('/api/users?role=developer', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!res.ok) throw new Error('Failed to fetch developers')
+      const developers = await res.json()
+      const sorted = developers.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ka'))
+      if (active) {
+        onDevelopers(sorted)
+      }
+    } catch (err) {
+      if (active) onError(err)
+    }
+  }
+
+  poll()
+  const interval = setInterval(poll, 4000)
+
+  return () => {
+    active = false
+    clearInterval(interval)
+  }
 }
 
 export function subscribeToManagers(onManagers, onError) {
-  const firestore = requireDb()
-  const managersQuery = query(
-    collection(firestore, 'users'),
-    where('role', '==', 'manager'),
-  )
+  let active = true
 
-  return onSnapshot(
-    managersQuery,
-    (snapshot) => {
-      const managers = snapshot.docs
-        .map((docSnap) => ({
-          id: docSnap.id,
-          ...docSnap.data(),
-        }))
-        .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ka'))
-      onManagers(managers)
-    },
-    onError,
-  )
+  const poll = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch('/api/users?role=manager', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!res.ok) throw new Error('Failed to fetch managers')
+      const managers = await res.json()
+      const sorted = managers.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ka'))
+      if (active) {
+        onManagers(sorted)
+      }
+    } catch (err) {
+      if (active) onError(err)
+    }
+  }
+
+  poll()
+  const interval = setInterval(poll, 4000)
+
+  return () => {
+    active = false
+    clearInterval(interval)
+  }
 }
 
 export function subscribeToDeveloperOrders(developerId, onOrders, onError) {
-  const firestore = requireDb()
-  const ordersQuery = query(
-    collection(firestore, 'orders'),
-    where('assignedDeveloperId', '==', developerId),
-    orderBy('updatedAt', 'desc'),
-  )
+  let active = true
 
-  return onSnapshot(
-    ordersQuery,
-    (snapshot) => {
-      const orders = snapshot.docs.map((docSnap) => ({
-        id: docSnap.id,
-        ...docSnap.data(),
-      }))
-      onOrders(orders)
-    },
-    onError,
-  )
+  const poll = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch(`/api/orders?assignedDeveloperId=${developerId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!res.ok) throw new Error('Failed to fetch developer orders')
+      const orders = await res.json()
+      if (active) {
+        onOrders(orders)
+      }
+    } catch (err) {
+      if (active) onError(err)
+    }
+  }
+
+  poll()
+  const interval = setInterval(poll, 4000)
+
+  return () => {
+    active = false
+    clearInterval(interval)
+  }
 }
 
 export const ACTIVE_ORDER_STATUSES = [
@@ -260,6 +289,7 @@ export const ACTIVE_ORDER_STATUSES = [
   ORDER_STATUS.IN_PROGRESS,
   ORDER_STATUS.WAITING_APPROVAL,
 ]
+
 export const ARCHIVED_ORDER_STATUSES = [
   ORDER_STATUS.COMPLETED,
   ORDER_STATUS.CANCELLED,
@@ -284,7 +314,7 @@ export function sortOrdersByPriority(orders) {
       (PRIORITY_SORT_WEIGHT[a.priority] ?? 99) -
       (PRIORITY_SORT_WEIGHT[b.priority] ?? 99)
     if (priorityDiff !== 0) return priorityDiff
-    return (b.updatedAt?.toMillis?.() ?? 0) - (a.updatedAt?.toMillis?.() ?? 0)
+    return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
   })
 }
 
@@ -295,14 +325,12 @@ export function partitionDeveloperOrders(orders) {
       const weightDiff =
         (STATUS_SORT_WEIGHT[a.status] ?? 99) - (STATUS_SORT_WEIGHT[b.status] ?? 99)
       if (weightDiff !== 0) return weightDiff
-      return (b.updatedAt?.toMillis?.() ?? 0) - (a.updatedAt?.toMillis?.() ?? 0)
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
     })
 
   const archived = orders
     .filter((order) => ARCHIVED_ORDER_STATUSES.includes(order.status))
-    .sort(
-      (a, b) => (b.updatedAt?.toMillis?.() ?? 0) - (a.updatedAt?.toMillis?.() ?? 0),
-    )
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
 
   return { active, archived }
 }
@@ -317,12 +345,7 @@ export function getDeveloperOrderStats(orders) {
 
   const completedThisMonth = orders.filter((order) => {
     if (order.status !== ORDER_STATUS.COMPLETED) return false
-    const updated =
-      typeof order.updatedAt?.toDate === 'function'
-        ? order.updatedAt.toDate()
-        : order.updatedAt
-          ? new Date(order.updatedAt)
-          : null
+    const updated = order.updatedAt ? new Date(order.updatedAt) : null
     return updated && updated >= monthStart
   }).length
 
@@ -330,12 +353,7 @@ export function getDeveloperOrderStats(orders) {
 }
 
 function getOrderUpdatedDate(order) {
-  const updated =
-    typeof order.updatedAt?.toDate === 'function'
-      ? order.updatedAt.toDate()
-      : order.updatedAt
-        ? new Date(order.updatedAt)
-        : null
+  const updated = order.updatedAt ? new Date(order.updatedAt) : null
   return updated && !Number.isNaN(updated.getTime()) ? updated : null
 }
 
@@ -435,30 +453,55 @@ export async function offerOrderPrice(orderId, price, explanation) {
     throw new Error('შეიყვანეთ სწორი ფასი.')
   }
 
-  const firestore = requireDb()
-  await updateDoc(doc(firestore, 'orders', orderId), {
-    price,
-    priceExplanation: explanation?.trim() || '',
-    status: ORDER_STATUS.QUOTE_OFFERED,
-    updatedAt: serverTimestamp(),
+  const token = localStorage.getItem('token')
+  const res = await fetch(`/api/orders/${orderId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      price,
+      priceExplanation: explanation?.trim() || '',
+      status: ORDER_STATUS.QUOTE_OFFERED
+    })
   })
+
+  if (!res.ok) {
+    const errData = await res.json()
+    throw new Error(errData.message || 'ფასის შეთავაზება ვერ მოხერხდა.')
+  }
 }
 
 export async function confirmOrderPrice(orderId) {
-  const firestore = requireDb()
-  await updateDoc(doc(firestore, 'orders', orderId), {
-    status: ORDER_STATUS.QUOTE_CONFIRMED,
-    quoteConfirmedAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
+  const token = localStorage.getItem('token')
+  const res = await fetch(`/api/orders/${orderId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      status: ORDER_STATUS.QUOTE_CONFIRMED,
+      quoteConfirmedAt: new Date()
+    })
   })
+  if (!res.ok) throw new Error('ფასის დადასტურება ვერ მოხერხდა.')
 }
 
 export async function rejectOrderPrice(orderId) {
-  const firestore = requireDb()
-  await updateDoc(doc(firestore, 'orders', orderId), {
-    status: ORDER_STATUS.QUOTE_REJECTED,
-    updatedAt: serverTimestamp(),
+  const token = localStorage.getItem('token')
+  const res = await fetch(`/api/orders/${orderId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      status: ORDER_STATUS.QUOTE_REJECTED
+    })
   })
+  if (!res.ok) throw new Error('ფასის უარყოფა ვერ მოხერხდა.')
 }
 
 export async function submitOrderRating(orderId, developerId, { rating, companyRating, review }) {
@@ -472,28 +515,28 @@ export async function submitOrderRating(orderId, developerId, { rating, companyR
     throw new Error('კომპანიის რეიტინგი უნდა იყოს 1-დან 5-მდე.')
   }
 
-  const firestore = requireDb()
-  const orderRef = doc(firestore, 'orders', orderId)
-  const orderSnap = await getDoc(orderRef)
-
-  if (!orderSnap.exists()) {
-    throw new Error('შეკვეთა ვერ მოიძებნა.')
-  }
-
-  const order = orderSnap.data()
-  if (order.status !== ORDER_STATUS.COMPLETED) {
-    throw new Error('რეიტინგი მხოლოდ დასრულებულ შეკვეთაზე შეიძლება.')
-  }
-  if (order.customerRating != null) {
-    throw new Error('ამ შეკვეთაზე უკვე გაქვს შეფასება.')
-  }
-
-  await updateDoc(orderRef, {
-    customerRating: value,
-    companyRating: compValue,
-    customerReview: review?.trim() || '',
-    updatedAt: serverTimestamp(),
+  const token = localStorage.getItem('token')
+  
+  const getRes = await fetch(`/api/orders/${orderId}`, {
+    headers: { 'Authorization': `Bearer ${token}` }
   })
+  if (!getRes.ok) throw new Error('შეკვეთა ვერ მოიძებნა.')
+  const order = await getRes.json()
+
+  const patchRes = await fetch(`/api/orders/${orderId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      customerRating: value,
+      companyRating: compValue,
+      customerReview: review?.trim() || ''
+    })
+  })
+
+  if (!patchRes.ok) throw new Error('შეფასების გაგზავნა ვერ მოხერხდა.')
 
   if (developerId) {
     await saveDeveloperReview(developerId, orderId, {
@@ -502,34 +545,24 @@ export async function submitOrderRating(orderId, developerId, { rating, companyR
       customerName: order.customerName,
       serviceType: order.serviceType,
     })
-
-    const devRef = doc(firestore, 'users', developerId)
-    const devSnap = await getDoc(devRef)
-    if (devSnap.exists()) {
-      const data = devSnap.data()
-      const count = (data.ratingCount ?? 0) + 1
-      const sum = (data.ratingSum ?? 0) + value
-      await updateDoc(devRef, {
-        ratingCount: count,
-        ratingSum: sum,
-        ratingAvg: sum / count,
-      })
-    }
   }
 }
 
 export async function updateOrderCompensation(orderId, { price, developerPayout }) {
-  const firestore = requireDb()
-  const payload = { updatedAt: serverTimestamp() }
+  const token = localStorage.getItem('token')
+  const payload = {}
+  if (price !== undefined) payload.price = price
+  if (developerPayout !== undefined) payload.developerPayout = developerPayout
 
-  if (price !== undefined) {
-    payload.price = price
-  }
-  if (developerPayout !== undefined) {
-    payload.developerPayout = developerPayout
-  }
-
-  await updateDoc(doc(firestore, 'orders', orderId), payload)
+  const res = await fetch(`/api/orders/${orderId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(payload)
+  })
+  if (!res.ok) throw new Error('ჰონორარის განახლება ვერ მოხერხდა.')
 }
 
 export async function updateOrderPaymentStatus(orderId, paymentStatus) {
@@ -537,11 +570,16 @@ export async function updateOrderPaymentStatus(orderId, paymentStatus) {
     throw new Error('paymentStatus უნდა იყოს unpaid ან paid.')
   }
 
-  const firestore = requireDb()
-  await updateDoc(doc(firestore, 'orders', orderId), {
-    paymentStatus,
-    updatedAt: serverTimestamp(),
+  const token = localStorage.getItem('token')
+  const res = await fetch(`/api/orders/${orderId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({ paymentStatus })
   })
+  if (!res.ok) throw new Error('გადახდის სტატუსის განახლება ვერ მოხერხდა.')
 }
 
 export async function updateOrderPayoutStatus(orderId, payoutStatus) {
@@ -549,21 +587,22 @@ export async function updateOrderPayoutStatus(orderId, payoutStatus) {
     throw new Error('payoutStatus უნდა იყოს pending ან paid.')
   }
 
-  const firestore = requireDb()
-  await updateDoc(doc(firestore, 'orders', orderId), {
-    payoutStatus,
-    updatedAt: serverTimestamp(),
+  const token = localStorage.getItem('token')
+  const res = await fetch(`/api/orders/${orderId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({ payoutStatus })
   })
+  if (!res.ok) throw new Error('გადარიცხვის სტატუსის განახლება ვერ მოხერხდა.')
 }
 
 export function formatOrderDate(timestamp) {
   if (!timestamp) return '—'
-
-  const date =
-    typeof timestamp.toDate === 'function' ? timestamp.toDate() : new Date(timestamp)
-
+  const date = new Date(timestamp)
   if (Number.isNaN(date.getTime())) return '—'
-
   return date.toLocaleDateString('ka-GE', {
     day: 'numeric',
     month: 'short',
@@ -575,79 +614,97 @@ export async function updateDeveloperOrderStatus(orderId, status) {
   if (![ORDER_STATUS.IN_PROGRESS, ORDER_STATUS.WAITING_APPROVAL, ORDER_STATUS.COMPLETED].includes(status)) {
     throw new Error('დეველოპერს მხოლოდ შესაბამისი სტატუსების დაყენება შეუძლია.')
   }
-
   return updateOrderStatus(orderId, status)
 }
 
 export async function updateOrderTimelineEvent(orderId, eventName, nextStatus = null) {
-  const firestore = requireDb()
+  const token = localStorage.getItem('token')
   const payload = {
-    [`${eventName}At`]: serverTimestamp(),
-    updatedAt: serverTimestamp(),
+    [`${eventName}At`]: new Date()
   }
   if (nextStatus) {
     payload.status = nextStatus
   }
-  await updateDoc(doc(firestore, 'orders', orderId), payload)
+  const res = await fetch(`/api/orders/${orderId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(payload)
+  })
+  if (!res.ok) throw new Error('Timeline-ის განახლება ვერ მოხერხდა.')
 }
 
 export async function approveOrderCompletion(orderId) {
-  const firestore = requireDb()
-  await updateDoc(doc(firestore, 'orders', orderId), {
-    status: ORDER_STATUS.COMPLETED,
-    managerApprovedAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
+  const token = localStorage.getItem('token')
+  const res = await fetch(`/api/orders/${orderId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      status: ORDER_STATUS.COMPLETED,
+      managerApprovedAt: new Date()
+    })
   })
+  if (!res.ok) throw new Error('შესრულების დადასტურება ვერ მოხერხდა.')
 }
 
 export async function assignDeveloperToOrder(orderId, { developerId, developerName, comment }) {
-  const firestore = requireDb()
-  const orderSnap = await getDoc(doc(firestore, 'orders', orderId))
-  if (!orderSnap.exists()) {
-    throw new Error('შეკვეთა ვერ მოიძებნა.')
-  }
-  if (orderSnap.data().status !== ORDER_STATUS.QUOTE_CONFIRMED) {
-    throw new Error('მინიჭება შესაძლებელია მხოლოდ ფასის დადასტურების შემდეგ.')
-  }
-
-  await updateDoc(doc(firestore, 'orders', orderId), {
-    assignedDeveloperId: developerId,
-    assignedDeveloperName: developerName,
-    assignedDeveloperComment: comment?.trim() || '',
-    status: ORDER_STATUS.ASSIGNED,
-    assignedAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
+  const token = localStorage.getItem('token')
+  const res = await fetch(`/api/orders/${orderId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      assignedDeveloperId: developerId,
+      assignedDeveloperName: developerName,
+      assignedDeveloperComment: comment?.trim() || '',
+      status: ORDER_STATUS.ASSIGNED,
+      assignedAt: new Date()
+    })
   })
+
+  if (!res.ok) {
+    const errData = await res.json()
+    throw new Error(errData.message || 'შემსრულებლის მინიჭება ვერ მოხერხდა.')
+  }
 }
 
 export async function updateOrderStatus(orderId, status) {
-  const firestore = requireDb()
-  await updateDoc(doc(firestore, 'orders', orderId), {
-    status,
-    updatedAt: serverTimestamp(),
+  const token = localStorage.getItem('token')
+  const res = await fetch(`/api/orders/${orderId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({ status })
   })
+  if (!res.ok) throw new Error('სტატუსის განახლება ვერ მოხერხდა.')
 }
 
 export async function addOrderNote(orderId, { text, authorName }) {
-  const firestore = requireDb()
-  await updateDoc(doc(firestore, 'orders', orderId), {
-    managerNotes: arrayUnion({
-      text: text.trim(),
-      authorName,
-      createdAt: Timestamp.now(),
-    }),
-    updatedAt: serverTimestamp(),
+  const token = localStorage.getItem('token')
+  const res = await fetch(`/api/orders/${orderId}/notes`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({ text, authorName })
   })
+  if (!res.ok) throw new Error('შენიშვნის დამატება ვერ მოხერხდა.')
 }
 
 export function formatOrderNoteTime(timestamp) {
   if (!timestamp) return ''
-
-  const date =
-    typeof timestamp.toDate === 'function' ? timestamp.toDate() : new Date(timestamp)
-
+  const date = new Date(timestamp)
   if (Number.isNaN(date.getTime())) return ''
-
   return date.toLocaleString('ka-GE', {
     day: 'numeric',
     month: 'short',

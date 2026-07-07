@@ -1,98 +1,110 @@
-import {
-  collection,
-  doc,
-  getDoc,
-  onSnapshot,
-  orderBy,
-  query,
-  serverTimestamp,
-  setDoc,
-  where,
-} from 'firebase/firestore'
-import { db } from '../firebase'
-import { ORDER_STATUS } from './orderService'
-
-function requireDb() {
-  if (!db) {
-    throw new Error('Firebase არ არის კონფიგურებული.')
-  }
-  return db
-}
-
 export async function saveDeveloperReview(developerId, orderId, { rating, review, customerName, serviceType }) {
-  const firestore = requireDb()
-  await setDoc(doc(firestore, 'users', developerId, 'reviews', orderId), {
-    orderId,
-    rating,
-    review: review?.trim() || '',
-    customerName: customerName?.trim() || 'კლიენტი',
-    serviceType: serviceType || '',
-    createdAt: serverTimestamp(),
+  const token = localStorage.getItem('token')
+  const res = await fetch(`/api/reviews/${developerId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      orderId,
+      rating,
+      comment: review?.trim() || '',
+      customerName: customerName?.trim() || 'კლიენტი',
+      serviceType: serviceType || ''
+    })
   })
+  if (!res.ok) {
+    const errData = await res.json()
+    throw new Error(errData.message || 'შეფასების შენახვა ვერ მოხერხდა.')
+  }
 }
 
 export function subscribeToDeveloperReviews(developerId, onReviews, onError) {
-  const firestore = requireDb()
-  const reviewsQuery = query(
-    collection(firestore, 'users', developerId, 'reviews'),
-    orderBy('createdAt', 'desc'),
-  )
+  let active = true
 
-  return onSnapshot(
-    reviewsQuery,
-    (snapshot) => {
-      const reviews = snapshot.docs.map((docSnap) => ({
-        id: docSnap.id,
-        ...docSnap.data(),
-      }))
-      onReviews(reviews)
-    },
-    onError,
-  )
+  const poll = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch(`/api/reviews/${developerId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!res.ok) throw new Error('Failed to fetch developer reviews')
+      const data = await res.json()
+      if (active) {
+        const mapped = data.map(item => ({
+          ...item,
+          review: item.comment || ''
+        }))
+        onReviews(mapped)
+      }
+    } catch (err) {
+      if (active) onError(err)
+    }
+  }
+
+  poll()
+  const interval = setInterval(poll, 4000)
+
+  return () => {
+    active = false
+    clearInterval(interval)
+  }
 }
 
 export function subscribeToDeveloperReviewsFromOrders(developerId, onReviews, onError) {
-  const firestore = requireDb()
-  const ordersQuery = query(
-    collection(firestore, 'orders'),
-    where('assignedDeveloperId', '==', developerId),
-    orderBy('updatedAt', 'desc'),
-  )
+  let active = true
 
-  return onSnapshot(
-    ordersQuery,
-    (snapshot) => {
-      const reviews = snapshot.docs
-        .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }))
-        .filter((order) => order.status === ORDER_STATUS.COMPLETED && order.customerRating != null)
-        .map((order) => ({
-          id: order.id,
-          orderId: order.id,
-          rating: order.customerRating,
-          review: order.customerReview || '',
-          customerName: order.customerName || 'კლიენტი',
-          serviceType: order.serviceType || '',
-          createdAt: order.updatedAt,
-        }))
-      onReviews(reviews)
-    },
-    onError,
-  )
+  const poll = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch(`/api/orders?assignedDeveloperId=${developerId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!res.ok) throw new Error('Failed to fetch developer orders reviews')
+      const data = await res.json()
+      if (active) {
+        const reviews = data
+          .filter((order) => order.status === 'completed' && order.customerRating != null)
+          .map((order) => ({
+            id: order.id,
+            orderId: order.id,
+            rating: order.customerRating,
+            review: order.customerReview || '',
+            customerName: order.customerName || 'კლიენტი',
+            serviceType: order.serviceType || '',
+            createdAt: order.updatedAt,
+          }))
+        onReviews(reviews)
+      }
+    } catch (err) {
+      if (active) onError(err)
+    }
+  }
+
+  poll()
+  const interval = setInterval(poll, 4000)
+
+  return () => {
+    active = false
+    clearInterval(interval)
+  }
 }
 
 export async function fetchDeveloperProfile(developerId) {
-  const firestore = requireDb()
-  const snapshot = await getDoc(doc(firestore, 'users', developerId))
-  if (!snapshot.exists() || snapshot.data().role !== 'developer') {
-    return null
-  }
-  return { id: snapshot.id, ...snapshot.data() }
+  const token = localStorage.getItem('token')
+  const res = await fetch(`/api/users/${developerId}`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  })
+  if (!res.ok) return null
+  const data = await res.json()
+  if (data.role !== 'developer') return null
+  return data
 }
 
 export function formatReviewDate(timestamp) {
   if (!timestamp) return '—'
-  const date =
-    typeof timestamp.toDate === 'function' ? timestamp.toDate() : new Date(timestamp)
+  const date = new Date(timestamp)
   if (Number.isNaN(date.getTime())) return '—'
   return date.toLocaleDateString('ka-GE', {
     day: 'numeric',

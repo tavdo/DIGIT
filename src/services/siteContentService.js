@@ -1,40 +1,50 @@
-import { doc, onSnapshot, serverTimestamp, setDoc } from 'firebase/firestore'
-import { db } from '../firebase'
 import { DEFAULT_SITE_CONTENT, mergeSiteContent } from '../data/defaultSiteContent'
 
-const SITE_DOC_ID = 'main'
-
-function requireDb() {
-  if (!db) {
-    throw new Error('Firebase არ არის კონფიგურირებული.')
-  }
-  return db
-}
+const SITE_DOC_ID = 'default'
 
 export function subscribeToSiteContent(onContent, onError) {
-  const firestore = requireDb()
-  const contentRef = doc(firestore, 'siteContent', SITE_DOC_ID)
+  let active = true
+  
+  const poll = async () => {
+    try {
+      const res = await fetch(`/api/site-content/${SITE_DOC_ID}`)
+      if (!res.ok) throw new Error('Failed to fetch site content')
+      const data = await res.json()
+      if (active) {
+        onContent(mergeSiteContent(data))
+      }
+    } catch (err) {
+      if (active) onError(err)
+    }
+  }
 
-  return onSnapshot(
-    contentRef,
-    (snapshot) => {
-      onContent(mergeSiteContent(snapshot.exists() ? snapshot.data() : null))
-    },
-    onError,
-  )
+  poll()
+  const interval = setInterval(poll, 5000)
+
+  return () => {
+    active = false
+    clearInterval(interval)
+  }
 }
 
 export async function updateSiteContent(content, adminId) {
-  const firestore = requireDb()
-  await setDoc(
-    doc(firestore, 'siteContent', SITE_DOC_ID),
-    {
-      ...content,
-      updatedAt: serverTimestamp(),
-      updatedBy: adminId,
+  const token = localStorage.getItem('token')
+  const res = await fetch(`/api/site-content/${SITE_DOC_ID}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
     },
-    { merge: true },
-  )
+    body: JSON.stringify({
+      ...content,
+      updatedBy: adminId
+    })
+  })
+
+  if (!res.ok) {
+    const errData = await res.json()
+    throw new Error(errData.message || 'სისტემური ტექსტების განახლება ვერ მოხერხდა.')
+  }
 }
 
 export function getDefaultSiteContent() {
