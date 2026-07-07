@@ -3,18 +3,20 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem 1.25rem;
+  padding: 2.5rem 1.25rem;
   background: var(--gradient-hero);
 }
 
 .admin-page__panel {
   width: 100%;
-  max-width: 400px;
-  background: var(--bg-color);
+  max-width: 420px;
+  background: var(--color-surface);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  padding: 2.5rem 2rem;
-  box-shadow: var(--shadow-lg);
+  border-radius: var(--radius-lg);
+  padding: 3rem 2.25rem;
+  box-shadow: var(--shadow-sm);
 }
 
 .admin-page__panel::before {
@@ -28,21 +30,22 @@
 
 .admin-page__badge {
   display: inline-block;
-  padding: 0.1875rem 0.5rem;
+  padding: 0.25rem 0.6rem;
   margin-bottom: 0.75rem;
   font-family: var(--font-mono);
   font-size: 0.625rem;
-  font-weight: 500;
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--color-copper-glow);
-  background: rgba(79, 109, 245, 0.1);
-  border-radius: 999px;
+  color: var(--color-copper);
+  background: var(--color-relay-soft);
+  border: 1px solid var(--color-copper-glow);
+  border-radius: var(--radius-sm);
 }
 
 .admin-page__title {
   font-size: 1.375rem;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--primary-color);
   margin-bottom: 0.375rem;
   letter-spacing: -0.03em;
@@ -67,27 +70,29 @@
 }
 
 .admin-page__footer a {
-  color: var(--color-copper-glow);
-  font-weight: 500;
+  color: var(--color-copper);
+  font-weight: 600;
 }
 
 .admin-page--wide {
   align-items: flex-start;
-  padding-top: 3rem;
+  padding-top: 3.5rem;
 }
 
 .admin-page--wide .admin-page__panel,
 .admin-panel {
-  max-width: 720px;
+  max-width: 760px;
   width: 100%;
 }
 
 .admin-panel {
-  background: var(--bg-color);
+  background: var(--color-surface);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-lg);
   padding: 2rem;
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-sm);
 }
 
 .admin-panel__header {
@@ -108,7 +113,7 @@
   padding: 2rem 1rem;
   text-align: center;
   color: var(--text-muted);
-  border: 1px dashed var(--color-border);
+  border: 1px dashed var(--color-border-strong);
   border-radius: var(--radius-md);
 }
 
@@ -123,15 +128,21 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  padding: 1rem 1.125rem;
+  padding: 1.25rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: var(--bg-alt);
+  background: var(--color-navy-soft);
+  transition: all var(--transition);
+}
+
+.admin-request:hover {
+  border-color: var(--color-border-strong);
 }
 
 .admin-request__info strong {
   color: var(--primary-color);
   font-size: 0.875rem;
+  font-weight: 700;
 }
 
 .admin-request__info span {
@@ -148,39 +159,48 @@
 
 .admin-request__reject {
   color: var(--color-error);
-  border-color: rgba(248, 113, 113, 0.2);
+  border-color: rgba(255, 70, 70, 0.2);
 }
 
 
 .admin-panel--super {
-  max-width: 1100px;
+  max-width: 1120px;
 }
 
 .admin-tabs {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
 }
 
 .admin-tabs__btn {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
-  padding: 0.5rem 0.875rem;
-  border: 1px solid var(--color-border);
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-md);
-  background: var(--bg-alt);
+  background: var(--color-navy-soft);
   color: var(--text-muted);
   font-size: 0.8125rem;
-  font-weight: 500;
+  font-weight: 700;
   cursor: pointer;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+  transition: all var(--transition);
+}
+
+.admin-tabs__btn:hover {
+  border-color: var(--color-copper);
+  color: var(--color-copper);
 }
 
 .admin-tabs__btn--active {
-  color: var(--color-copper-glow);
-  border-color: rgba(79, 109, 245, 0.4);
-  background: rgba(79, 109, 245, 0.08);
+  color: var(--color-copper) !important;
+  border-color: var(--color-copper);
+  background: var(--color-relay-soft);
+  box-shadow: 0 0 8px var(--color-copper-glow);
 }
 
 .admin-section__head {
@@ -195,6 +215,7 @@
 .admin-section__head h2 {
   margin: 0 0 0.25rem;
   font-size: 1.125rem;
+  font-weight: 800;
 }
 
 .admin-section__head p {

@@ -9,15 +9,28 @@ export const EXPERIENCE_YEAR_OPTIONS = [
 
 export const selectableExperienceCategories = popularServices
 
-export function formatExperienceYears(value) {
+export function formatExperienceYears(value, t) {
   if (!value) return '—'
+  if (t) {
+    const key = `cv.years_${value}`
+    const translated = t(key)
+    if (translated && translated !== key) {
+      return translated
+    }
+  }
   return EXPERIENCE_YEAR_OPTIONS.find((option) => option.value === value)?.label ?? value
 }
 
-export function formatExperienceCategories(categoryIds) {
+export function formatExperienceCategories(categoryIds, tObject) {
   if (!categoryIds?.length) return '—'
   return categoryIds
-    .map((id) => getServiceById(id)?.title ?? id)
+    .map((id) => {
+      const service = getServiceById(id)
+      if (service) {
+        return tObject ? tObject(service, 'title') : (service.title_ka || service.title || id)
+      }
+      return id
+    })
     .join(', ')
 }
 

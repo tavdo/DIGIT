@@ -8,7 +8,7 @@
 }
 
 .services-page__intro-text {
-  font-size: 1rem;
+  font-size: 1.0625rem;
   color: var(--text-muted);
   line-height: 1.75;
   margin-top: 0.875rem;
@@ -17,55 +17,64 @@
 .services-page__grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
 .service-item {
   display: flex;
   flex-direction: column;
-  background: var(--bg-color);
+  background: var(--color-surface);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: 2rem 1.75rem;
-  transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+  padding: 2.5rem 2rem;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition);
 }
 
 .service-item:hover {
-  border-color: var(--color-border-hover);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  border-color: var(--color-copper);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md), 0 0 15px rgba(0, 255, 136, 0.1);
+}
+
+.light-mode .service-item:hover {
+  box-shadow: var(--shadow-md), 0 0 15px rgba(5, 150, 105, 0.06);
 }
 
 .service-item--custom {
   border-style: dashed;
-  border-color: rgba(79, 109, 245, 0.2);
-  background: rgba(79, 109, 245, 0.02);
+  border-color: var(--color-border-strong);
+  background: var(--color-relay-soft);
 }
 
 .service-item--custom:hover {
-  border-color: rgba(79, 109, 245, 0.35);
+  border-color: var(--color-copper);
 }
 
 .service-item__icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  background: rgba(79, 109, 245, 0.08);
-  color: var(--color-copper-glow);
-  border-radius: var(--radius-sm);
+  width: 44px;
+  height: 44px;
+  background: var(--color-relay-soft);
+  color: var(--color-copper);
+  border: 1px solid var(--color-copper-glow);
+  border-radius: var(--radius-md);
   margin-bottom: 1.25rem;
 }
 
 .service-item--custom .service-item__icon {
-  background: rgba(79, 109, 245, 0.1);
-  color: var(--accent-color);
+  background: var(--color-relay-soft);
+  color: var(--color-copper);
+  border-color: var(--color-copper);
 }
 
 .service-item__title {
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 1.1rem;
+  font-weight: 800;
   color: var(--primary-color);
   margin-bottom: 0.625rem;
   line-height: 1.35;
@@ -87,6 +96,7 @@
 @media (max-width: 900px) {
   .services-page__grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
   }
 }
 

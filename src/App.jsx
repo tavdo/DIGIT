@@ -13,6 +13,8 @@ import Dashboard from './pages/Dashboard'
 import DeveloperDashboard from './pages/DeveloperDashboard'
 import SpecialistProfile from './pages/SpecialistProfile'
 import Specialists from './pages/Specialists'
+import Managers from './pages/Managers'
+import ManagerProfile from './pages/ManagerProfile'
 import Profile from './pages/Profile'
 import Admin from './pages/Admin'
 
@@ -43,7 +45,7 @@ function App() {
           <Route
             path="specialists"
             element={
-              <RoleProtectedRoute allowedRoles={['customer', 'manager', 'admin']}>
+              <RoleProtectedRoute allowedRoles={['manager', 'admin', 'developer']}>
                 <Specialists />
               </RoleProtectedRoute>
             }
@@ -51,8 +53,24 @@ function App() {
           <Route
             path="specialists/:developerId"
             element={
-              <RoleProtectedRoute allowedRoles={['customer', 'manager', 'admin']}>
+              <RoleProtectedRoute allowedRoles={['manager', 'admin', 'developer']}>
                 <SpecialistProfile />
+              </RoleProtectedRoute>
+            }
+          />
+          <Route
+            path="managers"
+            element={
+              <RoleProtectedRoute allowedRoles={['customer', 'manager', 'admin', 'developer']}>
+                <Managers />
+              </RoleProtectedRoute>
+            }
+          />
+          <Route
+            path="managers/:managerId"
+            element={
+              <RoleProtectedRoute allowedRoles={['customer', 'manager', 'admin', 'developer']}>
+                <ManagerProfile />
               </RoleProtectedRoute>
             }
           />

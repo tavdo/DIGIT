@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CheckCircle2, Plus, Star, XCircle } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { useTranslation } from '../context/LanguageContext'
 import FirebaseSetupNotice from '../components/FirebaseSetupNotice'
 import usePageMeta from '../hooks/usePageMeta'
 import { pageTitle } from '../constants/brand'
@@ -10,7 +11,6 @@ import {
   formatOrderAmount,
   formatOrderDate,
   ORDER_STATUS,
-  ORDER_STATUS_LABELS,
   rejectOrderPrice,
   submitOrderRating,
   subscribeToCustomerOrders,
@@ -19,6 +19,7 @@ import OrderAttachments from '../components/OrderAttachments'
 import './MyRequests.css'
 
 function RatingForm({ order, onRated, onError }) {
+  const { t } = useTranslation()
   const [rating, setRating] = useState(5)
   const [companyRating, setCompanyRating] = useState(5)
   const [review, setReview] = useState('')
@@ -31,7 +32,7 @@ function RatingForm({ order, onRated, onError }) {
       await submitOrderRating(order.id, order.assignedDeveloperId, { rating, companyRating, review })
       onRated()
     } catch (err) {
-      onError(err.message || 'შეფასება ვერ ჩაიწერა.')
+      onError(err.message || t('myRequests.ratingError') || 'შეფასება ვერ ჩაიწერა.')
     } finally {
       setSubmitting(false)
     }
@@ -48,10 +49,12 @@ function RatingForm({ order, onRated, onError }) {
       flexDirection: 'column',
       gap: '1rem'
     }}>
-      <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--color-royal)' }}>დავალება შესრულებულია! გთხოვთ შეაფასოთ:</h4>
+      <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--color-royal)' }}>{t('myRequests.ratingTitle')}</h4>
 
       <div>
-        <p className="my-request__rating-label" style={{ marginBottom: '0.25rem', fontSize: '0.9rem' }}>შეაფასე შემსრულებელი ({order.assignedDeveloperName || 'სპეციალისტი'}):</p>
+        <p className="my-request__rating-label" style={{ marginBottom: '0.25rem', fontSize: '0.9rem' }}>
+          {t('myRequests.rateSpecialist').replace('{name}', order.assignedDeveloperName || t('common.other'))}
+        </p>
         <div className="my-request__stars" style={{ display: 'flex', gap: '0.25rem' }}>
           {[1, 2, 3, 4, 5].map((value) => (
             <button
@@ -59,7 +62,7 @@ function RatingForm({ order, onRated, onError }) {
               type="button"
               className={`my-request__star ${rating >= value ? 'my-request__star--active' : ''}`}
               onClick={() => setRating(value)}
-              aria-label={`${value} ვარსკვლავი`}
+              aria-label={t('myRequests.starLabel').replace('{value}', value)}
               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', color: rating >= value ? '#ffd700' : 'var(--color-muted)' }}
             >
               <Star size={20} fill={rating >= value ? '#ffd700' : 'none'} />
@@ -69,7 +72,7 @@ function RatingForm({ order, onRated, onError }) {
       </div>
 
       <div>
-        <p className="my-request__rating-label" style={{ marginBottom: '0.25rem', fontSize: '0.9rem' }}>შეაფასე კომპანია:</p>
+        <p className="my-request__rating-label" style={{ marginBottom: '0.25rem', fontSize: '0.9rem' }}>{t('myRequests.rateCompany')}</p>
         <div className="my-request__stars" style={{ display: 'flex', gap: '0.25rem' }}>
           {[1, 2, 3, 4, 5].map((value) => (
             <button
@@ -77,7 +80,7 @@ function RatingForm({ order, onRated, onError }) {
               type="button"
               className={`my-request__star ${companyRating >= value ? 'my-request__star--active' : ''}`}
               onClick={() => setCompanyRating(value)}
-              aria-label={`${value} ვარსკვლავი`}
+              aria-label={t('myRequests.starLabel').replace('{value}', value)}
               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', color: companyRating >= value ? '#ffd700' : 'var(--color-muted)' }}
             >
               <Star size={20} fill={companyRating >= value ? '#ffd700' : 'none'} />
@@ -87,11 +90,11 @@ function RatingForm({ order, onRated, onError }) {
       </div>
 
       <div>
-        <p className="my-request__rating-label" style={{ marginBottom: '0.25rem', fontSize: '0.9rem' }}>დატოვე კომენტარი შესრულებულ დავალებაზე:</p>
+        <p className="my-request__rating-label" style={{ marginBottom: '0.25rem', fontSize: '0.9rem' }}>{t('myRequests.commentLabel')}</p>
         <textarea
           className="my-request__review"
           rows={3}
-          placeholder="კომენტარი (არასავალდებულო)"
+          placeholder={t('myRequests.commentPlaceholder')}
           value={review}
           onChange={(e) => setReview(e.target.value)}
           disabled={submitting}
@@ -109,13 +112,14 @@ function RatingForm({ order, onRated, onError }) {
       </div>
 
       <button type="submit" className="btn btn--primary btn--sm" disabled={submitting} style={{ alignSelf: 'flex-start' }}>
-        შეფასების გაგზავნა
+        {t('myRequests.submitRating')}
       </button>
     </form>
   )
 }
 
 function RequestCard({ order, onError }) {
+  const { t } = useTranslation()
   const [acting, setActing] = useState(false)
 
   const handleConfirm = async () => {
@@ -123,7 +127,7 @@ function RequestCard({ order, onError }) {
     try {
       await confirmOrderPrice(order.id)
     } catch (err) {
-      onError(err.message || 'დადასტურება ვერ მოხერხდა.')
+      onError(err.message || 'Price confirmation failed.')
     } finally {
       setActing(false)
     }
@@ -134,7 +138,7 @@ function RequestCard({ order, onError }) {
     try {
       await rejectOrderPrice(order.id)
     } catch (err) {
-      onError(err.message || 'უარყოფა ვერ მოხერხდა.')
+      onError(err.message || 'Price rejection failed.')
     } finally {
       setActing(false)
     }
@@ -150,7 +154,7 @@ function RequestCard({ order, onError }) {
           </p>
         </div>
         <span className={`order-badge order-badge--${order.status}`}>
-          {ORDER_STATUS_LABELS[order.status] ?? order.status}
+          {t('orders.status.' + order.status) || order.status}
         </span>
       </div>
 
@@ -167,11 +171,11 @@ function RequestCard({ order, onError }) {
           margin: '1rem 0'
         }}>
           <p className="my-request__price" style={{ margin: 0 }}>
-            შეთავაზებული ფასი: <strong>{formatOrderAmount(order.price)}</strong>
+            {t('myRequests.offeredPrice')} <strong>{formatOrderAmount(order.price)}</strong>
           </p>
           {order.priceExplanation && (
             <p className="my-request__price-explanation" style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: 'var(--color-muted)' }}>
-              რატომ ჯდება ეს ფასი: <em>{order.priceExplanation}</em>
+              {t('myRequests.priceExplanation')} <em>{order.priceExplanation}</em>
             </p>
           )}
         </div>
@@ -179,7 +183,7 @@ function RequestCard({ order, onError }) {
 
       {order.assignedDeveloperName && (
         <p className="my-request__developer">
-          შემსრულებელი:{' '}
+          {t('myRequests.specialistLabel')}{' '}
           {order.assignedDeveloperId ? (
             <Link to={`/specialists/${order.assignedDeveloperId}`}>
               <strong>{order.assignedDeveloperName}</strong>
@@ -199,7 +203,7 @@ function RequestCard({ order, onError }) {
             disabled={acting}
           >
             <CheckCircle2 size={16} />
-            ფასს ვეთანხმები
+            {t('myRequests.acceptPrice')}
           </button>
           <button
             type="button"
@@ -208,7 +212,7 @@ function RequestCard({ order, onError }) {
             disabled={acting}
           >
             <XCircle size={16} />
-            უარი
+            {t('myRequests.rejectPrice')}
           </button>
         </div>
       )}
@@ -226,9 +230,9 @@ function RequestCard({ order, onError }) {
           marginTop: '1rem',
           fontSize: '0.9rem'
         }}>
-          <p style={{ margin: '0 0 0.25rem 0' }}>შენი შეფასება სპეციალისტს: <strong>{'★'.repeat(order.customerRating)}</strong></p>
+          <p style={{ margin: '0 0 0.25rem 0' }}>{t('myRequests.yourRatingSpecialist')} <strong>{'★'.repeat(order.customerRating)}</strong></p>
           {order.companyRating != null && (
-            <p style={{ margin: '0 0 0.25rem 0' }}>შენი შეფასება კომპანიას: <strong>{'★'.repeat(order.companyRating)}</strong></p>
+            <p style={{ margin: '0 0 0.25rem 0' }}>{t('myRequests.yourRatingCompany')} <strong>{'★'.repeat(order.companyRating)}</strong></p>
           )}
           {order.customerReview && (
             <p style={{ margin: 0, fontStyle: 'italic', color: 'var(--color-muted)' }}>"{order.customerReview}"</p>
@@ -240,7 +244,8 @@ function RequestCard({ order, onError }) {
 }
 
 function MyRequests() {
-  usePageMeta(pageTitle('ჩემი მოთხოვნები'), 'DIGIT — შენი მოთხოვნების სტატუსი.')
+  const { t } = useTranslation()
+  usePageMeta(pageTitle(t('myRequests.metaTitle')), t('myRequests.metaDesc'))
 
   const { user, isFirebaseConfigured } = useAuth()
   const [orders, setOrders] = useState([])
@@ -272,7 +277,7 @@ function MyRequests() {
         setLoading(false)
       },
       (err) => {
-        setError(err.message || 'მოთხოვნების ჩატვირთვა ვერ მოხერხდა.')
+        setError(err.message || 'Failed to load requests.')
         setLoading(false)
       },
     )
@@ -284,8 +289,8 @@ function MyRequests() {
     <>
       <section className="page-hero page-hero--compact">
         <div className="container">
-          <h1 className="page-hero__title">ჩემი მოთხოვნები</h1>
-          <p className="page-hero__text">აკონტროლე შენი თიქეტების სტატუსი და ფასის დადასტურება.</p>
+          <h1 className="page-hero__title">{t('myRequests.title')}</h1>
+          <p className="page-hero__text">{t('myRequests.subtitle')}</p>
         </div>
       </section>
 
@@ -297,17 +302,17 @@ function MyRequests() {
           <div className="my-requests-page__toolbar">
             <Link to="/contact" className="btn btn--primary">
               <Plus size={18} />
-              ახალი მოთხოვნა
+              {t('myRequests.newRequestBtn')}
             </Link>
           </div>
 
           {loading ? (
-            <p className="my-requests-page__empty">იტვირთება...</p>
+            <p className="my-requests-page__empty">{t('myRequests.loadingRequests')}</p>
           ) : orders.length === 0 ? (
             <div className="my-requests-page__empty">
-              <p>მოთხოვნები ჯერ არ გაქვს.</p>
+              <p>{t('myRequests.noRequests')}</p>
               <Link to="/contact" className="btn btn--outline">
-                გამოიძახე დახმარება
+                {t('myRequests.callHelp')}
               </Link>
             </div>
           ) : (

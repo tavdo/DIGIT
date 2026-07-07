@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { useTranslation } from '../context/LanguageContext'
 import UserProfileEditor from '../components/profile/UserProfileEditor'
 import UserStatsGrid from '../components/profile/UserStatsGrid'
 import useUserOrderStats from '../hooks/useUserOrderStats'
@@ -11,13 +12,14 @@ import { getDefaultRouteForRole, resolveUserRole } from '../utils/roles'
 import './Profile.css'
 
 function Profile() {
-  usePageMeta(pageTitle('პროფილი'), 'DIGIT — პროფილი და სტატისტიკა.')
+  const { t } = useTranslation()
+  usePageMeta(pageTitle(t('profile.metaTitle')), t('profile.metaDesc'))
 
   const { user, userProfile } = useAuth()
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const role = resolveUserRole(userProfile)
-  const { stats, loading, error: statsError } = useUserOrderStats(user, userProfile)
+  const { orders, stats, loading, error: statsError } = useUserOrderStats(user, userProfile)
 
   const backTo = getDefaultRouteForRole(role)
 
@@ -27,7 +29,7 @@ function Profile() {
         <div className="profile-page__toolbar">
           <Link to={backTo} className="profile-page__back">
             <ArrowLeft size={16} />
-            უკან
+            {t('common.back')}
           </Link>
         </div>
 
@@ -43,13 +45,14 @@ function Profile() {
           onError={setError}
           onSaved={() => {
             setError('')
-            setMessage('პროფილი განახლდა.')
+            setMessage(t('profile.updatedSuccess'))
           }}
         />
 
         <UserStatsGrid
           role={role}
           stats={stats}
+          orders={orders}
           userProfile={userProfile}
           loading={loading}
         />

@@ -2,16 +2,18 @@ import { useState } from 'react'
 import { NavLink, Link } from 'react-router-dom'
 import { LogIn, LogOut, UserPlus } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { useTranslation } from '../context/LanguageContext'
 import { resolveUserRole } from '../utils/roles'
 import DigitMark from './DigitMark'
 import ThemeToggle from './ThemeToggle'
+import LanguageSelector from './LanguageSelector'
 import { SITE_NAME } from '../constants/brand'
 import './Navbar.css'
 
 const PUBLIC_LINKS = [
-  { to: '/', label: 'მთავარი', end: true },
-  { to: '/services', label: 'სერვისები' },
-  { to: '/about', label: 'ჩვენ შესახებ' },
+  { to: '/', labelKey: 'nav.home', end: true },
+  { to: '/services', labelKey: 'nav.services' },
+  { to: '/about', labelKey: 'nav.about' },
 ]
 
 function getNavLinks(role, isAuthenticated) {
@@ -19,37 +21,39 @@ function getNavLinks(role, isAuthenticated) {
 
   if (role === 'developer') {
     return [
-      { to: '/developer-dashboard', label: 'ჩემი ტასკები', end: true },
-      { to: '/profile', label: 'პროფილი' },
+      { to: '/developer-dashboard', labelKey: 'nav.myTasks', end: true },
+      { to: '/profile', labelKey: 'nav.profile' },
     ]
   }
 
   if (role === 'admin') {
     return [
-      { to: '/admin', label: 'ადმინ პანელი', end: true },
-      { to: '/dashboard', label: 'თიქეტები' },
-      { to: '/specialists', label: 'შემსრულებლები' },
-      { to: '/profile', label: 'პროფილი' },
+      { to: '/admin', labelKey: 'nav.adminPanel', end: true },
+      { to: '/dashboard', labelKey: 'nav.tickets' },
+      { to: '/specialists', labelKey: 'nav.specialists' },
+      { to: '/managers', labelKey: 'nav.managers' },
+      { to: '/profile', labelKey: 'nav.profile' },
     ]
   }
 
   if (role === 'manager') {
     return [
-      { to: '/', label: 'მთავარი', end: true },
-      { to: '/dashboard', label: 'თიქეტები' },
-      { to: '/specialists', label: 'შემსრულებლები' },
-      { to: '/profile', label: 'პროფილი' },
+      { to: '/', labelKey: 'nav.home', end: true },
+      { to: '/dashboard', labelKey: 'nav.tickets' },
+      { to: '/specialists', labelKey: 'nav.specialists' },
+      { to: '/managers', labelKey: 'nav.managers' },
+      { to: '/profile', labelKey: 'nav.profile' },
     ]
   }
 
   if (role === 'customer') {
     return [
-      { to: '/', label: 'მთავარი', end: true },
-      { to: '/services', label: 'სერვისები' },
-      { to: '/contact', label: 'ახალი მოთხოვნა' },
-      { to: '/my-requests', label: 'ჩემი მოთხოვნები' },
-      { to: '/specialists', label: 'შემსრულებლები' },
-      { to: '/profile', label: 'პროფილი' },
+      { to: '/', labelKey: 'nav.home', end: true },
+      { to: '/services', labelKey: 'nav.services' },
+      { to: '/contact', labelKey: 'nav.newRequest' },
+      { to: '/my-requests', labelKey: 'nav.myRequests' },
+      { to: '/managers', labelKey: 'nav.managers' },
+      { to: '/profile', labelKey: 'nav.profile' },
     ]
   }
 
@@ -59,11 +63,12 @@ function getNavLinks(role, isAuthenticated) {
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const { user, userProfile, loading, logout } = useAuth()
+  const { t } = useTranslation()
 
   const closeMenu = () => setMenuOpen(false)
 
   const displayName =
-    userProfile?.name || user?.displayName || user?.email?.split('@')[0] || 'მომხმარებელი'
+    userProfile?.name || user?.displayName || user?.email?.split('@')[0] || t('nav.profile')
 
   const role = resolveUserRole(userProfile)
   const navLinks = getNavLinks(role, Boolean(user))
@@ -84,7 +89,7 @@ function Navbar() {
         <button
           type="button"
           className={`navbar__toggle ${menuOpen ? 'navbar__toggle--open' : ''}`}
-          aria-label={menuOpen ? 'მენიუს დახურვა' : 'მენიუს გახსნა'}
+          aria-label={menuOpen ? t('nav.menuClose') : t('nav.menuOpen')}
           aria-expanded={menuOpen}
           onClick={() => setMenuOpen((prev) => !prev)}
         >
@@ -95,7 +100,7 @@ function Navbar() {
 
         <nav className={`navbar__nav ${menuOpen ? 'navbar__nav--open' : ''}`}>
           <ul className="navbar__list">
-            {navLinks.map(({ to, label, end }) => (
+            {navLinks.map(({ to, labelKey, end }) => (
               <li key={to}>
                 <NavLink
                   to={to}
@@ -105,13 +110,14 @@ function Navbar() {
                   }
                   onClick={closeMenu}
                 >
-                  {label}
+                  {t(labelKey)}
                 </NavLink>
               </li>
             ))}
           </ul>
 
           <div className="navbar__auth" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <LanguageSelector />
             <ThemeToggle />
             {loading ? (
               <span className="navbar__auth-loading">...</span>
@@ -124,7 +130,7 @@ function Navbar() {
                   onClick={handleLogout}
                 >
                   <LogOut size={15} />
-                  გასვლა
+                  {t('nav.logout')}
                 </button>
               </>
             ) : (
@@ -135,7 +141,7 @@ function Navbar() {
                   onClick={closeMenu}
                 >
                   <LogIn size={15} />
-                  შესვლა
+                  {t('nav.login')}
                 </Link>
                 <Link
                   to="/register"
@@ -143,7 +149,7 @@ function Navbar() {
                   onClick={closeMenu}
                 >
                   <UserPlus size={15} />
-                  რეგისტრაცია
+                  {t('nav.register')}
                 </Link>
               </>
             )}
@@ -155,7 +161,7 @@ function Navbar() {
         <button
           type="button"
           className="navbar__overlay"
-          aria-label="მენიუს დახურვა"
+          aria-label={t('nav.menuClose')}
           onClick={closeMenu}
         />
       )}

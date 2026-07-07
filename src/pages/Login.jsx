@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Loader2, LogIn } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { useTranslation } from '../context/LanguageContext'
 import FirebaseSetupNotice from '../components/FirebaseSetupNotice'
 import GoogleIcon from '../components/icons/GoogleIcon'
 import {
@@ -15,7 +16,8 @@ import { pageTitle } from '../constants/brand'
 import './Auth.css'
 
 function Login() {
-  usePageMeta(pageTitle('შესვლა'), 'DIGIT — შედით თქვენს ანგარიშში.')
+  const { t } = useTranslation()
+  usePageMeta(pageTitle(t('auth.loginTitle')), 'DIGIT — Log in to your account.')
   const { user, userProfile, loading, login, loginWithGoogle, refreshUserProfile, isFirebaseConfigured } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -41,8 +43,8 @@ function Login() {
     const errors = {}
     const emailError = validateEmail(email)
     const passwordError = validatePassword(password)
-    if (emailError) errors.email = emailError
-    if (passwordError) errors.password = passwordError
+    if (emailError) errors.email = t('errors.emailInvalid') || emailError
+    if (passwordError) errors.password = t('errors.passwordLength').replace('{min}', 6) || passwordError
     setFieldErrors(errors)
     return Object.keys(errors).length === 0
   }
@@ -81,7 +83,7 @@ function Login() {
       <div className="page auth-page">
         <div className="container">
           <div className="auth-loading">
-            <div className="auth-loading__spinner" aria-label="იტვირთება..." />
+            <div className="auth-loading__spinner" aria-label={t('common.loading')} />
           </div>
         </div>
       </div>
@@ -92,8 +94,8 @@ function Login() {
     <div className="page auth-page">
       <div className="container">
         <div className="auth-card">
-          <h1 className="auth-card__title">შესვლა</h1>
-          <p className="auth-card__subtitle">შედი ანგარიშში და გააგრძელე</p>
+          <h1 className="auth-card__title">{t('auth.loginTitle')}</h1>
+          <p className="auth-card__subtitle">{t('auth.loginSubtitle')}</p>
 
           {!isFirebaseConfigured && <FirebaseSetupNotice />}
 
@@ -102,7 +104,7 @@ function Login() {
           <form className="auth-form" onSubmit={handleSubmit} noValidate>
             <div className="auth-form__field">
               <label htmlFor="login-email" className="auth-form__label">
-                ელ. ფოსტა
+                {t('auth.email')}
               </label>
               <input
                 id="login-email"
@@ -120,7 +122,7 @@ function Login() {
 
             <div className="auth-form__field">
               <label htmlFor="login-password" className="auth-form__label">
-                პაროლი
+                {t('auth.password')}
               </label>
               <input
                 id="login-password"
@@ -144,18 +146,18 @@ function Login() {
               {submitting ? (
                 <>
                   <Loader2 size={18} className="auth-form__spin" />
-                  იტვირთება...
+                  {t('common.loading')}
                 </>
               ) : (
                 <>
                   <LogIn size={18} />
-                  შესვლა
+                  {t('auth.loginTitle')}
                 </>
               )}
             </button>
           </form>
 
-          <div className="auth-divider">ან</div>
+          <div className="auth-divider">{t('common.or')}</div>
 
           <button
             type="button"
@@ -164,11 +166,11 @@ function Login() {
             disabled={submitting}
           >
             <GoogleIcon size={18} />
-            Google-ით შესვლა
+            {t('auth.loginWithGoogle')}
           </button>
 
           <p className="auth-footer">
-            არ გაქვს ანგარიში? <Link to="/register">რეგისტრაცია</Link>
+            {t('auth.noAccount')} <Link to="/register">{t('auth.registerTitle')}</Link>
           </p>
         </div>
       </div>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Loader2, UserPlus } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { useTranslation } from '../context/LanguageContext'
 import FirebaseSetupNotice from '../components/FirebaseSetupNotice'
 import GoogleIcon from '../components/icons/GoogleIcon'
 import {
@@ -19,7 +20,8 @@ import { pageTitle } from '../constants/brand'
 import './Auth.css'
 
 function Register() {
-  usePageMeta(pageTitle('რეგისტრაცია'), 'DIGIT — შექმენით ანგარიში და გამოიძახეთ IT დახმარება.')
+  const { t } = useTranslation()
+  usePageMeta(pageTitle(t('auth.registerTitle')), 'DIGIT — Create an account.')
   const { signup, loginWithGoogle, refreshUserProfile, isFirebaseConfigured } = useAuth()
   const navigate = useNavigate()
 
@@ -43,17 +45,25 @@ function Register() {
     const passwordError = validatePassword(password)
     const confirmError = validatePasswordMatch(password, confirmPassword)
 
-    if (nameError) errors.name = nameError
-    if (emailError) errors.email = emailError
-    if (passwordError) errors.password = passwordError
-    if (confirmError) errors.confirmPassword = confirmError
+    if (nameError) errors.name = t('errors.nameInvalid') || nameError
+    if (emailError) errors.email = t('errors.emailInvalid') || emailError
+    if (passwordError) errors.password = t('errors.passwordLength').replace('{min}', 6) || passwordError
+    if (confirmError) errors.confirmPassword = t('errors.passwordsDoNotMatch') || confirmError
 
     if (accountType === 'developer') {
-      Object.assign(errors, validateDeveloperCv({
+      const devErrors = validateDeveloperCv({
         bio,
         experienceCategories,
         experienceYears,
-      }))
+      })
+      
+      // Localize CV validations
+      if (devErrors.bio) devErrors.bio = t('cv.bioMinError').replace('{min}', 30)
+      if (devErrors.experienceCategories) devErrors.experienceCategories = t('cv.categoriesRequired')
+      if (devErrors.experienceYears) devErrors.experienceYears = t('cv.yearsRequired')
+      if (devErrors.experienceYearsPositive) devErrors.experienceYears = t('cv.yearsPositive')
+      
+      Object.assign(errors, devErrors)
     }
 
     setFieldErrors(errors)
@@ -75,7 +85,7 @@ function Register() {
 
       if (result.pendingDeveloper) {
         setSuccessMessage(
-          'რეგისტრაცია წარმატებულია. დეველოპერის სტატუსის მოთხოვნა გაგზავნილია admin-თან დასადასტურებლად.',
+          t('auth.successPendingDev'),
         )
         return
       }
@@ -109,8 +119,8 @@ function Register() {
     <div className={`page auth-page ${accountType === 'developer' ? 'auth-page--register-developer' : ''}`}>
       <div className="container">
         <div className="auth-card">
-          <h1 className="auth-card__title">რეგისტრაცია</h1>
-          <p className="auth-card__subtitle">შექმენი ანგარიში და დაიწყე</p>
+          <h1 className="auth-card__title">{t('auth.registerTitle')}</h1>
+          <p className="auth-card__subtitle">{t('auth.registerSubtitle')}</p>
 
           {!isFirebaseConfigured && <FirebaseSetupNotice />}
 
@@ -120,7 +130,7 @@ function Register() {
           <form className="auth-form" onSubmit={handleSubmit} noValidate>
             <div className="auth-form__field">
               <label htmlFor="register-name" className="auth-form__label">
-                სახელი
+                {t('auth.name')}
               </label>
               <input
                 id="register-name"
@@ -138,7 +148,7 @@ function Register() {
 
             <div className="auth-form__field">
               <label htmlFor="register-email" className="auth-form__label">
-                ელ. ფოსტა
+                {t('auth.email')}
               </label>
               <input
                 id="register-email"
@@ -156,7 +166,7 @@ function Register() {
 
             <div className="auth-form__field">
               <label htmlFor="register-password" className="auth-form__label">
-                პაროლი
+                {t('auth.password')}
               </label>
               <input
                 id="register-password"
@@ -174,7 +184,7 @@ function Register() {
 
             <div className="auth-form__field">
               <label htmlFor="register-confirm" className="auth-form__label">
-                პაროლის დადასტურება
+                {t('auth.confirmPassword')}
               </label>
               <input
                 id="register-confirm"
@@ -191,7 +201,7 @@ function Register() {
             </div>
 
             <fieldset className="auth-form__field auth-role-select">
-              <legend className="auth-form__label">ანგარიშის ტიპი</legend>
+              <legend className="auth-form__label">{t('auth.accountType')}</legend>
               <label className="auth-role-select__option">
                 <input
                   type="radio"
@@ -202,8 +212,8 @@ function Register() {
                   disabled={submitting || !isFirebaseConfigured || !!successMessage}
                 />
                 <span className="auth-role-select__content">
-                  <strong>ბიზნესი</strong>
-                  <small>IT დახმარების მოთხოვნების გაგზავნა</small>
+                  <strong>{t('auth.businessRole')}</strong>
+                  <small>{t('auth.businessRoleDesc')}</small>
                 </span>
               </label>
               <label className="auth-role-select__option">
@@ -216,8 +226,8 @@ function Register() {
                   disabled={submitting || !isFirebaseConfigured || !!successMessage}
                 />
                 <span className="auth-role-select__content">
-                  <strong>შემსრულებელი</strong>
-                  <small>admin-ის დადასტურების შემდეგ — შეკვეთების მიღება</small>
+                  <strong>{t('auth.developerRole')}</strong>
+                  <small>{t('auth.developerRoleDesc')}</small>
                 </span>
               </label>
             </fieldset>
@@ -244,18 +254,18 @@ function Register() {
               {submitting ? (
                 <>
                   <Loader2 size={18} className="auth-form__spin" />
-                  იტვირთება...
+                  {t('common.loading')}
                 </>
               ) : (
                 <>
                   <UserPlus size={18} />
-                  რეგისტრაცია
+                  {t('auth.registerTitle')}
                 </>
               )}
             </button>
           </form>
 
-          <div className="auth-divider">ან</div>
+          <div className="auth-divider">{t('common.or')}</div>
 
           <button
             type="button"
@@ -264,11 +274,11 @@ function Register() {
             disabled={submitting || !isFirebaseConfigured}
           >
             <GoogleIcon size={18} />
-            Google-ით რეგისტრაცია
+            {t('auth.registerWithGoogle')}
           </button>
 
           <p className="auth-footer">
-            უკვე გაქვს ანგარიში? <Link to="/login">შესვლა</Link>
+            {t('auth.hasAccount')} <Link to="/login">{t('auth.loginTitle')}</Link>
           </p>
         </div>
       </div>

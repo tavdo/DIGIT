@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
+import { useTranslation } from '../../context/LanguageContext'
 import { updateUserProfile } from '../../services/userService'
 import { resolveUserRole, ROLE_LABELS } from '../../utils/roles'
 import {
@@ -12,6 +13,7 @@ import { User, Edit2, Save, X, Loader2 } from 'lucide-react'
 
 export default function UserProfileEditor({ onError, onSaved }) {
   const { user, userProfile, refreshUserProfile } = useAuth()
+  const { t, tObject } = useTranslation()
   const role = resolveUserRole(userProfile)
 
   const [isEditing, setIsEditing] = useState(false)
@@ -44,7 +46,7 @@ export default function UserProfileEditor({ onError, onSaved }) {
   const validateForm = () => {
     const errors = {}
     if (!name.trim()) {
-      errors.name = 'სახელის შევსება სავალდებულოა'
+      errors.name = t('profile.nameRequired')
     }
 
     if (role === 'developer') {
@@ -53,6 +55,13 @@ export default function UserProfileEditor({ onError, onSaved }) {
         experienceCategories,
         experienceYears,
       })
+
+      // Localize CV validations
+      if (devErrors.bio) devErrors.bio = t('cv.bioMinError').replace('{min}', 30)
+      if (devErrors.experienceCategories) devErrors.experienceCategories = t('cv.categoriesRequired')
+      if (devErrors.experienceYears) devErrors.experienceYears = t('cv.yearsRequired')
+      if (devErrors.experienceYearsPositive) devErrors.experienceYears = t('cv.yearsPositive')
+
       Object.assign(errors, devErrors)
     }
 
@@ -78,7 +87,7 @@ export default function UserProfileEditor({ onError, onSaved }) {
       setIsEditing(false)
       onSaved?.()
     } catch (err) {
-      onError?.(err.message || 'პროფილის განახლება ვერ მოხერხდა')
+      onError?.(err.message || 'Failed to update profile.')
     } finally {
       setSubmitting(false)
     }
@@ -93,10 +102,10 @@ export default function UserProfileEditor({ onError, onSaved }) {
           <User size={32} />
         </div>
         <div className="profile-card__identity">
-          <h1>{userProfile.name || 'მომხმარებელი'}</h1>
+          <h1>{userProfile.name || t('nav.profile')}</h1>
           <p>{userProfile.email}</p>
           <span className={`profile-role-badge profile-role-badge--${role}`}>
-            {ROLE_LABELS[role]}
+            {t('roles.' + role) || ROLE_LABELS[role]}
           </span>
         </div>
         {!isEditing && (
@@ -107,7 +116,7 @@ export default function UserProfileEditor({ onError, onSaved }) {
             style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}
           >
             <Edit2 size={14} />
-            რედაქტირება
+            {t('common.edit')}
           </button>
         )}
       </div>
@@ -116,22 +125,22 @@ export default function UserProfileEditor({ onError, onSaved }) {
         <div className="profile-view">
           <dl className="profile-meta">
             <div>
-              <dt>ტელეფონი</dt>
+              <dt>{t('profile.phone')}</dt>
               <dd>{userProfile.phone || '—'}</dd>
             </div>
             <div>
-              <dt>კომპანია</dt>
+              <dt>{t('profile.company')}</dt>
               <dd>{userProfile.companyName || '—'}</dd>
             </div>
             {role === 'developer' && (
               <>
                 <div>
-                  <dt>გამოცდილება</dt>
-                  <dd>{formatExperienceYears(userProfile.experienceYears)}</dd>
+                  <dt>{t('profile.experience')}</dt>
+                  <dd>{formatExperienceYears(userProfile.experienceYears, t)}</dd>
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>
-                  <dt>გამოცდილების კატეგორიები</dt>
-                  <dd>{formatExperienceCategories(userProfile.experienceCategories)}</dd>
+                  <dt>{t('profile.expCategories')}</dt>
+                  <dd>{formatExperienceCategories(userProfile.experienceCategories, tObject)}</dd>
                 </div>
               </>
             )}
@@ -139,7 +148,7 @@ export default function UserProfileEditor({ onError, onSaved }) {
 
           {role === 'developer' && userProfile.bio && (
             <div className="profile-view__block">
-              <h3>ჩემს შესახებ</h3>
+              <h3>{t('profile.aboutMe')}</h3>
               <p>{userProfile.bio}</p>
             </div>
           )}
@@ -147,7 +156,7 @@ export default function UserProfileEditor({ onError, onSaved }) {
       ) : (
         <form onSubmit={handleSubmit} className="profile-form">
           <div className="profile-form__field">
-            <span>სახელი</span>
+            <span>{t('profile.nameLabel')}</span>
             <input
               type="text"
               value={name}
@@ -158,7 +167,7 @@ export default function UserProfileEditor({ onError, onSaved }) {
           </div>
 
           <div className="profile-form__field">
-            <span>ტელეფონი</span>
+            <span>{t('profile.phoneLabel')}</span>
             <input
               type="text"
               value={phone}
@@ -168,7 +177,7 @@ export default function UserProfileEditor({ onError, onSaved }) {
           </div>
 
           <div className="profile-form__field">
-            <span>კომპანია</span>
+            <span>{t('profile.companyLabel')}</span>
             <input
               type="text"
               value={companyName}
@@ -200,7 +209,7 @@ export default function UserProfileEditor({ onError, onSaved }) {
               style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}
             >
               <X size={14} />
-              გაუქმება
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
@@ -213,7 +222,7 @@ export default function UserProfileEditor({ onError, onSaved }) {
               ) : (
                 <Save size={14} />
               )}
-              {submitting ? 'ინახება...' : 'შენახვა'}
+              {submitting ? t('common.saving') : t('common.save')}
             </button>
           </div>
         </form>

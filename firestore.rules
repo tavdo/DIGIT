@@ -161,12 +161,7 @@ service cloud.firestore {
       allow get: if request.auth != null && (
         request.auth.uid == userId
         || isManager()
-        || (isStaff()
-          && resource.data.keys().hasAll(['role'])
-          && resource.data.role in ['manager', 'developer', 'admin'])
-        || (resource.data.role == 'developer'
-          && hasUserProfile()
-          && userDoc().data.role in ['customer', 'manager', 'admin'])
+        || (resource.data.role in ['developer', 'manager'])
       );
 
       allow list: if isAdmin();
@@ -175,14 +170,11 @@ service cloud.firestore {
         && resource.data.keys().hasAll(['developerRequestStatus'])
         && resource.data.developerRequestStatus == 'pending';
 
-      allow list: if isStaff()
-        && resource.data.keys().hasAll(['role'])
-        && (resource.data.role == 'developer' || resource.data.role == 'manager');
-
-      allow list: if hasUserProfile()
-        && userDoc().data.role in ['customer', 'manager', 'admin']
-        && resource.data.keys().hasAll(['role'])
+      allow list: if request.auth != null
         && resource.data.role == 'developer';
+
+      allow list: if request.auth != null
+        && resource.data.role == 'manager';
 
       allow create: if request.auth != null
         && request.auth.uid == userId

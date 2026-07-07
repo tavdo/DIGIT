@@ -94,6 +94,8 @@ export async function createTicket({
   description,
   priority,
   attachmentFiles = [],
+  managerId = null,
+  managerName = null,
 }) {
   const firestore = requireDb()
   const ref = await addDoc(collection(firestore, 'orders'), {
@@ -106,6 +108,8 @@ export async function createTicket({
     status: ORDER_STATUS.NEW,
     assignedDeveloperId: null,
     assignedDeveloperName: null,
+    managerId: managerId || null,
+    managerName: managerName || null,
     managerNotes: [],
     attachments: [],
     price: null,
@@ -203,6 +207,28 @@ export function subscribeToDevelopers(onDevelopers, onError) {
         }))
         .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ka'))
       onDevelopers(developers)
+    },
+    onError,
+  )
+}
+
+export function subscribeToManagers(onManagers, onError) {
+  const firestore = requireDb()
+  const managersQuery = query(
+    collection(firestore, 'users'),
+    where('role', '==', 'manager'),
+  )
+
+  return onSnapshot(
+    managersQuery,
+    (snapshot) => {
+      const managers = snapshot.docs
+        .map((docSnap) => ({
+          id: docSnap.id,
+          ...docSnap.data(),
+        }))
+        .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ka'))
+      onManagers(managers)
     },
     onError,
   )

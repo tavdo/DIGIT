@@ -12,108 +12,106 @@ import Accordion from '../components/Accordion'
 import usePageMeta from '../hooks/usePageMeta'
 import { pageTitle } from '../constants/brand'
 import useSiteContent from '../hooks/useSiteContent'
+import { useTranslation } from '../context/LanguageContext'
 import './About.css'
 
-const workSteps = [
+const getWorkSteps = (t) => [
   {
     icon: ClipboardList,
-    title: 'გამოიძახე დახმარება',
-    description:
-      'ბიზნესი აირჩევს კატეგორიას, აღწერს პრობლემას და მიუთითებს პრიორიტეტს — ისევე მარტივად, როგორც ტაქსის გამოძახება.',
+    title: t('about.workSteps.step1Title'),
+    description: t('about.workSteps.step1Desc'),
   },
   {
     icon: ClipboardCheck,
-    title: 'მენეჯერი აფასებს',
-    description:
-      'მენეჯერი ხედავს თიქეტს, აფასებს სამუშაოს და გიგზავნის ფასის შეთავაზებას დადასტურებისთვის.',
+    title: t('about.workSteps.step2Title'),
+    description: t('about.workSteps.step2Desc'),
   },
   {
     icon: Eye,
-    title: 'ფასის დადასტურება',
-    description:
-      'ბიზნესი ხედავს შეთავაზებულ ფასს და ეთანხმება — მხოლოდ ამის შემდეგ იწყება მუშაობა.',
+    title: t('about.workSteps.step3Title'),
+    description: t('about.workSteps.step3Desc'),
   },
   {
     icon: ShieldCheck,
-    title: 'შემსრულება და შეფასება',
-    description:
-      'მენეჯერი აძლევს საქმეს გადამოწმებულ შემსრულებელს. დასრულების შემდეგ შეგიძლია შეაფასო მუშაობა.',
+    title: t('about.workSteps.step4Title'),
+    description: t('about.workSteps.step4Desc'),
   },
 ]
 
-const team = [
+const getTeam = (t) => [
   {
     name: 'გიორგი მ.',
-    role: 'მენეჯერი',
-    bio: 'პასუხისმგებელია კლიენტებთან კომუნიკაციაზე, პარტნიორების კოორდინაციაზე და ხარისხის კონტროლზე. ყოველთვის მზად არის დაგეხმაროს.',
+    role: t('about.team.roleManager'),
+    bio: t('about.team.bioManager'),
     initials: 'GM',
   },
   {
     name: 'ნიკა კ.',
-    role: 'დამფუძნებელი / დეველოპერი',
-    bio: 'DIGIT-ის შემქმნელი. მისი მიზანია — ტექნოლოგია და ადამიანური მიდგომა ერთად, რომ ყველას ენდოთ სერვისს, რომელსაც იყენებ.',
+    role: t('about.team.roleFounder'),
+    bio: t('about.team.bioFounder'),
     initials: 'NK',
   },
   {
     name: 'ანა ბ.',
-    role: 'კლიენტთა მხარდაჭერა',
-    bio: 'პირველი კონტაქტი ხშირად ანაა — უსმენს, პასუხობს კითხვებს და ზრუნავს, რომ პროცესი გლუვად წავიდეს დასაწყებიდან ბოლომდე.',
+    role: t('about.team.roleSupport'),
+    bio: t('about.team.bioSupport'),
     initials: 'AB',
   },
 ]
 
-const faqItems = [
+const getFaqItems = (t) => [
   {
-    question: 'როგორ ვირჩევთ პარტნიორებს?',
-    answer:
-      'ყველა პარტნიორი გადის შესაბამის შემოწმებას — გამოცდილება, რეკომენდაციები და სატესტო სამუშაო. მხოლოდ მათ, ვისაც ვენდობით, ვანდებით თქვენს მოთხოვნას. მენეჯერი ყოველთვის ირჩევს სპეციალისტს კონკრეტული ამოცანის მიხედვით, არა შემთხვევით.',
+    question: t('about.faq.q1'),
+    answer: t('about.faq.a1'),
   },
   {
-    question: 'რა ხდება თუ სამუშაო ხარისხიანად არ შესრულდა?',
-    answer:
-      'ჩვენი მიდგომა მარტივია — თუ შედეგი არ გაგიმჯობესიათ, დაუკავშირდით მენეჯერს. ერთად განვიხილავთ საკითხს და მოვძებნით გამოსავალს: გადაკეთება, კორექტირება ან სხვა გზა. თქვენი კმაყოფილება ჩვენთვის პრიორიტეტია.',
+    question: t('about.faq.q2'),
+    answer: t('about.faq.a2'),
   },
   {
-    question: 'რამდენი ღირს სერვისი?',
-    answer:
-      'ფასი დამოკიდებულია კონკრეტულ ამოცანაზე. მენეჯერი შეაფასებს მოთხოვნას და მუშაობის დაწყებამდე შეგათანხმებთ ფასს — გამჭვირვალედ, უსიამოვნო სიურპრიზების გარეშე. არაფერი არ იწყება თქვენი თანხმობის გარეშე.',
+    question: t('about.faq.q3'),
+    answer: t('about.faq.a3'),
   },
   {
-    question: 'რამდენ ხანში მიპასუხებენ?',
-    answer:
-      'ახალი თიქეტის შემდეგ მენეჯერი ჩვეულებრივ 1-2 საათში აფასებს და გიგზავნით ფასის შეთავაზებას. სასწრაფო პრიორიტეტი პირველ რიგში მუშავდება.',
+    question: t('about.faq.q4'),
+    answer: t('about.faq.a4'),
   },
   {
-    question: 'როგორ ვეთანხმები ფასს?',
-    answer:
-      '„ჩემი მოთხოვნები" გვერდზე ხედავ შეთავაზებულ ფასს და ერთი დაჭერით ადასტურებ ან უარყოფ. მუშაობა მხოლოდ დადასტურების შემდეგ იწყება.',
+    question: t('about.faq.q5'),
+    answer: t('about.faq.a5'),
   },
 ]
 
-const trustBadges = [
+const getTrustBadges = (t) => [
   {
     icon: TransparencyIcon,
-    title: '100% გამჭვირვალობა',
-    text: 'იცი რას, რატომ და რამდენად — ყველა ნაბიჯი ნათელია.',
+    title: t('about.guarantees.g1Title'),
+    text: t('about.guarantees.g1Text'),
   },
   {
     icon: Handshake,
-    title: 'ფასის შეთანხმება წინასწარ',
-    text: 'მუშაობა იწყება მხოლოდ მაშინ, როცა ფასს და პირობებს ეთანხმები.',
+    title: t('about.guarantees.g2Title'),
+    text: t('about.guarantees.g2Text'),
   },
   {
     icon: Headphones,
-    title: 'სტატუსი ყოველთვის ჩანს',
-    text: 'იცი სად არის შენი მოთხოვნა — ყოველ ეტაპზე ხედავ სტატუსს პანელში.',
+    title: t('about.guarantees.g3Title'),
+    text: t('about.guarantees.g3Text'),
   },
 ]
 
 function About() {
   const { content } = useSiteContent()
+  const { t, tObject } = useTranslation()
+
+  const workSteps = getWorkSteps(t)
+  const team = getTeam(t)
+  const faqItems = getFaqItems(t)
+  const trustBadges = getTrustBadges(t)
 
   usePageMeta(
-    pageTitle('ჩვენ შესახებ'),
-    'DIGIT — ჩვენი ისტორია, გუნდი და გარანტიები. სანდო გზა სპეციალისტებთან ერთი მენეჯერის კონტროლით.'
+    pageTitle(t('about.metaTitle')),
+    t('about.metaDesc')
   )
 
   return (
@@ -121,10 +119,10 @@ function About() {
       <section className="about-mission">
         <div className="container">
           <Reveal className="about-mission__inner">
-            <span className="about-mission__label">ჩვენი ისტორია</span>
-            <h1 className="about-mission__title">ნდობა, რომელიც გამოიმსახურებს</h1>
+            <span className="about-mission__label">{t('about.historyLabel')}</span>
+            <h1 className="about-mission__title">{t('about.historyTitle')}</h1>
             <div className="about-mission__text">
-              <p>{content.aboutIntro}</p>
+              <p>{tObject(content, 'aboutIntro')}</p>
             </div>
           </Reveal>
         </div>
@@ -133,9 +131,9 @@ function About() {
       <section className="about-section about-work">
         <div className="container">
           <Reveal className="about-section__header">
-            <h2 className="about-section__title">როგორ ვმუშაობთ</h2>
+            <h2 className="about-section__title">{t('about.howWeWorkTitle')}</h2>
             <p className="about-section__subtitle">
-              ყველა ნაბიჯი გამჭვირვალია — შენ ყოველთვის იცი რა ხდება
+              {t('about.howWeWorkSubtitle')}
             </p>
           </Reveal>
 
@@ -157,9 +155,9 @@ function About() {
       <section className="about-section about-team">
         <div className="container">
           <Reveal className="about-section__header">
-            <h2 className="about-section__title">ჩვენი გუნდი</h2>
+            <h2 className="about-section__title">{t('about.ourTeamTitle')}</h2>
             <p className="about-section__subtitle">
-              ადამიანები, რომლებიც ზრუნავენ შენს გამოცდილებაზე
+              {t('about.ourTeamSubtitle')}
             </p>
           </Reveal>
 
@@ -181,9 +179,9 @@ function About() {
       <section className="about-section about-faq">
         <div className="container">
           <Reveal className="about-section__header">
-            <h2 className="about-section__title">ხშირად დასმული კითხვები</h2>
+            <h2 className="about-section__title">{t('about.faqTitle')}</h2>
             <p className="about-section__subtitle">
-              პასუხები, რომლებიც შესაძლობს დაგეხმაროთ გადაწყვეტილების მიღებაში
+              {t('about.faqSubtitle')}
             </p>
           </Reveal>
 
@@ -196,9 +194,9 @@ function About() {
       <section className="about-section about-trust">
         <div className="container">
           <Reveal className="about-section__header">
-            <h2 className="about-section__title">ჩვენი გარანტიები</h2>
+            <h2 className="about-section__title">{t('about.guaranteesTitle')}</h2>
             <p className="about-section__subtitle">
-              პრინციპები, რომლებზეც აგებულია DIGIT
+              {t('about.guaranteesSubtitle')}
             </p>
           </Reveal>
 

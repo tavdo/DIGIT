@@ -11,44 +11,62 @@ export const allServices = [
   {
     id: 'computer-repair',
     icon: Monitor,
-    title: 'კომპიუტერის/ტექნიკის შეკეთება',
-    description:
-      'ლეპტოპების, დესკტოპ კომპიუტერების და სხვა ტექნიკის დიაგნოსტიკა, შეკეთება და აღდგენა. ჰარდვერული და პროგრამული პრობლემების სწრაფი გადაჭრა.',
+    title_ka: 'კომპიუტერის/ტექნიკის შეკეთება',
+    title_en: 'Computer & Hardware Repair',
+    description_ka:
+      'ლეპტოპების, დესკტოპ კომპიუტერების და სხვა ტექნიკის დიაგნოსტიკა, შეკეთება და აღდგენა. აპარატურული და პროგრამული პრობლემების სწრაფი გადაჭრა.',
+    description_en:
+      'Diagnostics, repair and recovery of laptops, desktop computers and other hardware. Quick resolution of hardware and software issues.',
   },
   {
     id: 'website',
     icon: Globe,
-    title: 'ვებსაიტის დამზადება',
-    description:
-      'კორპორატიული, portfolio და e-commerce ვებსაიტების შექმნა. თანამედროვე დიზაინი, მობილური ადაპტაცია და SEO-ს ოპტიმიზაცია.',
+    title_ka: 'ვებსაიტის დამზადება',
+    title_en: 'Website Development',
+    description_ka:
+      'კორპორატიული, პორტფოლიო და ელ-კომერციის ვებსაიტების შექმნა. თანამედროვე დიზაინი, მობილური ადაპტაცია და SEO ოპტიმიზაცია.',
+    description_en:
+      'Creation of corporate, portfolio and e-commerce websites. Modern design, mobile adaptation and SEO optimization.',
   },
   {
     id: 'technical-consultation',
     icon: MessageSquare,
-    title: '\u10e2\u10d4\u10e5\u10dc\u10d8\u10d9\u10e3\u10e0\u10d8 \u10d9\u10dd\u10dc\u10e1\u10e3\u10da\u10a2\u10d0\u10ea\u10d8\u10d0',
-    description:
+    title_ka: 'ტექნიკური კონსულტაცია',
+    title_en: 'Technical Consultation',
+    description_ka:
       'ტექნოლოგიური გადაწყვეტილებების შერჩევაში დახმარება. არქიტექტურის შეფასება, რჩევები აღჭურვილობისა და პროგრამული უზრუნველყოფის ასარჩევად.',
+    description_en:
+      'Assistance in choosing technology solutions. Architecture evaluation, advice on choosing equipment and software.',
   },
   {
     id: 'it-support-business',
     icon: Building2,
-    title: 'IT მხარდაჭერა ბიზნესისთვის',
-    description:
-      'ოფისის IT ინფრასტრუქტურის მოვლა, სერვერების მართვა და მუდმივი ტექნიკური მხარდაჭერა. შეთანხმებით პაკეტები მცირე და საშუალო ბიზნესისთვის.',
+    title_ka: 'IT მხარდაჭერა ბიზნესისთვის',
+    title_en: 'IT Support for Business',
+    description_ka:
+      'ოფისის IT ინფრასტრუქტურის მოვლა, სერვერების მართვა და მუდმივი ტექნიკური მხარდაჭერა. შეთანხმებითი პაკეტები მცირე და საშუალო ბიზნესისთვის.',
+    description_en:
+      'Maintenance of office IT infrastructure, server management and ongoing technical support. Custom packages for small and medium businesses.',
   },
   {
     id: 'gadget-repair',
     icon: Smartphone,
-    title: 'სმარტფონის/გაჯეტის შეკეთება',
-    description:
-      'ტელეფონების, ტაბლეტების და სხვა გაჯეტების ეკრანის, ბატარეის და სხვა კომპონენტების შეკეთება. მონაცემების შენახვის შესაძლებლობით.',
+    title_ka: 'სმარტფონის/გაჯეტის შეკეთება',
+    title_en: 'Smartphone & Gadget Repair',
+    description_ka:
+      'ტელეფონების, ტაბლეტების და სხვა გაჯეტების ეკრანის, ელემენტისა და სხვა კომპონენტების შეკეთება, მონაცემების შენახვის შესაძლებლობით.',
+    description_en:
+      'Repair of screens, batteries and other components for phones, tablets and gadgets. Data preservation options available.',
   },
   {
     id: 'custom',
     icon: HelpCircle,
-    title: 'სხვა',
-    description:
-      'არ ნახე რასაც ეძებდი? დაგვიკავშირდე და ვიპოვით შესაბამის სპეციალისტს შენი ამოცანისთვის.',
+    title_ka: 'სხვა',
+    title_en: 'Other',
+    description_ka:
+      'ვერ იპოვეთ ის, რასაც ეძებდით? დაგვიკავშირდით და ჩვენ ვიპოვით შესაბამის სპეციალისტს თქვენი ამოცანისთვის.',
+    description_en:
+      'Did not find what you were looking for? Contact us and we will find the right specialist for your task.',
     custom: true,
   },
 ]

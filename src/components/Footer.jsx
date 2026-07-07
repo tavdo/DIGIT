@@ -1,4 +1,5 @@
 import DigitMark from './DigitMark'
+import { useTranslation } from '../context/LanguageContext'
 import { CONTACT_EMAIL, SITE_NAME } from '../constants/brand'
 import './Footer.css'
 
@@ -9,6 +10,7 @@ const socialLinks = [
 ]
 
 function Footer() {
+  const { t } = useTranslation()
   const year = new Date().getFullYear()
 
   return (
@@ -21,12 +23,12 @@ function Footer() {
               <span>{SITE_NAME}</span>
             </div>
             <p className="footer__tagline">
-              სანდო სპეციალისტები — ერთი მენეჯერის კონტროლით.
+              {t('footer.tagline')}
             </p>
           </div>
 
           <div className="footer__section">
-            <h3 className="footer__heading">კონტაქტი</h3>
+            <h3 className="footer__heading">{t('footer.contact')}</h3>
             <ul className="footer__list">
               <li>
                 <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
@@ -34,12 +36,12 @@ function Footer() {
               <li>
                 <a href="tel:+995555123456">+995 555 123 456</a>
               </li>
-              <li>თბილისი, საქართველო</li>
+              <li>{t('footer.location')}</li>
             </ul>
           </div>
 
           <div className="footer__section">
-            <h3 className="footer__heading">გამოგვყევით</h3>
+            <h3 className="footer__heading">{t('footer.followUs')}</h3>
             <ul className="footer__social">
               {socialLinks.map(({ label, href }) => (
                 <li key={label}>
@@ -53,7 +55,7 @@ function Footer() {
         </div>
 
         <div className="footer__bottom">
-          <p>&copy; {year} {SITE_NAME}. ყველა უფლება დაცულია.</p>
+          <p>&copy; {year} {SITE_NAME}. {t('footer.rightsReserved')}</p>
         </div>
       </div>
     </footer>

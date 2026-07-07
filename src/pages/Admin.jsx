@@ -11,6 +11,7 @@ import {
   Users,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { useTranslation } from '../context/LanguageContext'
 import FirebaseSetupNotice from '../components/FirebaseSetupNotice'
 import AdminUsersPanel from '../components/admin/AdminUsersPanel'
 import AdminSitePanel from '../components/admin/AdminSitePanel'
@@ -28,12 +29,13 @@ import './Auth.css'
 import './Admin.css'
 
 const ADMIN_TABS = [
-  { id: 'users', label: 'მომხმარებლები', icon: Users },
-  { id: 'site', label: 'საიტი', icon: Globe },
-  { id: 'developers', label: 'შემსრულებლები', icon: UserCog },
+  { id: 'users', labelKey: 'admin.usersPanel', icon: Users },
+  { id: 'site', labelKey: 'admin.siteContentPanel', icon: Globe },
+  { id: 'developers', labelKey: 'admin.devsPanel', icon: UserCog },
 ]
 
 function AdminLogin({ onLoggedIn }) {
+  const { t } = useTranslation()
   const { login, isFirebaseConfigured } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -45,8 +47,8 @@ function AdminLogin({ onLoggedIn }) {
     const errors = {}
     const emailError = validateEmail(email)
     const passwordError = validatePassword(password)
-    if (emailError) errors.email = emailError
-    if (passwordError) errors.password = passwordError
+    if (emailError) errors.email = t('errors.emailInvalid') || emailError
+    if (passwordError) errors.password = t('errors.passwordLength').replace('{min}', 6) || passwordError
     setFieldErrors(errors)
     return Object.keys(errors).length === 0
   }
@@ -71,10 +73,18 @@ function AdminLogin({ onLoggedIn }) {
     <>
       <div className="admin-page__brand">
         <span className="admin-page__badge">Super Admin</span>
-        <h1 className="admin-page__title">ადმინ პანელი</h1>
-        <p className="admin-page__subtitle">საიტის და მომხმარებლების სრული მართვა</p>
+        <h1 className="admin-page__title">{t('nav.adminPanel')}</h1>
+        <p className="admin-page__subtitle">
+          {t('lang') === 'en'
+            ? 'Complete site and user management administration'
+            : 'საიტის და მომხმარებლების სრული მართვა'}
+        </p>
         {import.meta.env.VITE_USE_FIREBASE_EMULATOR === 'true' && (
-          <p className="admin-page__hint">ლოკალური admin: admin@gmail.com / admin123</p>
+          <p className="admin-page__hint">
+            {t('lang') === 'en'
+              ? 'Local admin: admin@gmail.com / admin123'
+              : 'ლოკალური admin: admin@gmail.com / admin123'}
+          </p>
         )}
       </div>
 
@@ -84,7 +94,7 @@ function AdminLogin({ onLoggedIn }) {
       <form className="auth-form" onSubmit={handleSubmit} noValidate>
         <div className="auth-form__field">
           <label htmlFor="admin-email" className="auth-form__label">
-            ელ. ფოსტა
+            {t('auth.email')}
           </label>
           <input
             id="admin-email"
@@ -100,7 +110,7 @@ function AdminLogin({ onLoggedIn }) {
 
         <div className="auth-form__field">
           <label htmlFor="admin-password" className="auth-form__label">
-            პაროლი
+            {t('auth.password')}
           </label>
           <input
             id="admin-password"
@@ -124,21 +134,22 @@ function AdminLogin({ onLoggedIn }) {
           {submitting ? (
             <>
               <Loader2 size={18} className="auth-form__spin" />
-              იტვირთება...
+              {t('common.loading')}
             </>
           ) : (
             <>
               <ShieldCheck size={18} />
-              Admin შესვლა
+              {t('lang') === 'en' ? 'Admin Login' : 'Admin შესვლა'}
             </>
           )}
         </button>
       </form>
 
       <p className="admin-page__footer">
-        მენეჯერი ხარ? <Link to="/login">შესვლა</Link>
+        {t('lang') === 'en' ? 'Are you a manager?' : 'მენეჯერი ხარ?'}{' '}
+        <Link to="/login">{t('nav.login')}</Link>
         {' · '}
-        <Link to="/">მთავარი გვერდი</Link>
+        <Link to="/">{t('lang') === 'en' ? 'Homepage' : 'მთავარი გვერდი'}</Link>
       </p>
     </>
   )
@@ -146,6 +157,7 @@ function AdminLogin({ onLoggedIn }) {
 
 function SuperAdminPanel() {
   const { user, logout } = useAuth()
+  const { t } = useTranslation()
   const [tab, setTab] = useState('users')
   const [error, setError] = useState('')
 
@@ -154,27 +166,29 @@ function SuperAdminPanel() {
       <div className="admin-panel__header">
         <div>
           <span className="admin-page__badge">Super Admin</span>
-          <h1 className="admin-page__title">ადმინ პანელი</h1>
-          <p className="admin-page__subtitle">მომხმარებლები · საიტი · შემსრულებლები</p>
+          <h1 className="admin-page__title">{t('nav.adminPanel')}</h1>
+          <p className="admin-page__subtitle">
+            {t('admin.usersPanel')} · {t('admin.siteContentPanel')} · {t('admin.devsPanel')}
+          </p>
         </div>
         <div className="admin-panel__actions">
           <Link to="/profile" className="btn btn--outline btn--sm">
             <User size={16} />
-            პროფილი
+            {t('nav.profile')}
           </Link>
           <Link to="/dashboard" className="btn btn--outline btn--sm">
             <LayoutDashboard size={16} />
-            თიქეტები
+            {t('nav.tickets')}
           </Link>
           <button type="button" className="btn btn--outline btn--sm" onClick={logout}>
             <LogOut size={16} />
-            გასვლა
+            {t('nav.logout')}
           </button>
         </div>
       </div>
 
       <nav className="admin-tabs" aria-label="ადმინის ტაბები">
-        {ADMIN_TABS.map(({ id, label, icon: Icon }) => (
+        {ADMIN_TABS.map(({ id, labelKey, icon: Icon }) => (
           <button
             key={id}
             type="button"
@@ -185,7 +199,7 @@ function SuperAdminPanel() {
             }}
           >
             <Icon size={16} />
-            {label}
+            {t(labelKey)}
           </button>
         ))}
       </nav>
@@ -200,7 +214,8 @@ function SuperAdminPanel() {
 }
 
 function Admin() {
-  usePageMeta(pageTitle('ადმინ პანელი'), 'DIGIT — სრული ადმინისტრაცია.')
+  const { t } = useTranslation()
+  usePageMeta(pageTitle(t('nav.adminPanel')), 'DIGIT — Super administration.')
 
   const { user, userProfile, loading, logout, refreshUserProfile } = useAuth()
   const [checkingAccess, setCheckingAccess] = useState(false)
@@ -226,7 +241,7 @@ function Admin() {
         if (!cancelled) {
           setAdminReady(true)
           setAdminSeedError(
-            err.message || 'Admin ანგარიში ვერ შეიქმნა. გადატვირთე dev server (npm run dev:all).',
+            err.message || 'Admin account could not be created. Restart dev server (npm run dev:all).',
           )
         }
       })
@@ -244,13 +259,21 @@ function Admin() {
 
       if (profile?.developerRequestStatus === DEVELOPER_REQUEST_STATUS.PENDING) {
         await logout()
-        setAccessError('შემსრულებლის მოთხოვნა admin-ის დადასტურებას ელოდება.')
+        setAccessError(
+          t('lang') === 'en'
+            ? 'Specialist request is waiting for admin approval.'
+            : 'შემსრულებლის მოთხოვნა admin-ის დადასტურებას ელოდება.'
+        )
         return
       }
 
       if (!isAdminRole(profile?.role)) {
         await logout()
-        setAccessError('ამ ანგარიშს არ აქვს super admin წვდომა. მენეჯერი ხარ? გამოიყენე /login.')
+        setAccessError(
+          t('lang') === 'en'
+            ? 'This account does not have super admin access.'
+            : 'ამ ანგარიშს არ აქვს super admin წვდომა.'
+        )
       }
     } finally {
       setCheckingAccess(false)
@@ -261,7 +284,7 @@ function Admin() {
     return (
       <div className="admin-page">
         <div className="auth-loading">
-          <div className="auth-loading__spinner" aria-label="იტვირთება..." />
+          <div className="auth-loading__spinner" aria-label={t('common.loading')} />
         </div>
       </div>
     )
