@@ -7,10 +7,14 @@
 }
 
 .about-mission::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse 50% 60% at 50% 0%, rgba(0, 255, 136, 0.05), transparent);
+  background: radial-gradient(
+    ellipse 50% 60% at 50% 0%,
+    rgba(0, 255, 136, 0.05),
+    transparent
+  );
   pointer-events: none;
 }
 
@@ -79,7 +83,11 @@
 .about-work {
   border-top: 1px solid var(--color-border);
   border-bottom: 1px solid var(--color-border);
-  background: radial-gradient(circle at bottom, rgba(0, 210, 255, 0.01) 0%, transparent 80%);
+  background: radial-gradient(
+    circle at bottom,
+    rgba(0, 210, 255, 0.01) 0%,
+    transparent 80%
+  );
 }
 
 .about-work__steps {
@@ -88,26 +96,111 @@
   gap: 1.5rem;
 }
 
-.about-work__step {
+/* ── საერთო "glow card" ბაზა: about-work__step + trust-badge ── */
+.about-work__step,
+.trust-badge {
   position: relative;
-  background: var(--color-surface);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--color-border);
+  overflow: hidden;
+  isolation: isolate;
+  cursor: pointer;
+  border: 1px solid transparent;
   border-radius: var(--radius-lg);
   padding: 2.5rem 2rem;
+  background: transparent;
   box-shadow: var(--shadow-sm);
   transition: all var(--transition);
 }
 
-.about-work__step:hover {
-  border-color: var(--color-copper);
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-md), 0 0 15px rgba(0, 255, 136, 0.1);
+.about-work__step-bg,
+.trust-badge__bg {
+  position: absolute;
+  inset: 5px;
+  z-index: 1;
+  border-radius: calc(var(--radius-lg) - 5px);
+  background: rgba(10, 16, 25, 0.82);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
 }
 
-.light-mode .about-work__step:hover {
-  box-shadow: var(--shadow-md), 0 0 15px rgba(5, 150, 105, 0.06);
+.light-mode .about-work__step-bg,
+.light-mode .trust-badge__bg {
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.about-work__step-blob,
+.trust-badge__blob {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(0, 255, 136, 0.55),
+    rgba(0, 210, 255, 0.25),
+    transparent
+  );
+  filter: blur(40px);
+  transform-origin: center;
+  animation: glowBlobOrbit 8s linear infinite;
+}
+
+.light-mode .about-work__step-blob,
+.light-mode .trust-badge__blob {
+  background: radial-gradient(
+    circle,
+    rgba(5, 150, 105, 0.35) 0%,
+    rgba(2, 132, 199, 0.22) 60%,
+    transparent 100%
+  );
+}
+
+.about-work__step-blob {
+  width: 260px;
+  height: 260px;
+  margin-left: -130px;
+  margin-top: -130px;
+  --orbit-radius: 160px;
+}
+
+.trust-badge__blob {
+  width: 220px;
+  height: 220px;
+  margin-left: -110px;
+  margin-top: -110px;
+  --orbit-radius: 130px;
+}
+
+.about-work__step-content,
+.trust-badge__content {
+  position: relative;
+  z-index: 2;
+}
+
+@media (hover: hover) {
+  .about-work__step:hover,
+  .trust-badge:hover {
+    transform: translateY(-8px);
+    border-color: var(--color-copper);
+    box-shadow:
+      var(--shadow-lg),
+      0 0 25px rgba(0, 255, 136, 0.18);
+  }
+
+  .about-work__step:hover .about-work__step-blob,
+  .trust-badge:hover .trust-badge__blob {
+    filter: blur(32px);
+    transform: scale(1.15);
+  }
+}
+
+@keyframes glowBlobOrbit {
+  from {
+    transform: rotate(0deg) translateX(var(--orbit-radius, 140px)) rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg) translateX(var(--orbit-radius, 140px))
+      rotate(-360deg);
+  }
 }
 
 .about-work__step-num {
@@ -154,25 +247,78 @@
 }
 
 .team-card {
+  position: relative;
   text-align: center;
-  background: var(--color-surface);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  overflow: hidden;
+  isolation: isolate;
   padding: 2.5rem 2rem;
-  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-navy);
+  background-image:
+    radial-gradient(at 88% 40%, var(--color-navy) 0px, transparent 85%),
+    radial-gradient(at 49% 30%, var(--color-navy) 0px, transparent 85%),
+    radial-gradient(at 14% 26%, var(--color-navy) 0px, transparent 85%),
+    radial-gradient(at 0% 64%, rgba(0, 255, 136, 0.35) 0px, transparent 85%),
+    radial-gradient(at 41% 94%, rgba(0, 210, 255, 0.3) 0px, transparent 85%),
+    radial-gradient(at 100% 99%, rgba(0, 255, 136, 0.25) 0px, transparent 85%);
+  box-shadow: 0px -16px 24px 0px rgba(255, 255, 255, 0.06) inset;
   transition: all var(--transition);
 }
 
-.team-card:hover {
-  border-color: var(--color-copper);
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-md), 0 0 15px rgba(0, 255, 136, 0.1);
+.light-mode .team-card {
+  background-color: var(--color-navy-soft);
+  box-shadow: 0px -16px 24px 0px rgba(255, 255, 255, 0.4) inset;
 }
 
-.light-mode .team-card:hover {
-  box-shadow: var(--shadow-md), 0 0 15px rgba(5, 150, 105, 0.06);
+.team-card:hover {
+  transform: translateY(-4px);
+}
+
+.team-card__border {
+  pointer-events: none;
+  position: absolute;
+  z-index: -1;
+  inset: -1px;
+  border-radius: var(--radius-lg);
+  background-image: linear-gradient(
+    0deg,
+    var(--color-border-strong) -50%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  overflow: hidden;
+}
+
+.team-card__border::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(
+    135deg,
+    transparent calc(var(--sweep-pos) - 15%),
+    var(--color-copper) var(--sweep-pos),
+    var(--color-sky) calc(var(--sweep-pos) + 6%),
+    transparent calc(var(--sweep-pos) + 20%)
+  );
+  animation: shared-corner-sweep 4s linear infinite;
+  animation-delay: calc(var(--diag, var(--card-index, 0)) * 0.3s);
+}
+
+/* დესკტოპი: 3 სვეტი — დიაგონალური თანმიმდევრობა */
+.about-team__grid > *:nth-child(1) {
+  --diag: 0;
+}
+.about-team__grid > *:nth-child(2) {
+  --diag: 1;
+}
+.about-team__grid > *:nth-child(3) {
+  --diag: 2;
+}
+
+@media (max-width: 900px) {
+  .about-team__grid > * {
+    --diag: unset;
+  }
 }
 
 .team-card__avatar {
@@ -215,7 +361,11 @@
 
 .about-faq {
   border-top: 1px solid var(--color-border);
-  background: radial-gradient(circle at top, rgba(0, 255, 136, 0.01) 0%, transparent 80%);
+  background: radial-gradient(
+    circle at top,
+    rgba(0, 255, 136, 0.01) 0%,
+    transparent 80%
+  );
 }
 
 .about-faq .accordion {
@@ -227,28 +377,6 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
-}
-
-.trust-badge {
-  text-align: center;
-  background: var(--color-surface);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 2.5rem 2rem;
-  box-shadow: var(--shadow-sm);
-  transition: all var(--transition);
-}
-
-.trust-badge:hover {
-  border-color: var(--color-copper);
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-md), 0 0 15px rgba(0, 255, 136, 0.1);
-}
-
-.light-mode .trust-badge:hover {
-  box-shadow: var(--shadow-md), 0 0 15px rgba(5, 150, 105, 0.06);
 }
 
 .trust-badge__icon {

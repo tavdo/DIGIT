@@ -1,22 +1,22 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
-import { AuthProvider } from './context/AuthContext'
-import Layout from './components/Layout'
-import RoleProtectedRoute from './components/RoleProtectedRoute'
-import Home from './pages/Home'
-import Services from './pages/Services'
-import About from './pages/About'
-import Contact from './pages/Contact'
-import MyRequests from './pages/MyRequests'
-import Login from './pages/Login'
-import Register from './pages/Register'
-import Dashboard from './pages/Dashboard'
-import DeveloperDashboard from './pages/DeveloperDashboard'
-import SpecialistProfile from './pages/SpecialistProfile'
-import Specialists from './pages/Specialists'
-import Managers from './pages/Managers'
-import ManagerProfile from './pages/ManagerProfile'
-import Profile from './pages/Profile'
-import Admin from './pages/Admin'
+import { Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import Layout from "./components/Layout";
+import RoleProtectedRoute from "./components/RoleProtectedRoute";
+import Home from "./pages/Home";
+import Services from "./pages/Services";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import MyRequests from "./pages/MyRequests";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Dashboard from "./pages/Dashboard";
+import DeveloperDashboard from "./pages/DeveloperDashboard";
+import SpecialistProfile from "./pages/SpecialistProfile";
+import Specialists from "./pages/Specialists";
+import Managers from "./pages/Managers";
+import ManagerProfile from "./pages/ManagerProfile";
+import Profile from "./pages/Profile";
+import Admin from "./pages/Admin";
 
 function App() {
   return (
@@ -29,7 +29,7 @@ function App() {
           <Route
             path="contact"
             element={
-              <RoleProtectedRoute allowedRoles={['customer']}>
+              <RoleProtectedRoute allowedRoles={["customer"]}>
                 <Contact />
               </RoleProtectedRoute>
             }
@@ -37,7 +37,7 @@ function App() {
           <Route
             path="my-requests"
             element={
-              <RoleProtectedRoute allowedRoles={['customer']}>
+              <RoleProtectedRoute allowedRoles={["customer"]}>
                 <MyRequests />
               </RoleProtectedRoute>
             }
@@ -45,7 +45,9 @@ function App() {
           <Route
             path="specialists"
             element={
-              <RoleProtectedRoute allowedRoles={['manager', 'admin', 'developer']}>
+              <RoleProtectedRoute
+                allowedRoles={["manager", "admin", "developer"]}
+              >
                 <Specialists />
               </RoleProtectedRoute>
             }
@@ -53,7 +55,9 @@ function App() {
           <Route
             path="specialists/:developerId"
             element={
-              <RoleProtectedRoute allowedRoles={['manager', 'admin', 'developer']}>
+              <RoleProtectedRoute
+                allowedRoles={["manager", "admin", "developer"]}
+              >
                 <SpecialistProfile />
               </RoleProtectedRoute>
             }
@@ -61,7 +65,9 @@ function App() {
           <Route
             path="managers"
             element={
-              <RoleProtectedRoute allowedRoles={['customer', 'manager', 'admin', 'developer']}>
+              <RoleProtectedRoute
+                allowedRoles={["customer", "manager", "admin", "developer"]}
+              >
                 <Managers />
               </RoleProtectedRoute>
             }
@@ -69,7 +75,9 @@ function App() {
           <Route
             path="managers/:managerId"
             element={
-              <RoleProtectedRoute allowedRoles={['customer', 'manager', 'admin', 'developer']}>
+              <RoleProtectedRoute
+                allowedRoles={["customer", "manager", "admin", "developer"]}
+              >
                 <ManagerProfile />
               </RoleProtectedRoute>
             }
@@ -79,7 +87,9 @@ function App() {
           <Route
             path="profile"
             element={
-              <RoleProtectedRoute allowedRoles={['customer', 'manager', 'developer', 'admin']}>
+              <RoleProtectedRoute
+                allowedRoles={["customer", "manager", "developer", "admin"]}
+              >
                 <Profile />
               </RoleProtectedRoute>
             }
@@ -91,7 +101,7 @@ function App() {
         <Route
           path="/developer-dashboard"
           element={
-            <RoleProtectedRoute allowedRoles={['developer']}>
+            <RoleProtectedRoute allowedRoles={["developer"]}>
               <DeveloperDashboard />
             </RoleProtectedRoute>
           }
@@ -100,7 +110,7 @@ function App() {
         <Route
           path="/dashboard"
           element={
-            <RoleProtectedRoute allowedRoles={['manager', 'admin']}>
+            <RoleProtectedRoute allowedRoles={["manager", "admin"]}>
               <Dashboard />
             </RoleProtectedRoute>
           }
@@ -112,7 +122,7 @@ function App() {
         />
       </Routes>
     </AuthProvider>
-  )
+  );
 }
 
-export default App
+export default App;
