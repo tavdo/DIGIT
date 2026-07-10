@@ -1,4 +1,4 @@
-// Firebase has been removed. All services now use the MongoDB/Express backend.
+// Firebase has been removed. All services now use the PostgreSQL/Express backend.
 // This file is kept as a stub to prevent import errors from any remaining references.
 export const isFirebaseConfigured = true
 export const useFirebaseEmulator = false

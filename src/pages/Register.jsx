@@ -22,7 +22,7 @@ import './Auth.css'
 function Register() {
   const { t } = useTranslation()
   usePageMeta(pageTitle(t('auth.registerTitle')), 'DIGIT — Create an account.')
-  const { signup, loginWithGoogle, refreshUserProfile } = useAuth()
+  const { signup, loginWithGoogle, refreshUserProfile, isFirebaseConfigured } = useAuth()
   const navigate = useNavigate()
 
   const [name, setName] = useState('')

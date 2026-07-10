@@ -36,7 +36,7 @@ const ADMIN_TABS = [
 
 function AdminLogin({ onLoggedIn }) {
   const { t } = useTranslation()
-  const { login } = useAuth()
+  const { login, isFirebaseConfigured } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fieldErrors, setFieldErrors] = useState({})

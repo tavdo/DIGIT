@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "server": "node server/server.js",
+    "server": "npm --prefix server start",
     "dev:all": "concurrently \"npm run server\" \"vite\"",
     "build": "vite build",
     "push": "git push origin main",

@@ -1,0 +1,139 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  customer
+  manager
+  developer
+  admin
+}
+
+enum DeveloperRequestStatus {
+  none
+  pending
+  approved
+  rejected
+}
+
+enum OrderPriority {
+  urgent
+  tomorrow
+  flexible
+}
+
+enum OrderStatus {
+  new
+  quote_offered
+  quote_confirmed
+  quote_rejected
+  assigned
+  in_progress
+  waiting_approval
+  completed
+  cancelled
+}
+
+enum PaymentStatus {
+  unpaid
+  paid
+}
+
+enum PayoutStatus {
+  pending
+  paid
+}
+
+model User {
+  id                     String                 @id @default(cuid())
+  email                  String                 @unique
+  password               String
+  name                   String                 @default("")
+  role                   UserRole               @default(customer)
+  developerRequestStatus DeveloperRequestStatus @default(none)
+  companyName            String                 @default("")
+  phone                  String                 @default("")
+  bio                    String                 @default("")
+  experienceCategories   String[]               @default([])
+  experienceYears        String                 @default("")
+  ratingAvg              Float                  @default(0)
+  ratingCount            Int                    @default(0)
+  ratingSum              Float                  @default(0)
+  completedTasksCount    Int                    @default(0)
+  developerRequestedAt   DateTime?
+  developerReviewedAt    DateTime?
+  developerReviewedBy    String?
+  updatedBy              String?
+  createdAt              DateTime               @default(now())
+
+  @@map("users")
+}
+
+model Order {
+  id                       String        @id @default(cuid())
+  customerId               String
+  customerName             String
+  managerId                String?
+  managerName              String?
+  assignedDeveloperId      String?
+  assignedDeveloperName    String?
+  assignedDeveloperComment String        @default("")
+  serviceId                String        @default("")
+  serviceType              String
+  description              String
+  priority                 OrderPriority
+  status                   OrderStatus   @default(new)
+  price                    Float         @default(0)
+  priceExplanation         String        @default("")
+  paymentStatus            PaymentStatus @default(unpaid)
+  developerPayout          Float         @default(0)
+  payoutStatus             PayoutStatus  @default(pending)
+  customerRating           Float?
+  companyRating            Int?
+  customerReview           String        @default("")
+  attachments              Json          @default("[]")
+  completionAttachment     Json?
+  managerNotes             Json          @default("[]")
+  quoteConfirmedAt         DateTime?
+  assignedAt               DateTime?
+  viewedAt                 DateTime?
+  confirmedAt              DateTime?
+  arrivedAt                DateTime?
+  startedAt                DateTime?
+  completedAt              DateTime?
+  managerApprovedAt        DateTime?
+  createdAt                DateTime      @default(now())
+  updatedAt                DateTime      @updatedAt
+
+  @@index([customerId])
+  @@index([assignedDeveloperId])
+  @@index([status])
+  @@map("orders")
+}
+
+model Review {
+  id                  String   @id @default(cuid())
+  orderId             String
+  rating              Int
+  comment             String   @default("")
+  customerName        String
+  serviceType         String
+  assignedDeveloperId String
+  createdAt           DateTime @default(now())
+
+  @@index([assignedDeveloperId])
+  @@map("reviews")
+}
+
+model SiteContent {
+  id      String @id @default(cuid())
+  docId   String @unique
+  content Json   @default("{}")
+
+  @@map("site_content")
+}

@@ -1,5 +1,4 @@
 import express from 'express'
-import mongoose from 'mongoose'
 import cors from 'cors'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
@@ -9,11 +8,10 @@ import { fileURLToPath } from 'url'
 import fs from 'fs'
 import dotenv from 'dotenv'
 
-import User from './models/User.js'
-import Order from './models/Order.js'
-import SiteContent from './models/SiteContent.js'
-import Review from './models/Review.js'
+import prisma from './db.js'
 import { authMiddleware } from './middleware/auth.js'
+import { formatUser, formatUsers } from './lib/format.js'
+import { pickOrderPatchData, pickSignupData, pickUserPatchData } from './lib/patchData.js'
 
 dotenv.config()
 
@@ -23,7 +21,6 @@ const __dirname = path.dirname(__filename)
 const app = express()
 const PORT = process.env.PORT || 5000
 const JWT_SECRET = process.env.JWT_SECRET || 'digit_secret_pass_123'
-const MONGO_URI = 'mongodb+srv://tavdo:temo1234@cluster0.euiap83.mongodb.net/digit'
 
 // Middlewares
 app.use(cors())
@@ -85,32 +82,29 @@ const DEFAULT_SITE_CONTENT = {
 app.post('/api/auth/signup', async (req, res) => {
   try {
     const { email, password, name, role, ...extra } = req.body
-    const existing = await User.findOne({ email })
+    const existing = await prisma.user.findUnique({ where: { email } })
     if (existing) {
       return res.status(400).json({ message: 'ფოსტა უკვე გამოყენებულია.' })
     }
 
     const hashedPassword = await bcrypt.hash(password, 10)
-    const developerRequestStatus = role === 'developer' ? 'pending' : 'none'
+    const userRole = role || 'customer'
+    const developerRequestStatus = userRole === 'developer' ? 'pending' : 'none'
 
-    const user = new User({
-      email,
-      password: hashedPassword,
-      name,
-      role: role || 'customer',
-      developerRequestStatus,
-      ...extra
+    const user = await prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        name,
+        role: userRole,
+        developerRequestStatus,
+        ...pickSignupData({ ...extra, role: userRole }),
+        ...(userRole === 'developer' ? { ratingAvg: 0, ratingCount: 0, ratingSum: 0 } : {})
+      }
     })
 
-    if (role === 'developer') {
-      user.ratingAvg = 0
-      user.ratingCount = 0
-      user.ratingSum = 0
-    }
-
-    await user.save()
-    const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '7d' })
-    res.status(201).json({ user, token })
+    const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '7d' })
+    res.status(201).json({ user: formatUser(user), token })
   } catch (err) {
     res.status(500).json({ message: err.message })
   }
@@ -119,7 +113,7 @@ app.post('/api/auth/signup', async (req, res) => {
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body
-    const user = await User.findOne({ email })
+    const user = await prisma.user.findUnique({ where: { email } })
     if (!user) {
       return res.status(400).json({ message: 'ელ.ფოსტა ან პაროლი არასწორია.' })
     }
@@ -127,35 +121,36 @@ app.post('/api/auth/login', async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({ message: 'ელ.ფოსტა ან პაროლი არასწორია.' })
     }
-    const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '7d' })
-    res.json({ user, token })
+    const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '7d' })
+    res.json({ user: formatUser(user), token })
   } catch (err) {
     res.status(500).json({ message: err.message })
   }
 })
 
 app.get('/api/auth/me', authMiddleware, async (req, res) => {
-  res.json(req.user)
+  res.json(formatUser(req.user))
 })
 
 app.post('/api/auth/google', async (req, res) => {
   try {
     const { email, name } = req.body
-    let user = await User.findOne({ email })
+    let user = await prisma.user.findUnique({ where: { email } })
     if (!user) {
       const randomPassword = Math.random().toString(36).slice(-8)
       const hashedPassword = await bcrypt.hash(randomPassword, 10)
-      user = new User({
-        email,
-        password: hashedPassword,
-        name: name || 'მომხმარებელი',
-        role: 'customer',
-        developerRequestStatus: 'none'
+      user = await prisma.user.create({
+        data: {
+          email,
+          password: hashedPassword,
+          name: name || 'მომხმარებელი',
+          role: 'customer',
+          developerRequestStatus: 'none'
+        }
       })
-      await user.save()
     }
-    const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '7d' })
-    res.json({ user, token })
+    const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '7d' })
+    res.json({ user: formatUser(user), token })
   } catch (err) {
     res.status(500).json({ message: err.message })
   }
@@ -165,12 +160,15 @@ app.post('/api/auth/google', async (req, res) => {
 app.get('/api/users', authMiddleware, async (req, res) => {
   try {
     const { role, developerRequestStatus } = req.query
-    const filter = {}
-    if (role) filter.role = role
-    if (developerRequestStatus) filter.developerRequestStatus = developerRequestStatus
+    const where = {}
+    if (role) where.role = role
+    if (developerRequestStatus) where.developerRequestStatus = developerRequestStatus
 
-    const list = await User.find(filter).sort({ name: 1 })
-    res.json(list)
+    const list = await prisma.user.findMany({
+      where,
+      orderBy: { name: 'asc' }
+    })
+    res.json(formatUsers(list))
   } catch (err) {
     res.status(500).json({ message: err.message })
   }
@@ -178,9 +176,9 @@ app.get('/api/users', authMiddleware, async (req, res) => {
 
 app.get('/api/users/:userId', authMiddleware, async (req, res) => {
   try {
-    const user = await User.findById(req.params.userId)
+    const user = await prisma.user.findUnique({ where: { id: req.params.userId } })
     if (!user) return res.status(404).json({ message: 'მომხმარებელი ვერ მოიძებნა.' })
-    res.json(user)
+    res.json(formatUser(user))
   } catch (err) {
     res.status(500).json({ message: err.message })
   }
@@ -188,9 +186,14 @@ app.get('/api/users/:userId', authMiddleware, async (req, res) => {
 
 app.patch('/api/users/:userId', authMiddleware, async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(req.params.userId, req.body, { new: true })
-    if (!user) return res.status(404).json({ message: 'მომხმარებელი ვერ მოიძებნა.' })
-    res.json(user)
+    const existing = await prisma.user.findUnique({ where: { id: req.params.userId } })
+    if (!existing) return res.status(404).json({ message: 'მომხმარებელი ვერ მოიძებნა.' })
+
+    const user = await prisma.user.update({
+      where: { id: req.params.userId },
+      data: pickUserPatchData(req.body)
+    })
+    res.json(formatUser(user))
   } catch (err) {
     res.status(500).json({ message: err.message })
   }
@@ -200,31 +203,31 @@ app.patch('/api/users/:userId', authMiddleware, async (req, res) => {
 app.post('/api/orders', authMiddleware, async (req, res) => {
   try {
     const { customerId, customerName, serviceId, serviceType, description, priority } = req.body
-    
-    // Find category manager mapping if configured
+
     let managerId = null
     let managerName = null
-    const siteContent = await SiteContent.findOne({ docId: 'default' })
-    if (siteContent && siteContent.content && siteContent.content.services) {
+    const siteContent = await prisma.siteContent.findUnique({ where: { docId: 'default' } })
+    if (siteContent?.content?.services) {
       const srv = siteContent.content.services.find(s => s.id === serviceId)
-      if (srv && srv.managerId) {
+      if (srv?.managerId) {
         managerId = srv.managerId
         managerName = srv.managerName
       }
     }
 
-    const order = new Order({
-      customerId,
-      customerName,
-      managerId,
-      managerName,
-      serviceId,
-      serviceType,
-      description,
-      priority,
-      status: 'new'
+    const order = await prisma.order.create({
+      data: {
+        customerId,
+        customerName,
+        managerId,
+        managerName,
+        serviceId,
+        serviceType,
+        description,
+        priority,
+        status: 'new'
+      }
     })
-    await order.save()
     res.status(201).json(order)
   } catch (err) {
     res.status(500).json({ message: err.message })
@@ -233,12 +236,15 @@ app.post('/api/orders', authMiddleware, async (req, res) => {
 
 app.get('/api/orders', authMiddleware, async (req, res) => {
   try {
-    const { customerId, assignedDeveloperId, filter } = req.query
-    const queryFilter = {}
-    if (customerId) queryFilter.customerId = customerId
-    if (assignedDeveloperId) queryFilter.assignedDeveloperId = assignedDeveloperId
+    const { customerId, assignedDeveloperId } = req.query
+    const where = {}
+    if (customerId) where.customerId = customerId
+    if (assignedDeveloperId) where.assignedDeveloperId = assignedDeveloperId
 
-    const ordersList = await Order.find(queryFilter).sort({ createdAt: -1 })
+    const ordersList = await prisma.order.findMany({
+      where,
+      orderBy: { createdAt: 'desc' }
+    })
     res.json(ordersList)
   } catch (err) {
     res.status(500).json({ message: err.message })
@@ -247,7 +253,7 @@ app.get('/api/orders', authMiddleware, async (req, res) => {
 
 app.get('/api/orders/:orderId', authMiddleware, async (req, res) => {
   try {
-    const order = await Order.findById(req.params.orderId)
+    const order = await prisma.order.findUnique({ where: { id: req.params.orderId } })
     if (!order) return res.status(404).json({ message: 'შეკვეთა ვერ მოიძებნა.' })
     res.json(order)
   } catch (err) {
@@ -257,20 +263,24 @@ app.get('/api/orders/:orderId', authMiddleware, async (req, res) => {
 
 app.patch('/api/orders/:orderId', authMiddleware, async (req, res) => {
   try {
-    const { status, managerId, managerName } = req.body
-    const prevOrder = await Order.findById(req.params.orderId)
+    const { status, managerId } = req.body
+    const prevOrder = await prisma.order.findUnique({ where: { id: req.params.orderId } })
     if (!prevOrder) return res.status(404).json({ message: 'შეკვეთა ვერ მოიძებნა.' })
 
-    const order = await Order.findByIdAndUpdate(req.params.orderId, req.body, { new: true })
+    const order = await prisma.order.update({
+      where: { id: req.params.orderId },
+      data: pickOrderPatchData(req.body)
+    })
 
-    // Self-healing database stats logic for manager completed counts
     if (status === 'completed' && prevOrder.status !== 'completed') {
       const activeManagerId = managerId || order.managerId
       if (activeManagerId) {
-        const mgr = await User.findById(activeManagerId)
+        const mgr = await prisma.user.findUnique({ where: { id: activeManagerId } })
         if (mgr) {
-          mgr.completedTasksCount = (mgr.completedTasksCount || 0) + 1
-          await mgr.save()
+          await prisma.user.update({
+            where: { id: activeManagerId },
+            data: { completedTasksCount: (mgr.completedTasksCount || 0) + 1 }
+          })
         }
       }
     }
@@ -284,12 +294,17 @@ app.patch('/api/orders/:orderId', authMiddleware, async (req, res) => {
 app.post('/api/orders/:orderId/notes', authMiddleware, async (req, res) => {
   try {
     const { text, authorName } = req.body
-    const order = await Order.findById(req.params.orderId)
+    const order = await prisma.order.findUnique({ where: { id: req.params.orderId } })
     if (!order) return res.status(404).json({ message: 'შეკვეთა ვერ მოიძებნა.' })
 
-    order.managerNotes.push({ text, authorName, createdAt: new Date() })
-    await order.save()
-    res.json(order)
+    const notes = Array.isArray(order.managerNotes) ? [...order.managerNotes] : []
+    notes.push({ text, authorName, createdAt: new Date().toISOString() })
+
+    const updated = await prisma.order.update({
+      where: { id: req.params.orderId },
+      data: { managerNotes: notes }
+    })
+    res.json(updated)
   } catch (err) {
     res.status(500).json({ message: err.message })
   }
@@ -306,7 +321,7 @@ app.post('/api/orders/upload', authMiddleware, upload.single('file'), (req, res)
 app.get('/api/site-content/:docId', async (req, res) => {
   try {
     const docId = req.params.docId
-    const doc = await SiteContent.findOne({ docId })
+    const doc = await prisma.siteContent.findUnique({ where: { docId } })
     if (!doc) {
       return res.json(docId === 'default' ? DEFAULT_SITE_CONTENT : {})
     }
@@ -319,13 +334,11 @@ app.get('/api/site-content/:docId', async (req, res) => {
 app.post('/api/site-content/:docId', authMiddleware, async (req, res) => {
   try {
     const docId = req.params.docId
-    let doc = await SiteContent.findOne({ docId })
-    if (!doc) {
-      doc = new SiteContent({ docId, content: req.body })
-    } else {
-      doc.content = req.body
-    }
-    await doc.save()
+    const doc = await prisma.siteContent.upsert({
+      where: { docId },
+      create: { docId, content: req.body },
+      update: { content: req.body }
+    })
     res.json(doc.content)
   } catch (err) {
     res.status(500).json({ message: err.message })
@@ -335,7 +348,7 @@ app.post('/api/site-content/:docId', authMiddleware, async (req, res) => {
 // Review Routes
 app.get('/api/reviews', authMiddleware, async (req, res) => {
   try {
-    const list = await Review.find().sort({ createdAt: -1 })
+    const list = await prisma.review.findMany({ orderBy: { createdAt: 'desc' } })
     res.json(list)
   } catch (err) {
     res.status(500).json({ message: err.message })
@@ -344,7 +357,10 @@ app.get('/api/reviews', authMiddleware, async (req, res) => {
 
 app.get('/api/reviews/:developerId', authMiddleware, async (req, res) => {
   try {
-    const list = await Review.find({ assignedDeveloperId: req.params.developerId }).sort({ createdAt: -1 })
+    const list = await prisma.review.findMany({
+      where: { assignedDeveloperId: req.params.developerId },
+      orderBy: { createdAt: 'desc' }
+    })
     res.json(list)
   } catch (err) {
     res.status(500).json({ message: err.message })
@@ -356,25 +372,31 @@ app.post('/api/reviews/:developerId', authMiddleware, async (req, res) => {
     const developerId = req.params.developerId
     const { orderId, rating, comment, customerName, serviceType } = req.body
 
-    const review = new Review({
-      orderId,
-      rating,
-      comment,
-      customerName,
-      serviceType,
-      assignedDeveloperId: developerId
+    const review = await prisma.review.create({
+      data: {
+        orderId,
+        rating,
+        comment,
+        customerName,
+        serviceType,
+        assignedDeveloperId: developerId
+      }
     })
-    await review.save()
 
-    // Recalculate developer statistics
-    const dev = await User.findById(developerId)
+    const dev = await prisma.user.findUnique({ where: { id: developerId } })
     if (dev) {
-      const reviews = await Review.find({ assignedDeveloperId: developerId })
+      const reviews = await prisma.review.findMany({
+        where: { assignedDeveloperId: developerId }
+      })
       const sum = reviews.reduce((acc, r) => acc + r.rating, 0)
-      dev.ratingCount = reviews.length
-      dev.ratingSum = sum
-      dev.ratingAvg = sum / reviews.length
-      await dev.save()
+      await prisma.user.update({
+        where: { id: developerId },
+        data: {
+          ratingCount: reviews.length,
+          ratingSum: sum,
+          ratingAvg: sum / reviews.length
+        }
+      })
     }
 
     res.status(201).json(review)
@@ -384,31 +406,32 @@ app.post('/api/reviews/:developerId', authMiddleware, async (req, res) => {
 })
 
 // Database Connection & Seed Setup
-mongoose
-  .connect(MONGO_URI)
-  .then(async () => {
-    console.log('[Mongoose] Connected successfully to MongoDB.')
+export async function startServer() {
+  try {
+    await prisma.$connect()
+    console.log('[PostgreSQL] Connected successfully.')
 
-    // Seed default administrator if not present
     const adminEmail = 'admin@gmail.com'
-    const adminExists = await User.findOne({ email: adminEmail })
+    const adminExists = await prisma.user.findUnique({ where: { email: adminEmail } })
     if (!adminExists) {
       const hashedAdminPassword = await bcrypt.hash('admin123', 10)
-      const defaultAdmin = new User({
-        email: adminEmail,
-        password: hashedAdminPassword,
-        name: 'Admin',
-        role: 'admin',
-        developerRequestStatus: 'none'
+      await prisma.user.create({
+        data: {
+          email: adminEmail,
+          password: hashedAdminPassword,
+          name: 'Admin',
+          role: 'admin',
+          developerRequestStatus: 'none'
+        }
       })
-      await defaultAdmin.save()
       console.log(`[Seed] Seeded default administrator account: ${adminEmail} / admin123`)
     }
 
     app.listen(PORT, () => {
       console.log(`[Express] Backend server running at http://localhost:${PORT}`)
     })
-  })
-  .catch(err => {
-    console.error('[Mongoose] Initial connection failed:', err)
-  })
+  } catch (err) {
+    console.error('[PostgreSQL] Initial connection failed:', err)
+    process.exit(1)
+  }
+}

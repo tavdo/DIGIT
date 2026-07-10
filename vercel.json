@@ -3,6 +3,8 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "rewrites": [
+    { "source": "/api/(.*)", "destination": "https://digit-309t.onrender.com/api/$1" },
+    { "source": "/uploads/(.*)", "destination": "https://digit-309t.onrender.com/uploads/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
