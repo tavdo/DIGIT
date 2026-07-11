@@ -63,6 +63,20 @@ const DATE_FIELDS = new Set([
   'managerApprovedAt'
 ])
 
+const USER_NUMERIC_FIELDS = new Set([
+  'ratingAvg',
+  'ratingCount',
+  'ratingSum',
+  'completedTasksCount'
+])
+
+const ORDER_NUMERIC_FIELDS = new Set([
+  'price',
+  'developerPayout',
+  'customerRating',
+  'companyRating'
+])
+
 function coerceDate(value) {
   if (value == null || value === '') return null
   if (value instanceof Date) return value
@@ -70,11 +84,23 @@ function coerceDate(value) {
   return Number.isNaN(parsed.getTime()) ? null : parsed
 }
 
+function coerceNumber(value) {
+  if (value == null || value === '') return null
+  const parsed = Number(value)
+  return Number.isNaN(parsed) ? null : parsed
+}
+
 export function pickUserPatchData(body) {
   const data = {}
   for (const [key, value] of Object.entries(body || {})) {
     if (!USER_PATCH_FIELDS.has(key) || value === undefined) continue
-    data[key] = DATE_FIELDS.has(key) ? coerceDate(value) : value
+    if (DATE_FIELDS.has(key)) {
+      data[key] = coerceDate(value)
+    } else if (USER_NUMERIC_FIELDS.has(key)) {
+      data[key] = coerceNumber(value)
+    } else {
+      data[key] = value
+    }
   }
   return data
 }
@@ -83,7 +109,13 @@ export function pickOrderPatchData(body) {
   const data = {}
   for (const [key, value] of Object.entries(body || {})) {
     if (!ORDER_PATCH_FIELDS.has(key) || value === undefined) continue
-    data[key] = DATE_FIELDS.has(key) ? coerceDate(value) : value
+    if (DATE_FIELDS.has(key)) {
+      data[key] = coerceDate(value)
+    } else if (ORDER_NUMERIC_FIELDS.has(key)) {
+      data[key] = coerceNumber(value)
+    } else {
+      data[key] = value
+    }
   }
   if (data.paymentStatus === 'pending') {
     data.paymentStatus = 'unpaid'

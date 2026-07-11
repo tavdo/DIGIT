@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 
 const AuthContext = createContext(null)
@@ -5,7 +6,7 @@ const AuthContext = createContext(null)
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [userProfile, setUserProfile] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(() => !!localStorage.getItem('token'))
 
   const refreshUserProfile = async () => {
     const token = localStorage.getItem('token')
@@ -41,7 +42,11 @@ export function AuthProvider({ children }) {
   }
 
   useEffect(() => {
-    refreshUserProfile()
+    const token = localStorage.getItem('token')
+    if (token) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      refreshUserProfile()
+    }
   }, [])
 
   const signup = async (email, password, name, accountType = 'customer', extra = {}) => {

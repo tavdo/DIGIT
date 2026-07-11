@@ -42,9 +42,15 @@ function Contact() {
       const enabled = content.services.filter((s) => s.enabled);
       const param = new URLSearchParams(window.location.search).get("service");
       if (param && enabled.some((s) => s.id === param)) {
-        setSelectedServiceId(param);
+        if (selectedServiceId !== param) {
+          Promise.resolve().then(() => {
+            setSelectedServiceId(param);
+          });
+        }
       } else if (enabled.length > 0 && !selectedServiceId) {
-        setSelectedServiceId(enabled[0].id);
+        Promise.resolve().then(() => {
+          setSelectedServiceId(enabled[0].id);
+        });
       }
     }
   }, [content, selectedServiceId]);

@@ -19,6 +19,7 @@ import {
   offerOrderPrice,
   approveOrderCompletion,
 } from '../../services/orderService'
+import OrderAttachments from '../OrderAttachments'
 import {
   Loader2,
   Send,
@@ -26,7 +27,6 @@ import {
   DollarSign,
   Calendar,
   FileText,
-  Paperclip,
   AlertCircle,
   Clock,
 } from 'lucide-react'
@@ -380,23 +380,7 @@ export default function ManagerOrdersPanel({ managerName, onError }) {
                 {/* Attachments */}
                 {selectedOrder.attachments?.length > 0 && (
                   <div style={{ marginTop: '1rem', borderTop: '1px solid var(--color-border)', paddingTop: '1rem' }}>
-                    <dt style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
-                      <Paperclip size={12} style={{ display: 'inline', marginRight: '0.25rem' }} /> მიბმული ფაილები
-                    </dt>
-                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                      {selectedOrder.attachments.map((url, i) => (
-                        <a
-                          key={i}
-                          href={url.url || url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="btn btn--outline btn--sm"
-                          style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
-                        >
-                          ფაილი {i + 1}
-                        </a>
-                      ))}
-                    </div>
+                    <OrderAttachments attachments={selectedOrder.attachments} title="მიბმული ფაილები" />
                   </div>
                 )}
               </div>

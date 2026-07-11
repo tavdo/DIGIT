@@ -17,7 +17,7 @@ export async function authMiddleware(req, res, next) {
     }
     req.user = user
     next()
-  } catch (err) {
+  } catch {
     return res.status(401).json({ message: 'Session expired or invalid token.' })
   }
 }

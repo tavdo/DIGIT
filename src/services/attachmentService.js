@@ -26,6 +26,7 @@ export async function uploadOrderAttachments(orderId, customerId, files) {
       name: file.name,
       url: data.url,
       size: file.size,
+      kind: file.type?.startsWith('video/') ? 'video' : 'image',
       uploadedBy: customerId,
     })
   }
@@ -71,6 +72,7 @@ export async function uploadCompletionAttachment(orderId, developerId, file) {
     id: crypto.randomUUID(),
     name: file.name,
     url: data.url,
+    kind: file.type?.startsWith('video/') ? 'video' : 'image',
     uploadedBy: developerId,
     uploadedAt: new Date().toISOString(),
   }

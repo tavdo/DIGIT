@@ -10,37 +10,46 @@ function DonutChart({ data }) {
     return <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', margin: '1rem 0' }}>მონაცემები არ არის</p>
   }
 
-  let accumulatedPercent = 0
   const radius = 50
   const strokeWidth = 12
   const circumference = 2 * Math.PI * radius
 
+  const circles = []
+  let accumulatedPercent = 0
+  for (let idx = 0; idx < data.length; idx++) {
+    const item = data[idx]
+    if (item.value === 0) continue
+    const percent = item.value / total
+    const strokeLength = percent * circumference
+    const strokeOffset = circumference - (accumulatedPercent * circumference)
+    accumulatedPercent += percent
+
+    circles.push({
+      idx,
+      item,
+      strokeLength,
+      strokeOffset,
+    })
+  }
+
   return (
     <div className="donut-chart-container" style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap', marginTop: '1.5rem', marginBottom: '1.5rem' }}>
       <svg width="140" height="140" viewBox="0 0 140 140" style={{ transform: 'rotate(-90deg)', overflow: 'visible' }}>
-        {data.map((item, idx) => {
-          if (item.value === 0) return null
-          const percent = item.value / total
-          const strokeLength = percent * circumference
-          const strokeOffset = circumference - (accumulatedPercent * circumference)
-          accumulatedPercent += percent
-
-          return (
-            <circle
-              key={idx}
-              cx="70"
-              cy="70"
-              r={radius}
-              fill="transparent"
-              stroke={item.color}
-              strokeWidth={strokeWidth}
-              strokeDasharray={`${strokeLength} ${circumference - strokeLength}`}
-              strokeDashoffset={strokeOffset}
-              style={{ transition: 'stroke-dashoffset 0.5s ease', cursor: 'pointer' }}
-              title={`${item.label}: ${item.value}`}
-            />
-          )
-        })}
+        {circles.map(({ idx, item, strokeLength, strokeOffset }) => (
+          <circle
+            key={idx}
+            cx="70"
+            cy="70"
+            r={radius}
+            fill="transparent"
+            stroke={item.color}
+            strokeWidth={strokeWidth}
+            strokeDasharray={`${strokeLength} ${circumference - strokeLength}`}
+            strokeDashoffset={strokeOffset}
+            style={{ transition: 'stroke-dashoffset 0.5s ease', cursor: 'pointer' }}
+            title={`${item.label}: ${item.value}`}
+          />
+        ))}
         <circle cx="70" cy="70" r={radius - strokeWidth/2 - 1} fill="var(--color-navy-soft)" />
       </svg>
       

@@ -1,6 +1,7 @@
 export function formatUser(user) {
   if (!user) return null
-  const { password, ...rest } = user
+  const rest = { ...user }
+  delete rest.password
   return rest
 }
 

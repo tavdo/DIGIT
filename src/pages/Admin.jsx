@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import {
   Globe,
@@ -214,8 +214,8 @@ function Admin() {
   const { user, userProfile, loading, logout, refreshUserProfile } = useAuth()
   const [checkingAccess, setCheckingAccess] = useState(false)
   const [accessError, setAccessError] = useState('')
-  const [adminReady, setAdminReady] = useState(true)
-  const [adminSeedError, setAdminSeedError] = useState('')
+  const adminReady = true
+  const adminSeedError = ''
 
   const handleLoggedIn = async () => {
     setCheckingAccess(true)

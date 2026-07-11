@@ -8,7 +8,7 @@ import { useTranslation } from '../../context/LanguageContext'
 import { Loader2, Save } from 'lucide-react'
 
 export default function AdminSitePanel({ adminId, onError }) {
-  const { t, tObject } = useTranslation()
+  const { t } = useTranslation()
   const [content, setContent] = useState(null)
   const [managers, setManagers] = useState([])
   const [saving, setSaving] = useState(false)

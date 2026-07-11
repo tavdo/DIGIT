@@ -1,14 +1,40 @@
 import { Film, ImageIcon } from 'lucide-react'
 import './OrderAttachments.css'
 
+const normalizeAttachments = (list) => {
+  if (!list || !Array.isArray(list)) return []
+  return list.map((att, i) => {
+    if (typeof att === 'string') {
+      const isImg = /\.(jpg|jpeg|png|webp|gif|svg|heic)($|\?)/i.test(att)
+      return {
+        id: `legacy-${i}`,
+        url: att,
+        name: att.split('/').pop() || `ფაილი ${i + 1}`,
+        kind: isImg ? 'image' : 'video'
+      }
+    }
+    const isImg = att.kind
+      ? att.kind === 'image'
+      : /\.(jpg|jpeg|png|webp|gif|svg|heic)($|\?)/i.test(att.url || att.name || '')
+    return {
+      ...att,
+      id: att.id || `att-${i}`,
+      url: att.url || '',
+      name: att.name || `ფაილი ${i + 1}`,
+      kind: isImg ? 'image' : 'video'
+    }
+  })
+}
+
 function OrderAttachments({ attachments, title = 'მიმაგრებული ფაილები' }) {
-  if (!attachments?.length) return null
+  const normalized = normalizeAttachments(attachments)
+  if (!normalized.length) return null
 
   return (
     <section className="order-attachments">
       <h3 className="order-attachments__title">{title}</h3>
       <div className="order-attachments__grid">
-        {attachments.map((attachment) => (
+        {normalized.map((attachment) => (
           <a
             key={attachment.id}
             href={attachment.url}
@@ -36,10 +62,11 @@ function OrderAttachments({ attachments, title = 'მიმაგრებულ
 }
 
 export function OrderAttachmentsCompact({ attachments }) {
-  if (!attachments?.length) return null
+  const normalized = normalizeAttachments(attachments)
+  if (!normalized.length) return null
 
-  const imageCount = attachments.filter((item) => item.kind === 'image').length
-  const videoCount = attachments.filter((item) => item.kind === 'video').length
+  const imageCount = normalized.filter((item) => item.kind === 'image').length
+  const videoCount = normalized.filter((item) => item.kind === 'video').length
 
   return (
     <p className="order-attachments__compact">

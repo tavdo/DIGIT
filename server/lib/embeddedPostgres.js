@@ -21,7 +21,8 @@ export async function startEmbeddedPostgres() {
     user: DB_USER,
     password: DB_PASSWORD,
     port: DB_PORT,
-    persistent: true
+    persistent: true,
+    initdbFlags: ['--encoding=UTF8', '--locale=C']
   })
 
   if (!fs.existsSync(DB_DIR)) {
