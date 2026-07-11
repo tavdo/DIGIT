@@ -204,7 +204,7 @@ export function subscribeToDevelopers(onDevelopers, onError) {
   const poll = async () => {
     try {
       const token = localStorage.getItem('token')
-      const res = await fetch('/api/users?role=developer', {
+      const res = await fetch('/api/users?role=developer&developerRequestStatus=approved', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       if (!res.ok) throw new Error('Failed to fetch developers')

@@ -202,16 +202,20 @@ app.patch('/api/users/:userId', authMiddleware, async (req, res) => {
 // Orders/Tickets Routes
 app.post('/api/orders', authMiddleware, async (req, res) => {
   try {
-    const { customerId, customerName, serviceId, serviceType, description, priority } = req.body
+    const { customerId, customerName, serviceId, serviceType, description, priority, managerId: bodyManagerId, managerName: bodyManagerName } = req.body
 
-    let managerId = null
-    let managerName = null
-    const siteContent = await prisma.siteContent.findUnique({ where: { docId: 'default' } })
-    if (siteContent?.content?.services) {
-      const srv = siteContent.content.services.find(s => s.id === serviceId)
-      if (srv?.managerId) {
-        managerId = srv.managerId
-        managerName = srv.managerName
+    let managerId = bodyManagerId || null
+    let managerName = bodyManagerName || null
+    if (!managerId) {
+      const siteContent = await prisma.siteContent.findUnique({ where: { docId: 'default' } })
+      const content = siteContent?.content
+      const services = content && typeof content === 'object' && !Array.isArray(content) ? content.services : null
+      if (Array.isArray(services)) {
+        const srv = services.find(s => s.id === serviceId)
+        if (srv?.managerId) {
+          managerId = srv.managerId
+          managerName = srv.managerName
+        }
       }
     }
 
@@ -412,9 +416,10 @@ export async function startServer() {
     console.log('[PostgreSQL] Connected successfully.')
 
     const adminEmail = 'admin@gmail.com'
-    const adminExists = await prisma.user.findUnique({ where: { email: adminEmail } })
+    const adminPassword = process.env.ADMIN_SEED_PASSWORD || 'admin123'
+    let adminExists = await prisma.user.findUnique({ where: { email: adminEmail } })
     if (!adminExists) {
-      const hashedAdminPassword = await bcrypt.hash('admin123', 10)
+      const hashedAdminPassword = await bcrypt.hash(adminPassword, 10)
       await prisma.user.create({
         data: {
           email: adminEmail,
@@ -424,7 +429,19 @@ export async function startServer() {
           developerRequestStatus: 'none'
         }
       })
-      console.log(`[Seed] Seeded default administrator account: ${adminEmail} / admin123`)
+      console.log(`[Seed] Seeded default administrator account: ${adminEmail} / ${adminPassword}`)
+    } else {
+      const passwordValid = await bcrypt.compare(adminPassword, adminExists.password)
+      if (adminExists.role !== 'admin' || !passwordValid) {
+        await prisma.user.update({
+          where: { email: adminEmail },
+          data: {
+            role: 'admin',
+            password: await bcrypt.hash(adminPassword, 10)
+          }
+        })
+        console.log(`[Seed] Repaired administrator account: ${adminEmail}`)
+      }
     }
 
     app.listen(PORT, () => {

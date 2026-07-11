@@ -120,6 +120,9 @@ export function pickOrderPatchData(body) {
   if (data.paymentStatus === 'pending') {
     data.paymentStatus = 'unpaid'
   }
+  if (data.companyRating != null) {
+    data.companyRating = Math.round(Number(data.companyRating))
+  }
   return data
 }
 

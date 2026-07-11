@@ -49,7 +49,7 @@ export default function AdminUsersPanel({ adminId, onError }) {
     const term = search.toLowerCase()
     return (
       (user.email || '').toLowerCase().includes(term) ||
-      (user.displayName || '').toLowerCase().includes(term)
+      (user.name || '').toLowerCase().includes(term)
     )
   })
 
@@ -105,7 +105,7 @@ export default function AdminUsersPanel({ adminId, onError }) {
                         {isSelf && <span className="admin-table__self">(საკუთარი)</span>}
                       </div>
                     </td>
-                    <td>{user.displayName || '—'}</td>
+                    <td>{user.name || '—'}</td>
                     <td>
                       <span className={`admin-role-badge admin-role-badge--${userRole}`}>
                         {ROLE_LABELS[userRole] || userRole}
