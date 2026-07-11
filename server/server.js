@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import multer from 'multer'
 import path from 'path'
-import { fileURLToPath } from 'url'
+import { fileURLToPath, pathToFileURL } from 'url'
 import fs from 'fs'
 import dotenv from 'dotenv'
 
@@ -451,4 +451,15 @@ export async function startServer() {
     console.error('[PostgreSQL] Initial connection failed:', err)
     process.exit(1)
   }
+}
+
+const isDirectRun =
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href
+
+if (isDirectRun) {
+  import('./bootstrap.js').catch((err) => {
+    console.error('[Server] Failed to start:', err?.message || err)
+    process.exit(1)
+  })
 }
