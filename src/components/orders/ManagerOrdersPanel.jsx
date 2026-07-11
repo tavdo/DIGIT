@@ -103,9 +103,9 @@ export default function ManagerOrdersPanel({ managerName, onError }) {
   const selectedOrder = orders.find((o) => o.id === selectedOrderId)
 
   // Sync form inputs when selected order changes during render
-  const [prevSelectedOrder, setPrevSelectedOrder] = useState(null)
-  if (selectedOrder !== prevSelectedOrder) {
-    setPrevSelectedOrder(selectedOrder)
+  const [prevSelectedOrderId, setPrevSelectedOrderId] = useState(null)
+  if (selectedOrderId !== prevSelectedOrderId) {
+    setPrevSelectedOrderId(selectedOrderId)
     if (selectedOrder) {
       setPriceInput(selectedOrder.price != null ? String(selectedOrder.price) : '')
       setPriceExplanationInput(selectedOrder.priceExplanation || '')
