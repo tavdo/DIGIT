@@ -152,6 +152,16 @@
   box-shadow: 0 0 10px var(--color-copper-glow);
 }
 
+.auth-form__input option {
+  color: var(--color-ink);
+  background: var(--color-navy-soft);
+}
+
+.light-mode .auth-form__input option {
+  color: var(--color-ink);
+  background: #ffffff;
+}
+
 .light-mode .auth-form__input:focus {
   background: #ffffff;
 }

@@ -38,13 +38,14 @@
   align-items: flex-start;
   gap: 0.5rem;
   padding: 0.75rem;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-md);
-  background: #ffffff;
+  background: var(--color-navy-soft);
   cursor: pointer;
   transition:
     border-color var(--transition),
-    background-color var(--transition);
+    background-color var(--transition),
+    box-shadow var(--transition);
 }
 
 .dev-cv-fields__category:hover {
@@ -52,8 +53,9 @@
 }
 
 .dev-cv-fields__category--checked {
-  border-color: rgba(79, 109, 245, 0.45);
-  background: rgba(79, 109, 245, 0.08);
+  border-color: var(--color-copper);
+  background: var(--color-relay-soft);
+  box-shadow: 0 0 8px var(--color-copper-glow);
 }
 
 .dev-cv-fields__category input {
@@ -77,7 +79,7 @@
 .dev-cv-fields__category-title {
   font-size: 0.75rem;
   line-height: 1.4;
-  color: var(--primary-color);
+  color: var(--color-ink);
 }
 
 .dev-cv-summary {
@@ -114,7 +116,7 @@
 .dev-cv-summary__meta dd {
   margin: 0;
   font-size: 0.8125rem;
-  color: var(--primary-color);
+  color: var(--color-ink);
   line-height: 1.45;
 }
 
