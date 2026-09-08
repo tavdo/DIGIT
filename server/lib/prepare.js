@@ -15,12 +15,19 @@ function shouldRunMigrations() {
 
 async function runMigrations() {
   if (!shouldRunMigrations()) return
-  if (!process.env.DATABASE_URL) return
+
+  const migrationUrl =
+    process.env.DATABASE_URL_UNPOOLED ||
+    process.env.POSTGRES_URL_NON_POOLING ||
+    process.env.POSTGRES_URL_NO_SSL ||
+    process.env.DATABASE_URL
+
+  if (!migrationUrl) return
 
   console.log('[PostgreSQL] Running migrations...')
   execSync('npx prisma migrate deploy', {
     cwd: serverRoot,
-    env: process.env,
+    env: { ...process.env, DATABASE_URL: migrationUrl },
     stdio: 'inherit'
   })
 }
@@ -62,7 +69,11 @@ export async function prepareServer() {
   if (preparePromise) return preparePromise
 
   preparePromise = (async () => {
-    await runMigrations()
+    try {
+      await runMigrations()
+    } catch (err) {
+      console.warn('[PostgreSQL] Migration warning:', err?.message || err)
+    }
     await prisma.$connect()
     await seedAdmin()
     prepared = true
