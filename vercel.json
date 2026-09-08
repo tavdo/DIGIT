@@ -1,5 +1,5 @@
 {
-  "installCommand": "npm install && npm install --prefix server",
+  "installCommand": "npm install && npm install --prefix server --omit=dev",
   "buildCommand": "npm run build:vercel",
   "outputDirectory": "dist",
   "framework": "vite",
@@ -9,7 +9,6 @@
   ],
   "functions": {
     "api/index.js": {
-      "maxDuration": 60,
       "includeFiles": "server/**"
     }
   }

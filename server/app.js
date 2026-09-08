@@ -27,6 +27,21 @@ app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
+app.use(async (req, res, next) => {
+  if (!process.env.VERCEL && process.env.NODE_ENV !== 'production') {
+    return next()
+  }
+
+  try {
+    const { prepareServer } = await import('./lib/prepare.js')
+    await prepareServer()
+    next()
+  } catch (err) {
+    console.error('[API] Init failed:', err?.message || err)
+    res.status(503).json({ message: 'Database unavailable' })
+  }
+})
+
 const uploadsDir = path.join(__dirname, 'uploads')
 const useMemoryUploads = isVercelRuntime() || useBlobStorage()
 
