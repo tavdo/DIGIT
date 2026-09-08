@@ -1,5 +1,5 @@
 {
-  "installCommand": "npm install && npm install --prefix server --omit=dev",
+  "installCommand": "npm install",
   "buildCommand": "npm run build:vercel",
   "outputDirectory": "dist",
   "framework": "vite",
@@ -9,7 +9,7 @@
   ],
   "functions": {
     "api/index.js": {
-      "includeFiles": "server/**"
+      "includeFiles": "node_modules/.prisma/**"
     }
   }
 }
