@@ -1,8 +1,29 @@
 import bcrypt from 'bcryptjs'
+import { execSync } from 'child_process'
+import path from 'path'
+import { fileURLToPath } from 'url'
 import prisma from '../db.js'
+
+const serverRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
 
 let prepared = false
 let preparePromise = null
+
+function shouldRunMigrations() {
+  return Boolean(process.env.VERCEL || process.env.NODE_ENV === 'production')
+}
+
+async function runMigrations() {
+  if (!shouldRunMigrations()) return
+  if (!process.env.DATABASE_URL) return
+
+  console.log('[PostgreSQL] Running migrations...')
+  execSync('npx prisma migrate deploy', {
+    cwd: serverRoot,
+    env: process.env,
+    stdio: 'inherit'
+  })
+}
 
 async function seedAdmin() {
   const adminEmail = 'admin@gmail.com'
@@ -41,6 +62,7 @@ export async function prepareServer() {
   if (preparePromise) return preparePromise
 
   preparePromise = (async () => {
+    await runMigrations()
     await prisma.$connect()
     await seedAdmin()
     prepared = true
