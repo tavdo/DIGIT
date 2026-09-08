@@ -8,7 +8,7 @@
     "server": "npm --prefix server start",
     "dev:all": "concurrently \"npm run server\" \"vite\"",
     "build": "vite build",
-    "build:vercel": "prisma generate && vite build",
+    "build:vercel": "node scripts/vercel-build.mjs && vite build",
     "postinstall": "prisma generate",
     "push": "git push origin main",
     "lint": "eslint .",

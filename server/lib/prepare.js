@@ -25,7 +25,7 @@ async function runMigrations() {
   if (!migrationUrl) return
 
   console.log('[PostgreSQL] Running migrations...')
-  execSync('npx prisma migrate deploy', {
+  execSync('npx prisma migrate deploy --schema=prisma/schema.prisma', {
     cwd: serverRoot,
     env: { ...process.env, DATABASE_URL: migrationUrl },
     stdio: 'inherit'
