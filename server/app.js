@@ -38,7 +38,10 @@ app.use(async (req, res, next) => {
     next()
   } catch (err) {
     console.error('[API] Init failed:', err?.message || err)
-    res.status(503).json({ message: 'Database unavailable' })
+    res.status(503).json({
+      message: 'Database unavailable',
+      detail: process.env.VERCEL ? String(err?.message || err) : undefined
+    })
   }
 })
 
