@@ -8,6 +8,7 @@
     "server": "npm --prefix server start",
     "dev:all": "concurrently \"npm run server\" \"vite\"",
     "build": "vite build",
+    "build:vercel": "npm --prefix server run db:generate && npm --prefix server run db:migrate && vite build",
     "push": "git push origin main",
     "lint": "eslint .",
     "preview": "vite preview",

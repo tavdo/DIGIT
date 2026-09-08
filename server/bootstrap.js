@@ -17,8 +17,10 @@ async function ensureDatabase() {
     return
   }
 
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('DATABASE_URL is required in production. Add a PostgreSQL database on Render.')
+  if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
+    throw new Error(
+      'DATABASE_URL is required in production. Add PostgreSQL in Vercel (Storage → Postgres, Neon, or Supabase) and set DATABASE_URL.'
+    )
   }
 
   const { startEmbeddedPostgres, getEmbeddedDatabaseUrl } = await import('./lib/embeddedPostgres.js')

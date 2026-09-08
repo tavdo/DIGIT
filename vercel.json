@@ -1,10 +1,16 @@
 {
-  "buildCommand": "npm run build",
+  "installCommand": "npm install && npm install --prefix server",
+  "buildCommand": "npm run build:vercel",
   "outputDirectory": "dist",
   "framework": "vite",
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "https://digit-309t.onrender.com/api/$1" },
-    { "source": "/uploads/(.*)", "destination": "https://digit-309t.onrender.com/uploads/$1" },
+    { "source": "/api/(.*)", "destination": "/api" },
     { "source": "/(.*)", "destination": "/index.html" }
-  ]
+  ],
+  "functions": {
+    "api/index.js": {
+      "maxDuration": 60,
+      "includeFiles": "server/**"
+    }
+  }
 }
