@@ -3,16 +3,16 @@
   top: 0;
   z-index: 100;
   width: 100%;
-  background: rgba(7, 9, 14, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(10, 9, 8, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--color-border);
   height: var(--header-height);
   padding: 0 1.5rem;
 }
 
 .light-mode .navbar {
-  background: rgba(255, 255, 255, 0.75);
+  background: rgba(250, 248, 244, 0.92);
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -34,14 +34,13 @@
   font-size: 1.2rem;
   color: var(--color-copper);
   letter-spacing: -0.01em;
-  text-transform: uppercase;
+  text-transform: none;
   transition: all var(--transition);
 }
 
 @media (hover: hover) {
   .navbar__logo:hover {
-    color: #ffffff;
-    text-shadow: 0 0 12px var(--color-copper-glow);
+    color: var(--color-copper);
   }
   .light-mode .navbar__logo:hover {
     color: var(--color-royal);
@@ -49,8 +48,8 @@
 }
 
 .navbar__logo-text {
-  letter-spacing: 0.12em;
-  font-size: 1.1rem;
+  letter-spacing: 0.06em;
+  font-size: 1.15rem;
   color: var(--color-ink);
   font-weight: 800;
 }
@@ -244,21 +243,21 @@
 }
 
 .navbar__auth-btn--register {
-  color: #07090e;
-  background: var(--gradient-brand);
-  border: none;
-  box-shadow: var(--shadow-copper);
+  color: var(--text-inverse);
+  background: var(--color-copper);
+  border: 1px solid var(--color-copper-dim);
+  box-shadow: none;
+  border-radius: var(--radius-sm);
 }
 
 .navbar__auth-btn--register:hover {
-  background: #ffffff;
-  color: #07090e;
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+  background: var(--color-ink);
+  color: var(--text-inverse);
 }
 
 .light-mode .navbar__auth-btn--register:hover {
   background: var(--color-ink);
-  color: #ffffff;
+  color: var(--color-paper);
 }
 
 .navbar__auth-btn--logout {

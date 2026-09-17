@@ -75,7 +75,7 @@ function Home() {
   return (
     <div className="home">
       <section className="hero">
-        <div className="hero__ambient" aria-hidden="true" />
+        <div className="hero__stripe" aria-hidden="true" />
         <div className="container hero__inner">
           <div className="hero__content">
             <Reveal variant="fade" className="hero__eyebrow-wrap">
@@ -89,7 +89,6 @@ function Home() {
                 <span className="hero__title-main">
                   {tObject(content, "heroTitle")}
                 </span>
-                <br />
                 <span className="hero__title-accent">
                   {tObject(content, "heroTitleAccent")}
                 </span>
@@ -113,8 +112,58 @@ function Home() {
               </Link>
             </Reveal>
           </div>
+
+          <Reveal delay={120} variant="left" className="hero__dispatch">
+            <div className="dispatch-panel">
+              <div className="dispatch-panel__header">
+                <span className="dispatch-panel__live">
+                  <span className="dispatch-panel__pulse" />
+                  LIVE
+                </span>
+                <span className="dispatch-panel__id">TKT-2847</span>
+              </div>
+              <div className="dispatch-panel__row">
+                <span className="dispatch-panel__label">STATUS</span>
+                <span className="dispatch-panel__badge dispatch-panel__badge--active">
+                  {t("home.dispatchStatus")}
+                </span>
+              </div>
+              <div className="dispatch-panel__row">
+                <span className="dispatch-panel__label">MANAGER</span>
+                <span className="dispatch-panel__value">Nino K.</span>
+              </div>
+              <div className="dispatch-panel__row">
+                <span className="dispatch-panel__label">SERVICE</span>
+                <span className="dispatch-panel__value">IT Support</span>
+              </div>
+              <div className="dispatch-panel__timeline">
+                <div className="dispatch-panel__tick dispatch-panel__tick--done" />
+                <div className="dispatch-panel__tick dispatch-panel__tick--done" />
+                <div className="dispatch-panel__tick dispatch-panel__tick--active" />
+                <div className="dispatch-panel__tick" />
+              </div>
+              <p className="dispatch-panel__note">{t("home.dispatchNote")}</p>
+            </div>
+          </Reveal>
         </div>
       </section>
+
+      <div className="status-strip" aria-hidden="true">
+        <div className="status-strip__track">
+          {[0, 1].map((pass) => (
+            <span key={pass} className="status-strip__group">
+              <span>{t("home.strip1")}</span>
+              <span className="status-strip__dot">◆</span>
+              <span>{t("home.strip2")}</span>
+              <span className="status-strip__dot">◆</span>
+              <span>{t("home.strip3")}</span>
+              <span className="status-strip__dot">◆</span>
+              <span>{t("home.strip4")}</span>
+              <span className="status-strip__dot">◆</span>
+            </span>
+          ))}
+        </div>
+      </div>
 
       <section className="section how-it-works">
         <div className="container">
