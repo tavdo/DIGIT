@@ -111,6 +111,22 @@ function Home() {
                 {t("home.heroActionHow")}
               </Link>
             </Reveal>
+            <Reveal delay={320} className="hero__stats">
+              <div className="hero__stat">
+                <strong>{t("home.stats.stat1Value")}</strong>
+                <span>{t("home.stats.stat1Label")}</span>
+              </div>
+              <div className="hero__stat-divider" aria-hidden="true" />
+              <div className="hero__stat">
+                <strong>{t("home.stats.stat2Value")}</strong>
+                <span>{t("home.stats.stat2Label")}</span>
+              </div>
+              <div className="hero__stat-divider" aria-hidden="true" />
+              <div className="hero__stat">
+                <strong>{t("home.stats.stat3Value")}</strong>
+                <span>{t("home.stats.stat3Label")}</span>
+              </div>
+            </Reveal>
           </div>
 
           <Reveal delay={120} variant="left" className="hero__dispatch">
@@ -168,6 +184,7 @@ function Home() {
       <section className="section how-it-works">
         <div className="container">
           <Reveal className="section__header">
+            <span className="section-label">{t("home.sectionLabel.howItWorks")}</span>
             <span className="relay-line relay-line--center" />
             <h2 className="section__title">{t("home.howItWorksTitle")}</h2>
             <p className="section__subtitle">{t("home.howItWorksSubtitle")}</p>
@@ -208,6 +225,7 @@ function Home() {
       <section className="section services-preview">
         <div className="container">
           <Reveal className="section__header">
+            <span className="section-label">{t("home.sectionLabel.services")}</span>
             <h2 className="section__title">{t("home.popularServicesTitle")}</h2>
             <p className="section__subtitle">
               {t("home.popularServicesSubtitle")}
@@ -255,6 +273,7 @@ function Home() {
       <section className="section trust">
         <div className="container trust__inner">
           <Reveal variant="left" className="trust__content">
+            <span className="section-label">{t("home.sectionLabel.trust")}</span>
             <span className="relay-line" />
             <h2 className="section__title">{t("home.whyDigitTitle")}</h2>
             <p className="trust__intro">{t("home.whyDigitIntro")}</p>

@@ -24,13 +24,32 @@
 }
 
 .ticket-form {
+  position: relative;
   padding: 2.5rem 2.25rem;
   background: var(--color-surface);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-copper);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.ticket-form::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 12px;
+  height: 100%;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 4px,
+    var(--color-border) 4px,
+    var(--color-border) 5px
+  );
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 .ticket-form__field {
@@ -131,9 +150,9 @@
 }
 
 .ticket-priority__btn--active.ticket-priority__btn--flexible {
-  border-color: #00ff88;
-  background: var(--color-relay-soft);
-  box-shadow: 0 0 12px var(--color-copper-glow);
+  border-color: var(--color-sage);
+  background: rgba(90, 143, 106, 0.1);
+  box-shadow: 0 0 12px rgba(90, 143, 106, 0.15);
 }
 
 .ticket-form__submit {
@@ -166,9 +185,8 @@
 .contact-info {
   padding: 2rem 1.75rem;
   background: var(--color-surface);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--color-border);
+  border-top: 2px solid var(--color-copper);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
 }

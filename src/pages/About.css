@@ -10,12 +10,15 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(
-    ellipse 50% 60% at 50% 0%,
-    rgba(0, 255, 136, 0.05),
-    transparent
+  background: repeating-linear-gradient(
+    -55deg,
+    transparent,
+    transparent 14px,
+    rgba(201, 162, 39, 0.04) 14px,
+    rgba(201, 162, 39, 0.04) 15px
   );
   pointer-events: none;
+  opacity: 0.5;
 }
 
 .about-mission__inner {
@@ -27,21 +30,24 @@
 .about-mission__label {
   display: inline-block;
   font-family: var(--font-mono);
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.6875rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   color: var(--color-copper);
   margin-bottom: 1.25rem;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-relay-soft);
 }
 
 .about-mission__title {
   font-size: clamp(2rem, 5vw, 3rem);
   font-weight: 800;
-  line-height: 1.1;
+  line-height: 1.08;
   letter-spacing: -0.03em;
   margin-bottom: 1.5rem;
-  color: var(--primary-color);
+  color: var(--color-ink);
 }
 
 .about-mission__text {
@@ -61,7 +67,7 @@
 }
 
 .about-section__header {
-  text-align: center;
+  text-align: left;
   max-width: 560px;
   margin: 0 auto 4rem;
 }
@@ -69,7 +75,7 @@
 .about-section__title {
   font-size: clamp(1.875rem, 4vw, 2.25rem);
   font-weight: 800;
-  color: var(--primary-color);
+  color: var(--color-ink);
   margin-bottom: 1rem;
   letter-spacing: -0.03em;
 }
@@ -83,154 +89,88 @@
 .about-work {
   border-top: 1px solid var(--color-border);
   border-bottom: 1px solid var(--color-border);
-  background: radial-gradient(
-    circle at bottom,
-    rgba(0, 210, 255, 0.01) 0%,
-    transparent 80%
-  );
+  background: var(--color-paper);
 }
 
 .about-work__steps {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
-/* ── საერთო "glow card" ბაზა: about-work__step + trust-badge ── */
 .about-work__step,
 .trust-badge {
   position: relative;
+  padding: 2rem 1.75rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-top: 2px solid var(--color-copper);
+  transition: transform var(--transition), border-color var(--transition);
   overflow: hidden;
-  isolation: isolate;
-  cursor: pointer;
-  border: 1px solid transparent;
-  border-radius: var(--radius-lg);
-  padding: 2.5rem 2rem;
-  background: transparent;
-  box-shadow: var(--shadow-sm);
-  transition: all var(--transition);
 }
 
-.about-work__step-bg,
-.trust-badge__bg {
+.about-work__step::after,
+.trust-badge::after {
+  content: "";
   position: absolute;
-  inset: 5px;
-  z-index: 1;
-  border-radius: calc(var(--radius-lg) - 5px);
-  background: rgba(10, 16, 25, 0.82);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-}
-
-.light-mode .about-work__step-bg,
-.light-mode .trust-badge__bg {
-  background: rgba(255, 255, 255, 0.82);
-}
-
-.about-work__step-blob,
-.trust-badge__blob {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    rgba(0, 255, 136, 0.55),
-    rgba(0, 210, 255, 0.25),
-    transparent
+  top: 0;
+  right: 0;
+  width: 10px;
+  height: 100%;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 4px,
+    var(--color-border) 4px,
+    var(--color-border) 5px
   );
-  filter: blur(40px);
-  transform-origin: center;
-  animation: glowBlobOrbit 8s linear infinite;
-}
-
-.light-mode .about-work__step-blob,
-.light-mode .trust-badge__blob {
-  background: radial-gradient(
-    circle,
-    rgba(5, 150, 105, 0.35) 0%,
-    rgba(2, 132, 199, 0.22) 60%,
-    transparent 100%
-  );
-}
-
-.about-work__step-blob {
-  width: 260px;
-  height: 260px;
-  margin-left: -130px;
-  margin-top: -130px;
-  --orbit-radius: 160px;
-}
-
-.trust-badge__blob {
-  width: 220px;
-  height: 220px;
-  margin-left: -110px;
-  margin-top: -110px;
-  --orbit-radius: 130px;
-}
-
-.about-work__step-content,
-.trust-badge__content {
-  position: relative;
-  z-index: 2;
+  opacity: 0.45;
 }
 
 @media (hover: hover) {
   .about-work__step:hover,
   .trust-badge:hover {
-    transform: translateY(-8px);
-    border-color: var(--color-copper);
-    box-shadow:
-      var(--shadow-lg),
-      0 0 25px rgba(0, 255, 136, 0.18);
-  }
-
-  .about-work__step:hover .about-work__step-blob,
-  .trust-badge:hover .trust-badge__blob {
-    filter: blur(32px);
-    transform: scale(1.15);
+    transform: translateY(-4px);
+    border-top-color: var(--color-coral);
   }
 }
 
-@keyframes glowBlobOrbit {
-  from {
-    transform: rotate(0deg) translateX(var(--orbit-radius, 140px)) rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg) translateX(var(--orbit-radius, 140px))
-      rotate(-360deg);
-  }
+.about-work__step-bg,
+.about-work__step-blob,
+.trust-badge__bg,
+.trust-badge__blob {
+  display: none;
 }
 
 .about-work__step-num {
   position: absolute;
-  top: 1.5rem;
-  right: 1.75rem;
+  top: 1.25rem;
+  right: 1.5rem;
+  font-family: var(--font-display);
   font-size: 2rem;
   font-weight: 800;
   color: var(--color-border-strong);
   line-height: 1;
-  opacity: 0.5;
 }
 
 .about-work__step-icon {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
-  background: var(--color-relay-soft);
+  width: 40px;
+  height: 40px;
   color: var(--color-copper);
-  border: 1px solid var(--color-copper-glow);
-  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  border-left: 2px solid var(--color-copper);
+  border-radius: var(--radius-sm);
   margin-bottom: 1.25rem;
 }
 
 .about-work__step-title {
+  font-family: var(--font-display);
   font-size: 1.0625rem;
-  font-weight: 800;
-  color: var(--primary-color);
+  font-weight: 700;
+  color: var(--color-ink);
   margin-bottom: 0.5rem;
 }
 
@@ -243,113 +183,80 @@
 .about-team__grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 .team-card {
   position: relative;
   text-align: center;
-  overflow: hidden;
-  isolation: isolate;
   padding: 2.5rem 2rem;
-  border-radius: var(--radius-lg);
-  background-color: var(--color-navy);
-  background-image:
-    radial-gradient(at 88% 40%, var(--color-navy) 0px, transparent 85%),
-    radial-gradient(at 49% 30%, var(--color-navy) 0px, transparent 85%),
-    radial-gradient(at 14% 26%, var(--color-navy) 0px, transparent 85%),
-    radial-gradient(at 0% 64%, rgba(0, 255, 136, 0.35) 0px, transparent 85%),
-    radial-gradient(at 41% 94%, rgba(0, 210, 255, 0.3) 0px, transparent 85%),
-    radial-gradient(at 100% 99%, rgba(0, 255, 136, 0.25) 0px, transparent 85%);
-  box-shadow: 0px -16px 24px 0px rgba(255, 255, 255, 0.06) inset;
-  transition: all var(--transition);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-top: 2px solid var(--color-copper);
+  transition: transform var(--transition), border-color var(--transition);
+  overflow: hidden;
 }
 
-.light-mode .team-card {
-  background-color: var(--color-navy-soft);
-  box-shadow: 0px -16px 24px 0px rgba(255, 255, 255, 0.4) inset;
+.team-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 10px;
+  height: 100%;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 4px,
+    var(--color-border) 4px,
+    var(--color-border) 5px
+  );
+  opacity: 0.45;
 }
 
-.team-card:hover {
-  transform: translateY(-4px);
+@media (hover: hover) {
+  .team-card:hover {
+    transform: translateY(-4px);
+    border-top-color: var(--color-coral);
+  }
 }
 
 .team-card__border {
-  pointer-events: none;
-  position: absolute;
-  z-index: -1;
-  inset: -1px;
-  border-radius: var(--radius-lg);
-  background-image: linear-gradient(
-    0deg,
-    var(--color-border-strong) -50%,
-    rgba(255, 255, 255, 0.05) 100%
-  );
-  overflow: hidden;
-}
-
-.team-card__border::before {
-  content: "";
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
-  background-image: linear-gradient(
-    135deg,
-    transparent calc(var(--sweep-pos) - 15%),
-    var(--color-copper) var(--sweep-pos),
-    var(--color-sky) calc(var(--sweep-pos) + 6%),
-    transparent calc(var(--sweep-pos) + 20%)
-  );
-  animation: shared-corner-sweep 4s linear infinite;
-  animation-delay: calc(var(--diag, var(--card-index, 0)) * 0.3s);
-}
-
-/* დესკტოპი: 3 სვეტი — დიაგონალური თანმიმდევრობა */
-.about-team__grid > *:nth-child(1) {
-  --diag: 0;
-}
-.about-team__grid > *:nth-child(2) {
-  --diag: 1;
-}
-.about-team__grid > *:nth-child(3) {
-  --diag: 2;
-}
-
-@media (max-width: 900px) {
-  .about-team__grid > * {
-    --diag: unset;
-  }
+  display: none;
 }
 
 .team-card__avatar {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 80px;
-  height: 80px;
+  width: 72px;
+  height: 72px;
   margin: 0 auto 1.5rem;
-  background: var(--gradient-brand);
-  color: #07090e;
-  font-size: 1.5rem;
+  background: var(--color-relay-soft);
+  color: var(--color-copper);
+  font-family: var(--font-display);
+  font-size: 1.25rem;
   font-weight: 800;
   text-transform: uppercase;
+  border: 2px solid var(--color-copper);
   border-radius: 50%;
-  box-shadow: 0 0 15px var(--color-copper-glow);
 }
 
 .team-card__name {
+  font-family: var(--font-display);
   font-size: 1.0625rem;
-  font-weight: 800;
-  color: var(--primary-color);
+  font-weight: 700;
+  color: var(--color-ink);
   margin-bottom: 0.25rem;
 }
 
 .team-card__role {
-  font-size: 0.8125rem;
-  font-weight: 700;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
   color: var(--color-copper);
   margin-bottom: 1rem;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
@@ -361,11 +268,7 @@
 
 .about-faq {
   border-top: 1px solid var(--color-border);
-  background: radial-gradient(
-    circle at top,
-    rgba(0, 255, 136, 0.01) 0%,
-    transparent 80%
-  );
+  background: var(--color-navy-soft);
 }
 
 .about-faq .accordion {
@@ -376,26 +279,30 @@
 .about-trust__grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
+  gap: 1.25rem;
+}
+
+.trust-badge {
+  text-align: center;
 }
 
 .trust-badge__icon {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 52px;
-  height: 52px;
+  width: 44px;
+  height: 44px;
   margin: 0 auto 1.25rem;
-  background: var(--color-relay-soft);
   color: var(--color-copper);
-  border: 1px solid var(--color-copper-glow);
-  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
 }
 
 .trust-badge__title {
+  font-family: var(--font-display);
   font-size: 1rem;
-  font-weight: 800;
-  color: var(--primary-color);
+  font-weight: 700;
+  color: var(--color-ink);
   margin-bottom: 0.5rem;
 }
 

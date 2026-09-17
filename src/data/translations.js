@@ -89,6 +89,19 @@ export const translations = {
       strip2: 'გადამოწმებული სპეციალისტები',
       strip3: 'გამჭვირვალე სტატუსი',
       strip4: 'ხარისხის გარანტია',
+      stats: {
+        stat1Value: '24/7',
+        stat1Label: 'მხარდაჭერა',
+        stat2Value: '1',
+        stat2Label: 'მენეჯერი თქვენზე',
+        stat3Value: '100%',
+        stat3Label: 'გამჭვირვალე სტატუსი',
+      },
+      sectionLabel: {
+        howItWorks: '01 — პროცესი',
+        services: '02 — სერვისები',
+        trust: '03 — ნდობა',
+      },
       steps: {
         step1Title: 'გამოიძახეთ დახმარება',
         step1Desc: 'აირჩიეთ კატეგორია, აღწერეთ პრობლემა და მიუთითეთ პრიორიტეტი — ისევე მარტივად, როგორც ტაქსის გამოძახება.',
@@ -420,6 +433,19 @@ export const translations = {
       strip2: 'Verified specialists',
       strip3: 'Transparent status',
       strip4: 'Quality guarantee',
+      stats: {
+        stat1Value: '24/7',
+        stat1Label: 'Support',
+        stat2Value: '1',
+        stat2Label: 'Manager for you',
+        stat3Value: '100%',
+        stat3Label: 'Transparent status',
+      },
+      sectionLabel: {
+        howItWorks: '01 — Process',
+        services: '02 — Services',
+        trust: '03 — Trust',
+      },
       steps: {
         step1Title: 'Call for Help',
         step1Desc: 'Choose a category, describe the issue and indicate priority — as easy as calling a taxi.',

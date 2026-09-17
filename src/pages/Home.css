@@ -12,6 +12,18 @@
   border-bottom: 1px solid var(--color-border);
 }
 
+.hero::after {
+  content: "";
+  position: absolute;
+  bottom: -120px;
+  left: -80px;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201, 162, 39, 0.12), transparent 70%);
+  pointer-events: none;
+}
+
 .hero__stripe {
   position: absolute;
   top: 0;
@@ -104,6 +116,45 @@
   border-color: var(--color-border-strong);
 }
 
+.hero__stats {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+  margin-top: 2.5rem;
+  padding-top: 1.75rem;
+  border-top: 1px dashed var(--color-border);
+}
+
+.hero__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.hero__stat strong {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--color-copper);
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.hero__stat span {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.hero__stat-divider {
+  width: 1px;
+  height: 28px;
+  background: var(--color-border-strong);
+}
+
 /* ── Dispatch panel (decorative) ── */
 .hero__dispatch {
   display: flex;
@@ -111,15 +162,41 @@
 }
 
 .dispatch-panel {
+  position: relative;
   width: 100%;
   max-width: 340px;
   padding: 1.25rem 1.35rem 1.35rem;
   background: var(--color-surface);
   border: 1px solid var(--color-border-strong);
   border-left: 3px solid var(--color-copper);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-md), inset 0 1px 0 rgba(237, 232, 223, 0.04);
   font-family: var(--font-mono);
   font-size: 0.75rem;
+  transform: rotate(-1.5deg);
+  transition: transform var(--transition);
+}
+
+@media (hover: hover) {
+  .dispatch-panel:hover {
+    transform: rotate(0deg) translateY(-4px);
+  }
+}
+
+.dispatch-panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 12px;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 4px,
+    var(--color-border) 4px,
+    var(--color-border) 5px
+  );
+  opacity: 0.6;
 }
 
 .dispatch-panel__header {
@@ -296,6 +373,7 @@
 }
 
 .steps-timeline {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1.25rem;
@@ -303,6 +381,25 @@
 
 .steps-timeline__line {
   display: none;
+}
+
+@media (min-width: 901px) {
+  .steps-timeline__line {
+    display: block;
+    position: absolute;
+    top: 3.25rem;
+    left: 12%;
+    right: 12%;
+    height: 1px;
+    background: repeating-linear-gradient(
+      to right,
+      var(--color-border-strong),
+      var(--color-border-strong) 6px,
+      transparent 6px,
+      transparent 12px
+    );
+    z-index: 0;
+  }
 }
 
 .step-card {
@@ -385,11 +482,31 @@
 }
 
 .service-card {
+  position: relative;
   grid-column: span 2;
   padding: 1.5rem;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
+  border-top: 2px solid var(--color-copper);
   transition: transform var(--transition), border-color var(--transition);
+  overflow: hidden;
+}
+
+.service-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 8px;
+  height: 100%;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 3px,
+    var(--color-border) 3px,
+    var(--color-border) 4px
+  );
+  opacity: 0.5;
 }
 
 .service-card:nth-child(1),
@@ -588,7 +705,16 @@
 }
 
 .cta__ambient {
-  display: none;
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 20px,
+    rgba(10, 9, 8, 0.04) 20px,
+    rgba(10, 9, 8, 0.04) 21px
+  );
+  pointer-events: none;
 }
 
 .cta__inner {
@@ -666,5 +792,19 @@
 
   .hero__actions .btn {
     width: 100%;
+  }
+
+  .hero__stats {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .hero__stat-divider {
+    display: none;
+  }
+
+  .dispatch-panel {
+    transform: none;
   }
 }

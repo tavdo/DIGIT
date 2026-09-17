@@ -269,7 +269,7 @@ textarea:focus-visible {
 }
 
 .page-hero .page__title {
-  color: #ffffff;
+  color: var(--color-ink);
 }
 
 .page-hero .page__subtitle {
@@ -293,16 +293,12 @@ textarea:focus-visible {
 
 .glass-panel--hover:hover {
   transform: translateY(-4px);
-  border-color: var(--color-border-strong);
-  box-shadow:
-    var(--shadow-md),
-    0 0 15px rgba(0, 255, 136, 0.05);
+  border-color: var(--color-copper);
+  box-shadow: var(--shadow-md), var(--shadow-copper);
 }
 
 .light-mode .glass-panel--hover:hover {
-  box-shadow:
-    var(--shadow-md),
-    0 0 15px rgba(5, 150, 105, 0.05);
+  box-shadow: var(--shadow-md), var(--shadow-copper);
 }
 
 /* ── Buttons ── */
@@ -425,15 +421,15 @@ textarea:focus-visible {
 }
 
 .priority-badge--flexible {
-  color: #00ff66;
+  color: var(--color-sage);
 }
 
 .order-badge--quote_offered {
-  color: #00f2fe;
+  color: var(--color-sky);
 }
 
 .order-badge--quote_confirmed {
-  color: #00ff66;
+  color: var(--color-sage);
 }
 
 .order-badge--quote_rejected {
@@ -449,6 +445,18 @@ textarea:focus-visible {
 
 .orders-detail__row--actions {
   flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+/* ── Section labels ── */
+.section-label {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-copper);
   margin-bottom: 0.75rem;
 }
 
