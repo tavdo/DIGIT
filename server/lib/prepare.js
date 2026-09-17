@@ -32,6 +32,41 @@ async function runMigrations() {
   })
 }
 
+const LEGACY_HERO_TITLE_KA = 'შენ არ ეძებ სპეციალისტს.'
+
+const HERO_COPY = {
+  heroEyebrow_ka: 'DIGIT · dispatch desk',
+  heroEyebrow_en: 'DIGIT · dispatch desk',
+  heroTitle_ka: 'აღწერე პრობლემა.',
+  heroTitle_en: 'Describe the problem.',
+  heroTitleAccent_ka: 'მენეჯერი გზაშია.',
+  heroTitleAccent_en: 'Your manager is on it.',
+  heroSubtitle_ka:
+    'IT სერვისი ისევე მარტივად, როგორც ტაქსის გამოძახება — ფასი, შემსრულებელი და სტატუსი ერთ ეკრანზე.',
+  heroSubtitle_en:
+    'IT support as easy as calling a taxi — price, specialist, and status on one screen.'
+}
+
+async function migrateHeroCopy() {
+  const doc = await prisma.siteContent.findUnique({ where: { docId: 'default' } })
+  if (!doc) return
+
+  const content = doc.content
+  if (!content || typeof content !== 'object' || Array.isArray(content)) return
+  if (content.heroTitle_ka !== LEGACY_HERO_TITLE_KA) return
+
+  await prisma.siteContent.update({
+    where: { docId: 'default' },
+    data: {
+      content: {
+        ...content,
+        ...HERO_COPY
+      }
+    }
+  })
+  console.log('[Seed] Updated legacy hero copy to new slogan.')
+}
+
 async function seedAdmin() {
   const adminEmail = 'admin@gmail.com'
   const adminPassword = process.env.ADMIN_SEED_PASSWORD || 'admin123'
@@ -76,6 +111,7 @@ export async function prepareServer() {
     }
     await prisma.$connect()
     await seedAdmin()
+    await migrateHeroCopy()
     prepared = true
     console.log('[PostgreSQL] Connected successfully.')
   })()

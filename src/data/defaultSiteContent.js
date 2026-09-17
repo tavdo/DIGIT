@@ -2,16 +2,16 @@ import { CONTACT_EMAIL, SITE_DESCRIPTION, SITE_TAGLINE } from '../constants/bran
 import { allServices } from './services'
 
 export const DEFAULT_SITE_CONTENT = {
-  heroEyebrow_ka: 'DIGIT · შუამავალი კონტროლი',
-  heroEyebrow_en: 'DIGIT · Intermediary Control',
-  heroTitle_ka: 'შენ არ ეძებ სპეციალისტს.',
-  heroTitle_en: 'You do not search for a specialist.',
-  heroTitleAccent_ka: 'შენ იღებ კონტროლს.',
-  heroTitleAccent_en: 'You take control.',
+  heroEyebrow_ka: 'DIGIT · dispatch desk',
+  heroEyebrow_en: 'DIGIT · dispatch desk',
+  heroTitle_ka: 'აღწერე პრობლემა.',
+  heroTitle_en: 'Describe the problem.',
+  heroTitleAccent_ka: 'მენეჯერი გზაშია.',
+  heroTitleAccent_en: 'Your manager is on it.',
   heroSubtitle_ka:
-    'გამოიძახე IT დახმარება ისევე მარტივად, როგორც ტაქსის გამოძახება — მენეჯერი ადგენს ფასს, შემსრულებელი მუშაობს, შენ ხედავ ყველაფერს.',
+    'IT სერვისი ისევე მარტივად, როგორც ტაქსის გამოძახება — ფასი, შემსრულებელი და სტატუსი ერთ ეკრანზე.',
   heroSubtitle_en:
-    'Call for IT support as easily as a taxi — manager estimates, specialist works, you see everything.',
+    'IT support as easy as calling a taxi — price, specialist, and status on one screen.',
   tagline_ka: SITE_TAGLINE,
   tagline_en: 'Trusted Services Platform',
   siteDescription_ka: SITE_DESCRIPTION,

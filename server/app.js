@@ -67,14 +67,14 @@ const upload = multer({ storage: storageConfig })
 
 // Default site content fallback
 const DEFAULT_SITE_CONTENT = {
-  heroEyebrow_ka: 'DIGIT · შუამავალი კონტროლი',
-  heroEyebrow_en: 'DIGIT · Intermediary Control',
-  heroTitle_ka: 'შენ არ ეძებ სპეციალისტს.',
-  heroTitle_en: 'You do not search for a specialist.',
-  heroTitleAccent_ka: 'შენ იღებ კონტროლს.',
-  heroTitleAccent_en: 'You take control.',
-  heroSubtitle_ka: 'გამოიძახე IT დახმარება ისევე მარტივად, როგორც ტაქსის გამოძახება — მენეჯერი ადგენს ფასს, შემსრულებელი მუშაობს, შენ ხედავ ყველაფერს.',
-  heroSubtitle_en: 'Call for IT support as easily as a taxi — manager estimates, specialist works, you see everything.',
+  heroEyebrow_ka: 'DIGIT · dispatch desk',
+  heroEyebrow_en: 'DIGIT · dispatch desk',
+  heroTitle_ka: 'აღწერე პრობლემა.',
+  heroTitle_en: 'Describe the problem.',
+  heroTitleAccent_ka: 'მენეჯერი გზაშია.',
+  heroTitleAccent_en: 'Your manager is on it.',
+  heroSubtitle_ka: 'IT სერვისი ისევე მარტივად, როგორც ტაქსის გამოძახება — ფასი, შემსრულებელი და სტატუსი ერთ ეკრანზე.',
+  heroSubtitle_en: 'IT support as easy as calling a taxi — price, specialist, and status on one screen.',
   tagline_ka: 'სანდო სერვისების პლატფორმა',
   tagline_en: 'Trusted Services Platform',
   siteDescription_ka: 'DIGIT — სანდო სერვისების პლატფორმა. გამოცდილი სპეციალისტები ერთი მენეჯერის კონტროლის ქვეშ.',
