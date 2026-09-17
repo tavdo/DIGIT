@@ -32,15 +32,20 @@ async function runMigrations() {
   })
 }
 
-const LEGACY_HERO_TITLE_KA = 'შენ არ ეძებ სპეციალისტს.'
+const LEGACY_HERO_TITLES_KA = new Set(['შენ არ ეძებ სპეციალისტს.'])
+
+const LEGACY_HERO_ACCENTS_KA = new Set([
+  'შენ იღებ კონტროლს.',
+  'მენეჯერი გზაშია.'
+])
 
 const HERO_COPY = {
   heroEyebrow_ka: 'DIGIT · dispatch desk',
   heroEyebrow_en: 'DIGIT · dispatch desk',
   heroTitle_ka: 'აღწერე პრობლემა.',
   heroTitle_en: 'Describe the problem.',
-  heroTitleAccent_ka: 'მენეჯერი გზაშია.',
-  heroTitleAccent_en: 'Your manager is on it.',
+  heroTitleAccent_ka: 'დახმარება გზაშია.',
+  heroTitleAccent_en: 'Help is on the way.',
   heroSubtitle_ka:
     'IT სერვისი ისევე მარტივად, როგორც ტაქსის გამოძახება — ფასი, შემსრულებელი და სტატუსი ერთ ეკრანზე.',
   heroSubtitle_en:
@@ -53,7 +58,9 @@ async function migrateHeroCopy() {
 
   const content = doc.content
   if (!content || typeof content !== 'object' || Array.isArray(content)) return
-  if (content.heroTitle_ka !== LEGACY_HERO_TITLE_KA) return
+  const needsTitleUpdate = LEGACY_HERO_TITLES_KA.has(content.heroTitle_ka)
+  const needsAccentUpdate = LEGACY_HERO_ACCENTS_KA.has(content.heroTitleAccent_ka)
+  if (!needsTitleUpdate && !needsAccentUpdate) return
 
   await prisma.siteContent.update({
     where: { docId: 'default' },
