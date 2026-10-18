@@ -75,6 +75,18 @@ function Home() {
   return (
     <div className="home">
       <section className="hero">
+        <div className="hero__bg" aria-hidden="true">
+          <img
+            src="/hero-bg.jpg"
+            alt=""
+            className="hero__bg-img"
+            width={1920}
+            height={1080}
+            decoding="async"
+            fetchPriority="high"
+          />
+          <div className="hero__bg-overlay" />
+        </div>
         <div className="hero__stripe" aria-hidden="true" />
         <div className="container hero__inner">
           <div className="hero__content">
