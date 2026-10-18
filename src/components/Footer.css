@@ -1,6 +1,6 @@
 .footer {
   position: relative;
-  background: var(--color-navy-soft);
+  background: color-mix(in srgb, var(--color-navy-soft) 70%, transparent);
   color: var(--color-ink);
   padding: 4rem 0 0;
   border-top: 1px solid var(--color-border);
@@ -13,11 +13,12 @@
   left: 50%;
   transform: translateX(-50%);
   font-family: var(--font-display);
-  font-size: clamp(6rem, 18vw, 12rem);
-  font-weight: 800;
+  font-size: clamp(5rem, 16vw, 11rem);
+  font-weight: 500;
+  font-style: italic;
   letter-spacing: -0.04em;
-  color: var(--color-ink);
-  opacity: 0.025;
+  color: var(--color-copper);
+  opacity: 0.12;
   pointer-events: none;
   white-space: nowrap;
   user-select: none;

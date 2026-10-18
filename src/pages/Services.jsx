@@ -29,37 +29,34 @@ function Services() {
 
       <div className="page services-page">
         <div className="container">
-          <div className="services-page__grid">
+          <div className="services-page__list">
             {services.map((service, index) => {
-              const Icon = service.icon;
               const custom = service.custom;
               return (
-                <Reveal
+                <article
                   key={service.id}
-                  className={`service-item ${custom ? "service-item--custom" : ""}`}
-                  delay={index * 80}
+                  className={`service-row ${custom ? "service-row--custom" : ""}`}
                 >
-                  <div
-                    className="service-item__border"
-                    style={{ "--card-index": index }}
-                  />
-                  <div className="service-item__icon">
-                    <Icon size={26} strokeWidth={1.75} />
+                  <span className="service-row__index">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <div>
+                    <h2 className="service-row__title">
+                      {tObject(service, "title")}
+                    </h2>
+                    <p className="service-row__desc">
+                      {tObject(service, "description")}
+                    </p>
                   </div>
-                  <h2 className="service-item__title">
-                    {tObject(service, "title")}
-                  </h2>
-                  <p className="service-item__desc">
-                    {tObject(service, "description")}
-                  </p>
                   <Link
                     to={`/contact?service=${service.id}`}
-                    className={`btn ${custom ? "btn--outline" : "btn--primary"} service-item__btn`}
+                    className="service-row__link"
                   >
-                    {custom ? <Sparkles size={18} /> : <ArrowRight size={18} />}
+                    {custom ? <Sparkles size={16} /> : null}
                     {t("services.requestService")}
+                    <ArrowRight size={16} />
                   </Link>
-                </Reveal>
+                </article>
               );
             })}
           </div>

@@ -6,7 +6,6 @@ import {
   Users,
   Headphones,
   ArrowRight,
-  CircleHelp,
   LayoutGrid,
   ClipboardList,
 } from "lucide-react";
@@ -75,123 +74,49 @@ function Home() {
   return (
     <div className="home">
       <section className="hero">
-        <div className="hero__bg" aria-hidden="true">
-          <img
-            src="/hero-bg.jpg"
-            alt=""
-            className="hero__bg-img"
-            width={1920}
-            height={1080}
-            decoding="async"
-            fetchPriority="high"
-          />
-          <div className="hero__bg-overlay" />
-        </div>
-        <div className="hero__stripe" aria-hidden="true" />
-        <div className="container hero__inner">
-          <div className="hero__content">
-            <Reveal variant="fade" className="hero__eyebrow-wrap">
-              <span className="hero__eyebrow">
-                {tObject(content, "heroEyebrow")}
-              </span>
-            </Reveal>
-            <Reveal delay={80}>
-              <span className="relay-line" />
-              <h1 className="hero__title">
-                <span className="hero__title-main">
-                  {tObject(content, "heroTitle")}
-                </span>
-                <span className="hero__title-accent">
-                  {tObject(content, "heroTitleAccent")}
-                </span>
-              </h1>
-            </Reveal>
-            <Reveal delay={160}>
-              <p className="hero__text">{tObject(content, "heroSubtitle")}</p>
-            </Reveal>
-            <Reveal delay={240} className="hero__actions">
-              <Link to="/contact" className="btn btn--primary btn--lg">
-                <ClipboardList size={18} />
-                {t("home.heroActionRequest")}
-                <ArrowRight size={18} />
-              </Link>
-              <Link
-                to="/about"
-                className="btn btn--outline btn--lg hero__btn-outline"
-              >
-                <CircleHelp size={18} />
-                {t("home.heroActionHow")}
-              </Link>
-            </Reveal>
-            <Reveal delay={320} className="hero__stats">
-              <div className="hero__stat">
-                <strong>{t("home.stats.stat1Value")}</strong>
-                <span>{t("home.stats.stat1Label")}</span>
-              </div>
-              <div className="hero__stat-divider" aria-hidden="true" />
-              <div className="hero__stat">
-                <strong>{t("home.stats.stat2Value")}</strong>
-                <span>{t("home.stats.stat2Label")}</span>
-              </div>
-              <div className="hero__stat-divider" aria-hidden="true" />
-              <div className="hero__stat">
-                <strong>{t("home.stats.stat3Value")}</strong>
-                <span>{t("home.stats.stat3Label")}</span>
-              </div>
-            </Reveal>
-          </div>
-
-          <Reveal delay={120} variant="left" className="hero__dispatch">
-            <div className="dispatch-panel">
-              <div className="dispatch-panel__header">
-                <span className="dispatch-panel__live">
-                  <span className="dispatch-panel__pulse" />
-                  LIVE
-                </span>
-                <span className="dispatch-panel__id">TKT-2847</span>
-              </div>
-              <div className="dispatch-panel__row">
-                <span className="dispatch-panel__label">STATUS</span>
-                <span className="dispatch-panel__badge dispatch-panel__badge--active">
-                  {t("home.dispatchStatus")}
-                </span>
-              </div>
-              <div className="dispatch-panel__row">
-                <span className="dispatch-panel__label">MANAGER</span>
-                <span className="dispatch-panel__value">Nino K.</span>
-              </div>
-              <div className="dispatch-panel__row">
-                <span className="dispatch-panel__label">SERVICE</span>
-                <span className="dispatch-panel__value">IT Support</span>
-              </div>
-              <div className="dispatch-panel__timeline">
-                <div className="dispatch-panel__tick dispatch-panel__tick--done" />
-                <div className="dispatch-panel__tick dispatch-panel__tick--done" />
-                <div className="dispatch-panel__tick dispatch-panel__tick--active" />
-                <div className="dispatch-panel__tick" />
-              </div>
-              <p className="dispatch-panel__note">{t("home.dispatchNote")}</p>
-            </div>
+        <div className="hero__veil" aria-hidden="true" />
+        <div className="hero__copy">
+          <Reveal variant="fade">
+            <p className="hero__kicker">{tObject(content, "heroEyebrow")}</p>
           </Reveal>
+          <Reveal delay={80}>
+            <h1 className="hero__title">
+              <span className="hero__title-main">
+                {tObject(content, "heroTitle")}
+              </span>
+              <span className="hero__title-accent">
+                {tObject(content, "heroTitleAccent")}
+              </span>
+            </h1>
+          </Reveal>
+          <Reveal delay={160}>
+            <p className="hero__text">{tObject(content, "heroSubtitle")}</p>
+          </Reveal>
+          <Reveal delay={220} className="hero__actions">
+            <Link to="/contact" className="btn btn--primary btn--lg">
+              {t("home.heroActionRequest")}
+              <ArrowRight size={18} />
+            </Link>
+            <Link to="/about" className="hero__text-link">
+              {t("home.heroActionHow")}
+            </Link>
+          </Reveal>
+          <dl className="hero__stats">
+            <div>
+              <dt>{t("home.stats.stat1Label")}</dt>
+              <dd>{t("home.stats.stat1Value")}</dd>
+            </div>
+            <div>
+              <dt>{t("home.stats.stat2Label")}</dt>
+              <dd>{t("home.stats.stat2Value")}</dd>
+            </div>
+            <div>
+              <dt>{t("home.stats.stat3Label")}</dt>
+              <dd>{t("home.stats.stat3Value")}</dd>
+            </div>
+          </dl>
         </div>
       </section>
-
-      <div className="status-strip" aria-hidden="true">
-        <div className="status-strip__track">
-          {[0, 1].map((pass) => (
-            <span key={pass} className="status-strip__group">
-              <span>{t("home.strip1")}</span>
-              <span className="status-strip__dot">◆</span>
-              <span>{t("home.strip2")}</span>
-              <span className="status-strip__dot">◆</span>
-              <span>{t("home.strip3")}</span>
-              <span className="status-strip__dot">◆</span>
-              <span>{t("home.strip4")}</span>
-              <span className="status-strip__dot">◆</span>
-            </span>
-          ))}
-        </div>
-      </div>
 
       <section className="section how-it-works">
         <div className="container">
@@ -244,33 +169,25 @@ function Home() {
             </p>
           </Reveal>
 
-          <div className="services-grid">
-            {visibleServices.map((service, index) => {
-              const Icon = service.icon;
-              return (
-                <Reveal
-                  key={service.id}
-                  className="service-card"
-                  delay={index * 70}
-                  variant="up"
-                >
-                  <div className="service-card__bg" />
-                  <div className="service-card__blob" />
-                  <div className="service-card__content">
-                    <div className="service-card__thread" aria-hidden="true" />
-                    <div className="service-card__icon">
-                      <Icon size={24} strokeWidth={1.75} />
-                    </div>
-                    <h3 className="service-card__title">
-                      {tObject(service, "title")}
-                    </h3>
-                    <p className="service-card__text">
-                      {tObject(service, "description")}
-                    </p>
-                  </div>
-                </Reveal>
-              );
-            })}
+          <div className="services-ledger">
+            {visibleServices.map((service, index) => (
+              <Link
+                key={service.id}
+                to={`/contact?service=${service.id}`}
+                className="services-ledger__row"
+              >
+                <span className="services-ledger__index">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <span className="services-ledger__title">
+                  {tObject(service, "title")}
+                </span>
+                <span className="services-ledger__text">
+                  {tObject(service, "description")}
+                </span>
+                <ArrowRight size={18} aria-hidden="true" />
+              </Link>
+            ))}
           </div>
 
           <Reveal className="services-preview__action" delay={200}>

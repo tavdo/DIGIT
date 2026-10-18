@@ -7,13 +7,12 @@ function DigitMark({ size = 'md', className = '' }) {
       aria-hidden="true"
     >
       <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect width="40" height="40" rx="11" className="digit-mark__bg" />
+        <rect width="40" height="40" className="digit-mark__bg" />
         <rect
-          x="0.75"
-          y="0.75"
-          width="38.5"
-          height="38.5"
-          rx="10.25"
+          x="1.25"
+          y="1.25"
+          width="37.5"
+          height="37.5"
           className="digit-mark__ring"
         />
         <path

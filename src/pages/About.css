@@ -111,20 +111,7 @@
 
 .about-work__step::after,
 .trust-badge::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 10px;
-  height: 100%;
-  background: repeating-linear-gradient(
-    to bottom,
-    transparent,
-    transparent 4px,
-    var(--color-border) 4px,
-    var(--color-border) 5px
-  );
-  opacity: 0.45;
+  content: none;
 }
 
 @media (hover: hover) {
@@ -198,20 +185,7 @@
 }
 
 .team-card::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 10px;
-  height: 100%;
-  background: repeating-linear-gradient(
-    to bottom,
-    transparent,
-    transparent 4px,
-    var(--color-border) 4px,
-    var(--color-border) 5px
-  );
-  opacity: 0.45;
+  content: none;
 }
 
 @media (hover: hover) {

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Sun, Moon } from 'lucide-react'
 
 export default function ThemeToggle() {
-  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark')
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light')
 
   useEffect(() => {
     if (theme === 'light') {
@@ -36,7 +36,7 @@ export default function ThemeToggle() {
         padding: '0.45rem',
         borderRadius: 'var(--radius-md)',
         transition: 'all 0.15s ease',
-        boxShadow: theme === 'dark' ? '0 0 5px rgba(0, 255, 102, 0.15)' : 'none',
+        boxShadow: 'none',
       }}
       onMouseOver={(e) => {
         e.currentTarget.style.borderColor = 'var(--color-royal)'
