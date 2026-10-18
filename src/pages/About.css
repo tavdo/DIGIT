@@ -1,24 +1,17 @@
+.about-mission,
+.about-section {
+  background: rgba(16, 14, 12, 0.48);
+  color: #e7e0d6;
+}
+
 .about-mission {
-  background: var(--gradient-hero);
-  color: var(--color-ink);
   padding: clamp(5rem, 10vw, 7rem) 0;
   position: relative;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid rgba(244, 239, 230, 0.12);
 }
 
 .about-mission::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    -55deg,
-    transparent,
-    transparent 14px,
-    rgba(201, 162, 39, 0.04) 14px,
-    rgba(201, 162, 39, 0.04) 15px
-  );
-  pointer-events: none;
-  opacity: 0.5;
+  content: none;
 }
 
 .about-mission__inner {
@@ -43,11 +36,12 @@
 
 .about-mission__title {
   font-size: clamp(2rem, 5vw, 3rem);
-  font-weight: 800;
+  font-weight: 500;
+  font-style: italic;
   line-height: 1.08;
   letter-spacing: -0.03em;
   margin-bottom: 1.5rem;
-  color: var(--color-ink);
+  color: #f4efe6;
 }
 
 .about-mission__text {
@@ -59,7 +53,7 @@
 .about-mission__text p {
   font-size: 1.0625rem;
   line-height: 1.75;
-  color: var(--text-color);
+  color: #c9c0b4;
 }
 
 .about-section {
@@ -73,23 +67,23 @@
 }
 
 .about-section__title {
-  font-size: clamp(1.875rem, 4vw, 2.25rem);
-  font-weight: 800;
-  color: var(--color-ink);
+  font-size: clamp(1.875rem, 4vw, 2.75rem);
+  font-weight: 500;
+  font-style: italic;
+  color: #f4efe6;
   margin-bottom: 1rem;
   letter-spacing: -0.03em;
 }
 
 .about-section__subtitle {
   font-size: 0.9375rem;
-  color: var(--text-muted);
+  color: #c9c0b4;
   line-height: 1.65;
 }
 
 .about-work {
-  border-top: 1px solid var(--color-border);
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-paper);
+  border-top: 1px solid rgba(244, 239, 230, 0.12);
+  border-bottom: 1px solid rgba(244, 239, 230, 0.12);
 }
 
 .about-work__steps {
@@ -102,8 +96,8 @@
 .trust-badge {
   position: relative;
   padding: 2rem 1.75rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: rgba(16, 14, 12, 0.42);
+  border: 1px solid rgba(244, 239, 230, 0.14);
   border-top: 2px solid var(--color-copper);
   transition: transform var(--transition), border-color var(--transition);
   overflow: hidden;
@@ -136,7 +130,7 @@
   font-family: var(--font-display);
   font-size: 2rem;
   font-weight: 800;
-  color: var(--color-border-strong);
+  color: rgba(244, 239, 230, 0.28);
   line-height: 1;
 }
 
@@ -156,14 +150,14 @@
 .about-work__step-title {
   font-family: var(--font-display);
   font-size: 1.0625rem;
-  font-weight: 700;
-  color: var(--color-ink);
+  font-weight: 500;
+  color: #f4efe6;
   margin-bottom: 0.5rem;
 }
 
 .about-work__step-text {
   font-size: 0.875rem;
-  color: var(--text-muted);
+  color: #c9c0b4;
   line-height: 1.65;
 }
 
@@ -177,8 +171,8 @@
   position: relative;
   text-align: center;
   padding: 2.5rem 2rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: rgba(16, 14, 12, 0.42);
+  border: 1px solid rgba(244, 239, 230, 0.14);
   border-top: 2px solid var(--color-copper);
   transition: transform var(--transition), border-color var(--transition);
   overflow: hidden;
@@ -219,8 +213,8 @@
 .team-card__name {
   font-family: var(--font-display);
   font-size: 1.0625rem;
-  font-weight: 700;
-  color: var(--color-ink);
+  font-weight: 500;
+  color: #f4efe6;
   margin-bottom: 0.25rem;
 }
 
@@ -236,13 +230,30 @@
 
 .team-card__bio {
   font-size: 0.875rem;
-  color: var(--text-muted);
+  color: #c9c0b4;
   line-height: 1.65;
 }
 
 .about-faq {
-  border-top: 1px solid var(--color-border);
-  background: var(--color-navy-soft);
+  border-top: 1px solid rgba(244, 239, 230, 0.12);
+}
+
+.about-faq .accordion__item {
+  background: rgba(16, 14, 12, 0.42);
+  border-color: rgba(244, 239, 230, 0.14);
+}
+
+.about-faq .accordion__trigger {
+  color: #f4efe6;
+}
+
+.about-faq .accordion__trigger:hover {
+  background: rgba(244, 239, 230, 0.06);
+}
+
+.about-faq .accordion__answer,
+.about-faq .accordion__icon {
+  color: #c9c0b4;
 }
 
 .about-faq .accordion {
@@ -275,14 +286,14 @@
 .trust-badge__title {
   font-family: var(--font-display);
   font-size: 1rem;
-  font-weight: 700;
-  color: var(--color-ink);
+  font-weight: 500;
+  color: #f4efe6;
   margin-bottom: 0.5rem;
 }
 
 .trust-badge__text {
   font-size: 0.875rem;
-  color: var(--text-muted);
+  color: #c9c0b4;
   line-height: 1.65;
 }
 
