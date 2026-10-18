@@ -378,9 +378,10 @@
 }
 
 .cta {
-  background: var(--color-ink);
-  color: var(--color-paper);
+  background: rgba(16, 14, 12, 0.42);
+  color: #f4efe6;
   padding: clamp(3.5rem, 7vw, 5.5rem) 0;
+  border-top: 1px solid rgba(244, 239, 230, 0.14);
 }
 
 .cta__ambient {
@@ -403,18 +404,18 @@
   font-style: italic;
   font-size: clamp(2.2rem, 5vw, 3.6rem);
   letter-spacing: -0.03em;
-  color: var(--color-paper);
+  color: #f4efe6;
   margin: 0 0 0.4rem;
 }
 
 .light-mode .cta__title,
 .light-mode .cta__text {
-  color: var(--color-paper);
+  color: #f4efe6;
 }
 
 .cta__text {
   max-width: 28rem;
-  color: color-mix(in srgb, var(--color-paper) 72%, transparent);
+  color: #c9c0b4;
   margin: 0;
 }
 
